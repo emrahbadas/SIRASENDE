@@ -484,20 +484,73 @@ Micro-drama için klasik video analytics'ten daha değerli metriklerden biri, bi
 
 ## Business Model
 
-## Advertising
+### Para Akışı (Decided)
 
-MVP için ana gelir modeli reklamdır.
+Para yalnızca **creator** ve **platform** tarafından kazanılır. İzleyici hiçbir koşulda gelir elde etmez.
 
-İzleyici ücretsiz izler. Olası reklam modelleri:
+| Taraf | Ne öder | Ne kazanır |
+| --- | --- | --- |
+| İzleyici | Reklam izler **veya** coin satın alıp kilitli bölüm açar / indirme satın alır | — |
+| Creator | Video depolama planı (storage) | Reklam geliri (platform komisyonu düşülerek) + indirme satışı payı |
+| Platform | — | Depolama planı satışı + reklam komisyonu + indirme komisyonu + coin ile bölüm açma geliri |
+
+Kurallar:
+
+- Creator geliri **yalnızca** iki kaynaktan gelir: içeriğinde gösterilen reklamlar ve (açtıysa) dizisinin indirilmesi.
+- İndirme **creator yetkisindedir** ve varsayılan olarak **kapalıdır**. Creator indirmeyi kapatırsa, daha önce satın almış olanlar dahil kimse indiremez (yetki her indirme URL'si üretiminde kontrol edilir).
+- Coin ile bölüm açma geliri varsayılan olarak platforma gider (`coin_unlock_creator_share_bps = 0`); politika ile değiştirilebilir.
+- Tüm oranlar `revenue_policies` tablosunda versiyonlu tutulur. Uygulama koduna yüzde gömülmez; değişiklik yeni bir policy versiyonu eklenerek yapılır.
+
+```text
+Reklam ağı geliri ──► ad_impressions ──► settle_ad_revenue (dönemsel)
+                                            ├─► creator cüzdanı   (ad_creator_share_bps)
+                                            └─► platform geliri   (kalan)
+
+İzleyici ödemesi ──► coin ──┬─► bölüm açma ──► platform geliri
+                            └─► indirme    ──┬─► creator cüzdanı (download_creator_share_bps)
+                                             └─► platform geliri
+
+Creator ödemesi ──► depolama planı ──► platform geliri
+Creator cüzdanı ──► request_payout ──► admin onayı ──► banka
+```
+
+### Cüzdan ve Ledger Altyapısı (Implemented)
+
+Migration: `supabase/migrations/20261011060000_monetization_wallets.sql`
+
+- **Double-entry ledger**: `ledger_transactions` + `ledger_entries`. Her işlem para birimi bazında sıfıra dengelenir; satırlar değiştirilemez (append-only).
+- **Cüzdanlar** (`wallet_accounts`): izleyici coin cüzdanı (`COIN`), creator kazanç cüzdanı (`TRY`, kuruş) ve sistem hesapları (`platform_revenue`, `deferred_coin_revenue`, `payouts_payable`, `external_payments`, `ad_network`, `coin_issuance`). Bakiye ledger'dan türetilir, negatife düşemez.
+- **Coin**: satılan ama harcanmamış coin `deferred_coin_revenue` (yükümlülük) olarak tutulur; harcandığında `coin_value_minor` üzerinden gelire dönüşür.
+- **Idempotency**: mağaza işlem ID'si, reklam ağı event ID'si ve ödeme sağlayıcı ID'si tekrar gönderilirse ikinci kez işlenmez.
+- **Depolama kotası**: Cloudflare Stream depolamayı dakika bazında faturaladığı için kota **video dakikası** olarak tutulur. Yükleme sırasında `reserved_seconds` ile yer ayrılır, kota aşılırsa trigger yüklemeyi reddeder.
+
+| RPC | Çağıran | Açıklama |
+| --- | --- | --- |
+| `can_watch_episode(episode)` | herkes | Ücretsiz pencere, unlock veya sahiplik kontrolü |
+| `unlock_episode_with_coins(episode)` | izleyici | Fiyat seriden okunur, istemci fiyat gönderemez |
+| `purchase_series_download(series)` | izleyici | Creator indirmeyi açmadıysa `downloads_disabled` |
+| `can_download_episode(episode)` | izleyici | İndirme URL'si üretmeden önce çağrılır |
+| `request_payout(amount)` | creator | Minimum tutar policy'den gelir |
+| `my_storage_summary()` | creator | Kota ve kullanım |
+| `resolve_payout(...)`, `settle_ad_revenue(...)` | admin | Ödeme onayı/reddi, dönemsel reklam dağıtımı |
+| `credit_coin_purchase(...)` | service role | Mağaza makbuzu doğrulandıktan sonra |
+| `record_ad_impression(...)` | service role | Reklam ağı SSV callback'i; rewarded ise bölümü açar |
+| `record_storage_payment(...)` | service role | Ödeme sağlayıcı webhook'u |
+
+Senaryo testi: `supabase/tests/monetization_wallets.test.sql` (tek transaction içinde çalışır, sonunda geri alınır).
+
+### Advertising
+
+İzleyici reklam izleyerek ücretsiz izler. Olası reklam modelleri:
 
 - Pre-roll
 - Interstitial
-- Rewarded Video
+- Rewarded Video (kilitli bölümü açar)
 - Native Promotion
 - Sponsored Series
 - Sponsored Episode
 
-Her bölüm arasında reklam göstermek kullanıcı deneyimini bozabileceğinden reklam sıklığı aşağıdaki metriklerle optimize edilmelidir:
+Reklam sıklığı aşağıdaki metriklerle optimize edilmelidir:
 
 - Retention
 - Streaming cost
@@ -506,88 +559,19 @@ Her bölüm arasında reklam göstermek kullanıcı deneyimini bozabileceğinden
 - Episode-to-episode conversion
 - User complaints
 
-Reklam politikası hard-code edilmemeli, configuration veya policy olarak yönetilmelidir.
+Reklam politikası hard-code edilmemeli, configuration veya policy olarak yönetilmelidir. Reklam gösterimleri istemciden değil, reklam ağının sunucu tarafı doğrulamasından (SSV / reporting API) kaydedilir.
 
-## Creator Revenue Share
+### Oranlar ve Fiyatlar (TBD)
 
-Creator, uygun gelirlerden pay almalıdır.
+Başlangıç policy'si (`revenue_policies` v1) yer tutucudur:
 
-Başlangıç için değerlendirilebilecek modeller:
+- Reklam: creator %60 / platform %40
+- İndirme: creator %70 / platform %30
+- 1 coin = 0,50 TRY
+- Minimum ödeme: 500 TRY
+- Depolama planları: Başlangıç 30 dk (ücretsiz), Pro 600 dk (499 TRY/ay), Studio 3000 dk (1.999 TRY/ay)
 
-- Creator %60 / Platform %40
-- Creator %70 / Platform %30
-
-Kesin oran **TBD**'dir ve aşağıdaki faktörlerle belirlenmelidir:
-
-- Net advertising revenue
-- Payment fees
-- Taxes
-- Video delivery cost
-- AI processing cost
-- Refunds veya chargebacks
-- Creator planı
-- İçerik performansı
-
-Revenue share oranları database veya versioned policy üzerinden değiştirilebilir olmalıdır. Uygulama koduna sabit yüzde gömülmemelidir.
-
-## Creator Subscription
-
-Creatorlardan ilk günden yüksek depolama veya işlem ücreti alınmamalıdır. Freemium model önerilir.
-
-### FREE
-
-- 1 aktif production
-- Belirli episode kotası
-- Otomatik subtitle
-- Temel analytics
-- Reklam geliri paylaşımı
-
-### CREATOR PRO
-
-- Daha fazla aktif production
-- Daha yüksek upload limiti
-- Gelişmiş analytics
-- TR + EN localization
-- Daha yüksek creator revenue share
-- Gelişmiş creator page
-
-### STUDIO
-
-- Çok sayıda proje
-- Team account
-- Yüksek video kotası
-- Gelişmiş analytics
-- API erişimi
-- Priority processing
-- Daha yüksek revenue share
-- Production company profile
-
-Kesin fiyatlar ve limitler **TBD**'dir. Pricing, product configuration ile yönetilmelidir.
-
-## Coin
-
-Coin sistemi MVP kapsamı dışındadır.
-
-Gelecekte örnek model:
-
-```text
-Episode 1–10: FREE
-
-Episode 11+
-  → Watch Ad
-  veya
-  → Unlock with Coins
-```
-
-Coin sistemi için ileride:
-
-- Google Play Billing
-- Apple In-App Purchase
-- Entitlement management
-- Refund handling
-- Fraud prevention
-
-gerekecektir.
+Kesin değerler aşağıdaki faktörlerle belirlenmelidir: net reklam geliri, ödeme ve mağaza komisyonları, vergiler, video teslim maliyeti, AI işleme maliyeti, iade/chargeback.
 
 ## VIP
 
@@ -1794,7 +1778,7 @@ Creator Login
 
 Aşağıdaki konular henüz kesinleşmemiştir:
 
-- Kesin creator revenue share oranı
+- Kesin creator revenue share oranı (yer tutucu: `revenue_policies` v1)
 - Brüt ve net gelir hesaplama politikası
 - Reklam provider seçimi
 - Reklam sıklığı ve placement kuralları
