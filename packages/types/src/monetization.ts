@@ -1,7 +1,8 @@
 // Monetization model (see supabase/migrations/20261011060000_monetization_wallets.sql)
 //   Viewer: watches ads or spends coins to unlock episodes / buy downloads. Never earns.
-//   Creator: earns ad revenue share + download share (downloads only if enabled).
-//   Platform: storage plans, ad commission, download commission, coin unlocks.
+//   Creator: earns ad revenue share, the same share of coin unlocks (they replace
+//   ads), and download share (downloads only if enabled).
+//   Platform: storage plans and the commission on ads, coin unlocks and downloads.
 // All split ratios come from the versioned revenue_policies table.
 
 /** TRY minor units (kuruş). */
@@ -44,7 +45,7 @@ export interface RevenuePolicy {
   adCreatorShareBps: number;
   /** Basis points of a download sale going to the creator. */
   downloadCreatorShareBps: number;
-  /** Basis points of a coin episode unlock going to the creator (0 by default). */
+  /** Basis points of a coin episode unlock going to the creator; always equals adCreatorShareBps. */
   coinUnlockCreatorShareBps: number;
   /** TRY value of one coin when spent, in kuruş. */
   coinValueMinor: MinorAmount;

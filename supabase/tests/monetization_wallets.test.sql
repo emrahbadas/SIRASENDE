@@ -49,14 +49,14 @@ begin
   select balance into v_bal from wallet_accounts where profile_id = v_viewer;
   if v_bal <> 110 then raise exception 'T3 coin balance %', v_bal; end if;
 
-  -- T4 coin unlock: 10 coins x 0.50 TRY = 500 kuruş to platform, 0 to creator
+  -- T4 coin unlock: 10 coins x 0.50 TRY = 500 kuruş, creator gets the ad share (60%) = 300
   v_plat_before := (select balance from wallet_accounts where system_code='platform_revenue');
   perform public.unlock_episode_with_coins(v_eps[3]);
   perform public.unlock_episode_with_coins(v_eps[3]);
   if (select balance from wallet_accounts where profile_id = v_viewer) <> 100 then raise exception 'T4 coins after unlock'; end if;
   if not public.can_watch_episode(v_eps[3]) then raise exception 'T4b unlocked ep3 not watchable'; end if;
-  if (select balance from wallet_accounts where system_code='platform_revenue') - v_plat_before <> 500 then raise exception 'T4c platform revenue'; end if;
-  if exists (select 1 from wallet_accounts where creator_id = v_creator and balance <> 0) then raise exception 'T4d creator must not earn from unlock'; end if;
+  if (select balance from wallet_accounts where system_code='platform_revenue') - v_plat_before <> 200 then raise exception 'T4c platform revenue'; end if;
+  if (select balance from wallet_accounts where creator_id = v_creator) <> 300 then raise exception 'T4d creator unlock share'; end if;
 
   -- T5 downloads are off by default
   begin
@@ -66,11 +66,11 @@ begin
     if sqlerrm <> 'downloads_disabled' then raise exception 'T5 got %', sqlerrm; end if;
   end;
 
-  -- T6 creator enables downloads: 40 coins = 2000 kuruş, creator 70% = 1400
+  -- T6 creator enables downloads: 40 coins = 2000 kuruş, creator 70% = 1400 (+300 from T4)
   update public.series set downloads_enabled = true, download_coin_price = 40 where id = v_series;
   perform public.purchase_series_download(v_series);
   if (select balance from wallet_accounts where profile_id = v_viewer) <> 60 then raise exception 'T6 coins'; end if;
-  if (select balance from wallet_accounts where creator_id = v_creator) <> 1400 then raise exception 'T6b creator'; end if;
+  if (select balance from wallet_accounts where creator_id = v_creator) <> 1700 then raise exception 'T6b creator'; end if;
   if not public.can_download_episode(v_eps[1]) then raise exception 'T6c can download'; end if;
   update public.series set downloads_enabled = false where id = v_series;
   if public.can_download_episode(v_eps[1]) then raise exception 'T6d creator disabled downloads'; end if;
@@ -82,7 +82,7 @@ begin
   if not public.can_watch_episode(v_eps[4]) then raise exception 'T7 rewarded unlock'; end if;
   perform set_config('request.jwt.claims', json_build_object('sub', v_admin, 'role','authenticated')::text, true);
   v_n := public.settle_ad_revenue(now() - interval '1 day', now() + interval '1 day');
-  if (select balance from wallet_accounts where creator_id = v_creator) <> 2000 then raise exception 'T7b creator'; end if;
+  if (select balance from wallet_accounts where creator_id = v_creator) <> 2300 then raise exception 'T7b creator'; end if;
   if (select count(*) from ad_impressions where settlement_id is null) <> 0 then raise exception 'T7c unsettled'; end if;
 
   -- T8 payouts: policy minimum, balance check, admin-only resolve, reject refunds
@@ -93,8 +93,8 @@ begin
   exception when others then
     if sqlerrm <> 'below_min_payout' then raise exception 'T8 got %', sqlerrm; end if;
   end;
-  insert into revenue_policies (version, ad_creator_share_bps, download_creator_share_bps, coin_value_minor, min_payout_minor)
-    values (99, 6000, 7000, 50, 1000);
+  insert into revenue_policies (version, ad_creator_share_bps, download_creator_share_bps, coin_unlock_creator_share_bps, coin_value_minor, min_payout_minor)
+    values (99, 6000, 7000, 6000, 50, 1000);
   begin
     perform public.request_payout(5000);
     raise exception 'T8b expected insufficient_balance';
@@ -102,7 +102,7 @@ begin
     if sqlerrm <> 'insufficient_balance' then raise exception 'T8b got %', sqlerrm; end if;
   end;
   v_id := public.request_payout(1500);
-  if (select balance from wallet_accounts where creator_id = v_creator) <> 500 then raise exception 'T8c'; end if;
+  if (select balance from wallet_accounts where creator_id = v_creator) <> 800 then raise exception 'T8c'; end if;
   perform set_config('request.jwt.claims', json_build_object('sub', v_viewer, 'role','authenticated')::text, true);
   begin
     perform public.resolve_payout(v_id, true);
@@ -112,7 +112,13 @@ begin
   end;
   perform set_config('request.jwt.claims', json_build_object('sub', v_admin, 'role','authenticated')::text, true);
   perform public.resolve_payout(v_id, false, null, 'iban eksik');
-  if (select balance from wallet_accounts where creator_id = v_creator) <> 2000 then raise exception 'T8e reject refund'; end if;
+  if (select balance from wallet_accounts where creator_id = v_creator) <> 2300 then raise exception 'T8e reject refund'; end if;
+  begin
+    insert into revenue_policies (version, ad_creator_share_bps, download_creator_share_bps, coin_unlock_creator_share_bps, coin_value_minor, min_payout_minor)
+      values (100, 6000, 7000, 0, 50, 1000);
+    raise exception 'T8f unlock share diverged from ad share';
+  exception when check_violation then null;
+  end;
 
   -- T9 ledger integrity
   begin
@@ -158,7 +164,7 @@ begin
   -- re-running a settled period is a no-op, not an error
   perform set_config('request.jwt.claims', json_build_object('sub', v_admin, 'role','authenticated')::text, true);
   if public.settle_ad_revenue(now() - interval '1 day', now() + interval '1 day') <> 0 then raise exception 'T10f resettle'; end if;
-  if (select balance from wallet_accounts where system_code='platform_revenue') - v_plat_before <> 500 + 600 + 400 + 49900 then
+  if (select balance from wallet_accounts where system_code='platform_revenue') - v_plat_before <> 200 + 600 + 400 + 49900 then
     raise exception 'T10c platform revenue';
   end if;
 

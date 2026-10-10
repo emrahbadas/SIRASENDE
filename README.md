@@ -491,14 +491,14 @@ Para yalnızca **creator** ve **platform** tarafından kazanılır. İzleyici hi
 | Taraf | Ne öder | Ne kazanır |
 | --- | --- | --- |
 | İzleyici | Reklam izler **veya** coin satın alıp kilitli bölüm açar / indirme satın alır | — |
-| Creator | Video depolama planı (storage) | Reklam geliri (platform komisyonu düşülerek) + indirme satışı payı |
-| Platform | — | Depolama planı satışı + reklam komisyonu + indirme komisyonu + coin ile bölüm açma geliri |
+| Creator | Video depolama planı (storage) | Reklam geliri + coin ile açılan bölümlerden reklam payı oranında pay + indirme satışı payı |
+| Platform | — | Depolama planı satışı + reklam komisyonu + coin açma komisyonu + indirme komisyonu |
 
 Kurallar:
 
-- Creator geliri **yalnızca** iki kaynaktan gelir: içeriğinde gösterilen reklamlar ve (açtıysa) dizisinin indirilmesi.
+- Creator geliri izlenmeden gelir: içeriğinde gösterilen reklamlar ve reklamın yerine geçen coin ile bölüm açma. Ek olarak (açtıysa) dizisinin indirilmesinden pay alır.
 - İndirme **creator yetkisindedir** ve varsayılan olarak **kapalıdır**. Creator indirmeyi kapatırsa, daha önce satın almış olanlar dahil kimse indiremez (yetki her indirme URL'si üretiminde kontrol edilir).
-- Coin ile bölüm açma geliri varsayılan olarak platforma gider (`coin_unlock_creator_share_bps = 0`); politika ile değiştirilebilir.
+- Coin ile bölüm açan izleyici reklamı atladığı için creator, coin açma gelirinden **reklam payıyla aynı oranda** pay alır. Bu kural veritabanında zorunludur (`coin_unlock_creator_share_bps = ad_creator_share_bps`); reklam oranı değişirse coin oranı da birlikte değişmek zorundadır.
 - Tüm oranlar `revenue_policies` tablosunda versiyonlu tutulur. Uygulama koduna yüzde gömülmez; değişiklik yeni bir policy versiyonu eklenerek yapılır.
 
 ```text
@@ -506,7 +506,8 @@ Reklam ağı geliri ──► ad_impressions ──► settle_ad_revenue (dönem
                                             ├─► creator cüzdanı   (ad_creator_share_bps)
                                             └─► platform geliri   (kalan)
 
-İzleyici ödemesi ──► coin ──┬─► bölüm açma ──► platform geliri
+İzleyici ödemesi ──► coin ──┬─► bölüm açma ──┬─► creator cüzdanı (reklam payıyla aynı oran)
+                            │                └─► platform geliri
                             └─► indirme    ──┬─► creator cüzdanı (download_creator_share_bps)
                                              └─► platform geliri
 
@@ -563,9 +564,10 @@ Reklam politikası hard-code edilmemeli, configuration veya policy olarak yönet
 
 ### Oranlar ve Fiyatlar (TBD)
 
-Başlangıç policy'si (`revenue_policies` v1) yer tutucudur:
+Güncel policy (`revenue_policies` v2) yer tutucudur:
 
 - Reklam: creator %60 / platform %40
+- Coin ile bölüm açma: creator %60 / platform %40 (reklam oranına bağlı)
 - İndirme: creator %70 / platform %30
 - 1 coin = 0,50 TRY
 - Minimum ödeme: 500 TRY
