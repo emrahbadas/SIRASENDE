@@ -45,7 +45,7 @@ export default async function PublicSeriesPage({
       </Link>
 
       <header className="mt-4 flex gap-6">
-        <div className="flex aspect-[9/13] w-40 shrink-0 items-center justify-center rounded-xl border border-zinc-800 bg-gradient-to-br from-zinc-900 to-zinc-950">
+        <div className="flex aspect-9/13 w-40 shrink-0 items-center justify-center rounded-xl border border-zinc-800 bg-linear-to-br from-zinc-900 to-zinc-950">
           {series.poster_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img

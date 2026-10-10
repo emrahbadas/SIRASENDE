@@ -120,7 +120,7 @@ export default async function HomePage({
                 href={`/series/${s.id}`}
                 className="group overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/50 transition hover:border-rose-500/50"
               >
-                <div className="flex aspect-[9/13] items-center justify-center bg-gradient-to-br from-zinc-900 to-zinc-950">
+                <div className="flex aspect-9/13 items-center justify-center bg-linear-to-br from-zinc-900 to-zinc-950">
                   {s.poster_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={s.poster_url} alt={s.title} className="h-full w-full object-cover" />
