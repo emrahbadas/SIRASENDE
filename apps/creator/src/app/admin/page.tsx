@@ -1,7 +1,15 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { approveSeries, rejectSeries } from "./actions";
+import { approveSeries, rejectSeries, requestChanges } from "./actions";
+
+const warningLabels: Record<string, string> = {
+  violence: "Şiddet",
+  fear: "Korku",
+  profanity: "Argo/Küfür",
+  sensitive_themes: "Hassas temalar",
+  substance_use: "Madde kullanımı",
+};
 
 // PostgREST to-one relations are inferred as arrays without generated DB types
 const one = <T,>(v: T | T[] | null | undefined): T | null =>
@@ -31,7 +39,7 @@ export default async function AdminPage({
   const { data: pending } = await supabase
     .from("series")
     .select(
-      "id, title, description, primary_language, updated_at, productions(title, production_type, age_rating, creator_profiles(creator_name), production_categories(categories(name_tr))), seasons(episodes(id))"
+      "id, title, description, primary_language, updated_at, productions(title, production_type, age_rating, content_warnings, creator_profiles(creator_name), production_categories(categories(name_tr))), seasons(episodes(id))"
     )
     .eq("status", "moderating")
     .order("updated_at", { ascending: true });
@@ -77,44 +85,66 @@ export default async function AdminPage({
                 key={s.id}
                 className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5"
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h2 className="font-semibold">{s.title}</h2>
-                    <p className="mt-1 text-sm text-zinc-500">
-                      {creatorName} · {production?.production_type} ·{" "}
-                      {s.primary_language.toUpperCase()} · {episodeCount} bölüm
-                      {categoryName && <> · {categoryName}</>}
-                      {production?.age_rating && (
-                        <span className="ml-2 rounded border border-amber-700 px-1.5 py-0.5 text-xs text-amber-400">
-                          {production.age_rating}
-                        </span>
-                      )}
-                    </p>
-                    {s.description && (
-                      <p className="mt-2 text-sm text-zinc-400">{s.description}</p>
+                <div>
+                  <h2 className="font-semibold">{s.title}</h2>
+                  <p className="mt-1 text-sm text-zinc-500">
+                    {creatorName} · {production?.production_type} ·{" "}
+                    {s.primary_language.toUpperCase()} · {episodeCount} bölüm
+                    {categoryName && <> · {categoryName}</>}
+                    {production?.age_rating && (
+                      <span className="ml-2 rounded border border-amber-700 px-1.5 py-0.5 text-xs text-amber-400">
+                        {production.age_rating}
+                      </span>
                     )}
-                  </div>
-                  <div className="flex shrink-0 gap-2">
-                    <form action={approveSeries}>
-                      <input type="hidden" name="series_id" value={s.id} />
-                      <button
-                        type="submit"
-                        className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium transition hover:bg-emerald-500"
-                      >
-                        Onayla
-                      </button>
-                    </form>
-                    <form action={rejectSeries}>
-                      <input type="hidden" name="series_id" value={s.id} />
-                      <button
-                        type="submit"
-                        className="rounded-lg border border-rose-800 px-4 py-2 text-sm text-rose-400 transition hover:bg-rose-950"
-                      >
-                        Reddet
-                      </button>
-                    </form>
-                  </div>
+                  </p>
+                  {(production?.content_warnings?.length ?? 0) > 0 && (
+                    <p className="mt-2 flex flex-wrap gap-1">
+                      {production!.content_warnings.map((w: string) => (
+                        <span
+                          key={w}
+                          className="rounded-full border border-zinc-700 px-2 py-0.5 text-xs text-zinc-400"
+                        >
+                          {warningLabels[w] ?? w}
+                        </span>
+                      ))}
+                    </p>
+                  )}
+                  {s.description && (
+                    <p className="mt-2 text-sm text-zinc-400">{s.description}</p>
+                  )}
                 </div>
+
+                <form className="mt-4 space-y-3" action={approveSeries}>
+                  <input type="hidden" name="series_id" value={s.id} />
+                  <textarea
+                    name="note"
+                    rows={2}
+                    placeholder="Red / düzeltme notu — creator bu notu görecek (onayda boş bırakılabilir)"
+                    className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-rose-500"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium transition hover:bg-emerald-500"
+                    >
+                      Onayla
+                    </button>
+                    <button
+                      type="submit"
+                      formAction={requestChanges}
+                      className="rounded-lg border border-sky-800 px-4 py-2 text-sm text-sky-400 transition hover:bg-sky-950"
+                    >
+                      Düzeltme iste
+                    </button>
+                    <button
+                      type="submit"
+                      formAction={rejectSeries}
+                      className="rounded-lg border border-rose-800 px-4 py-2 text-sm text-rose-400 transition hover:bg-rose-950"
+                    >
+                      Reddet
+                    </button>
+                  </div>
+                </form>
               </li>
             );
           })}

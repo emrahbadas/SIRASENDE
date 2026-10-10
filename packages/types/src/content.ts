@@ -18,9 +18,23 @@ export const CONTENT_STATUSES = [
   "published",
   "blocked",
   "failed",
+  "rejected",
+  "needs_changes",
 ] as const;
 
 export type ContentStatus = (typeof CONTENT_STATUSES)[number];
+
+export const AGE_RATINGS = ["7+", "13+", "16+", "18+"] as const;
+export type AgeRating = (typeof AGE_RATINGS)[number];
+
+export const CONTENT_WARNINGS = [
+  "violence",
+  "fear",
+  "profanity",
+  "sensitive_themes",
+  "substance_use",
+] as const;
+export type ContentWarning = (typeof CONTENT_WARNINGS)[number];
 
 export const SCRIPT_SOURCES = ["human", "ai_assisted", "ai_generated"] as const;
 export const VIDEO_SOURCES = ["real_footage", "ai_generated", "hybrid"] as const;

@@ -58,6 +58,12 @@ export async function createProduction(formData: FormData) {
   const description = optional(formData.get("description"));
   const primaryLanguage = String(formData.get("primary_language") ?? "tr");
 
+  const ALLOWED_WARNINGS = ["violence", "fear", "profanity", "sensitive_themes", "substance_use"];
+  const contentWarnings = formData
+    .getAll("content_warnings")
+    .map(String)
+    .filter((w) => ALLOWED_WARNINGS.includes(w));
+
   const { data: production, error: pErr } = await supabase
     .from("productions")
     .insert({
@@ -66,6 +72,7 @@ export async function createProduction(formData: FormData) {
       description,
       production_type: String(formData.get("production_type") ?? "human"),
       age_rating: ageRating,
+      content_warnings: contentWarnings,
       script_source: optional(formData.get("script_source")),
       video_source: optional(formData.get("video_source")),
       voice_source: optional(formData.get("voice_source")),
@@ -161,9 +168,9 @@ export async function submitForReview(formData: FormData) {
 
   const { error } = await supabase
     .from("series")
-    .update({ status: "moderating" })
+    .update({ status: "moderating", moderation_note: null })
     .eq("id", seriesId)
-    .eq("status", "draft");
+    .in("status", ["draft", "rejected", "needs_changes"]);
 
   if (error) {
     redirect(`/studio/productions/${productionId}?error=` + encodeURIComponent(error.message));

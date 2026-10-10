@@ -6,6 +6,14 @@ import { createClient } from "@/lib/supabase/server";
 const one = <T,>(v: T | T[] | null | undefined): T | null =>
   Array.isArray(v) ? (v[0] ?? null) : (v ?? null);
 
+const warningLabels: Record<string, string> = {
+  violence: "Şiddet",
+  fear: "Korku",
+  profanity: "Argo/Küfür",
+  sensitive_themes: "Hassas temalar",
+  substance_use: "Madde kullanımı",
+};
+
 export default async function PublicSeriesPage({
   params,
 }: {
@@ -17,7 +25,7 @@ export default async function PublicSeriesPage({
   const { data: series } = await supabase
     .from("series")
     .select(
-      "id, title, description, poster_url, primary_language, status, productions(production_type, age_rating, creator_profiles(creator_name)), seasons(season_number, episodes(id, episode_number, title, status, duration_seconds))"
+      "id, title, description, poster_url, primary_language, status, productions(production_type, age_rating, content_warnings, creator_profiles(creator_name)), seasons(season_number, episodes(id, episode_number, title, status, duration_seconds))"
     )
     .eq("id", id)
     .eq("status", "published")
@@ -63,6 +71,18 @@ export default async function PublicSeriesPage({
             )}
           </p>
           {series.description && <p className="mt-4 text-zinc-400">{series.description}</p>}
+          {(production?.content_warnings?.length ?? 0) > 0 && (
+            <p className="mt-3 flex flex-wrap gap-1">
+              {production!.content_warnings.map((w: string) => (
+                <span
+                  key={w}
+                  className="rounded-full border border-zinc-700 px-2 py-0.5 text-xs text-zinc-400"
+                >
+                  {warningLabels[w] ?? w}
+                </span>
+              ))}
+            </p>
+          )}
         </div>
       </header>
 

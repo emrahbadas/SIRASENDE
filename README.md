@@ -305,6 +305,14 @@ Creator aşağıdaki metadata alanlarını belirtebilir:
 | Voice | Human, Synthetic, Hybrid |
 | Music | Original, Licensed, AI Generated |
 
+Ayrıca her production için **zorunlu** sınıflandırma alanları:
+
+| Alan | Değerler |
+| --- | --- |
+| Tür (kategori) | Romance, Drama, Crime, Thriller, Horror, Sci-Fi, Comedy, Mystery, Fantasy, Action |
+| Yaş aralığı | 7+, 13+, 16+, 18+ |
+| İçerik uyarıları | Şiddet, Korku, Argo/Küfür, Hassas temalar, Madde kullanımı (opsiyonel çoklu seçim) |
+
 Bu metadata, ileride AI film endüstrisi ve içerik keşfi için değerli bir veri seti oluşturabilir.
 
 ### İçerik Hiyerarşisi
@@ -1040,6 +1048,8 @@ flowchart TD
 - `transcribing`
 - `translating`
 - `moderating`
+- `needs_changes`
+- `rejected`
 - `ready`
 - `published`
 - `blocked`
@@ -1103,6 +1113,47 @@ Emit VideoReady Event
 
 User Generated Content nedeniyle moderasyon core feature'dır.
 
+### Platform Sınırı
+
+Sıra Sende genel bir UGC/sosyal medya platformu değildir; **yalnızca senaryolu video-dizi ve kısa film yayın platformudur**.
+
+- Yalnızca tamamen kurgusal senaryo içerikleri ve kişilerin kendi hikâyelerinden türetilmiş diziler yayınlanır.
+- İçerik gerçek hayattan esinlenebilir; ancak gerçek kişilerin mahremiyetini ihlal eden ifşa içeriği veya belgesiz suçlama/gündem yayını olamaz.
+- Pornografik veya açık cinsel içerik, rıza dışı/gizli çekim, özel hayat görüntüsü, gerçek kişilere yönelik taciz/itibar saldırısı kabul edilmez.
+- Haber/gündem paylaşımı, propaganda ve siyasi kampanya içeriği kabul edilmez. Siyasi tema ancak açıkça senaryolu kurgu, drama, parodi veya hiciv niteliğinde olabilir.
+
+### Moderasyon Akışı (Decided)
+
+Hiçbir içerik otomatik yayınlanmaz; **son yayın yetkisi insandadır**. AI moderasyon yalnızca ön eleme yapabilir.
+
+```text
+draft
+  ↓ (creator onaya gönderir)
+moderating (pending review)
+  ↓
+┌───────────┬───────────────┬─────────┐
+published   needs_changes   rejected
+                ↓ (not ile creator'a döner, tekrar gönderilebilir)
+published
+  ↓ (rapor / telif şikâyeti)
+under_review → remain_published / suspended / removed
+```
+
+- Moderatör kararında `needs_changes` için not zorunludur; `rejected` için önerilir. Not creator'a gösterilir.
+- Admin/moderatör, inceleme sırasında içeriği **reklam, coin, VIP, bölüm kilidi ve diğer monetization engellerine takılmadan** baştan sona izler. Bu `moderation_preview` yetkisi server-side tanımlanır ve normal kullanıcıya asla taşınmaz.
+
+### Zorunlu İçerik Sınıflandırması (Decided)
+
+Creator onaya göndermeden önce şunları belirtmek zorundadır:
+
+- Tür (kategori)
+- Yaş aralığı (7+ / 13+ / 16+ / 18+)
+- İçerik dili
+- Yapım tipi
+- İçerik uyarıları (şiddet, korku, argo/küfür, hassas temalar, madde kullanımı)
+
+Yaş bilgisi platform içi metadata'dır; Google Play'de ayrıca IARC içerik derecelendirme anketi doğru doldurulmalıdır.
+
 ### Moderasyon Kategorileri
 
 İçerik aşağıdaki kategoriler açısından incelenebilmelidir:
@@ -1124,13 +1175,33 @@ AI moderation yardımcı olabilir ancak gerekli durumlarda manual review destekl
 
 ### Creator Rights Declaration
 
-Creator yayın sırasında aşağıdaki beyanları kabul etmelidir:
+Creator yayın sırasında aşağıdaki **Yayıncı Beyanı**'nı kabul etmelidir:
+
+> Yüklediğim içeriğin senaryolu/kurgu niteliğinde olduğunu; pornografik içerik, rıza dışı veya gizli görüntü, özel hayatın ifşası, gerçek kişilere yönelik zarar verici içerik veya platformun yasakladığı başka materyaller içermediğini beyan ederim. İçerikte kullanılan görüntü, video, müzik, ses, senaryo ve diğer eserler için gerekli yayın ve kullanım haklarına sahip olduğumu veya gerekli izinleri aldığımı kabul ederim. İçeriğin üçüncü kişilerin haklarını ihlal etmesi halinde doğabilecek taleplerden kendi yüklemem ölçüsünde sorumluyum. Sıra Sende'nin içeriği inceleme, yayınlamama, yayından kaldırma veya ek bilgi/kanıt isteme hakkını kabul ederim.
+
+Beyan maddeleri:
 
 - İçeriğin yayın haklarına sahibim.
 - Kullanılan görüntüler için gerekli izinlere sahibim.
 - Kullanılan müzik ve sesler için gerekli haklara sahibim.
 - Gerçek kişilerin AI kullanılarak taklit edilmesi halinde gerekli izinlere sahibim.
 - Platform Terms of Service kurallarını kabul ediyorum.
+
+### Telif Politikası
+
+Telif sorumluluğu creator'a aittir; ancak platform ayrıca şunları işletmelidir:
+
+- Telif şikâyeti alma kanalı
+- Kaldırma (takedown) süreci
+- İtiraz (appeal) süreci
+- Tekrar ihlal (repeat infringer) politikası
+
+### Rapor ve Engelleme (Google Play UGC gereksinimi)
+
+Ön moderasyon raporlama ihtiyacını ortadan kaldırmaz. Kullanıcılar:
+
+- Yayınlanmış içeriği uygulama içinden raporlayabilmeli,
+- Gerektiğinde creator/kullanıcı engelleyebilmelidir.
 
 ### Copyright Claim Durumları
 
@@ -1375,7 +1446,8 @@ MVP, ürünün temel creator-to-viewer döngüsünü doğrulamalıdır.
 
 - User management
 - Production management
-- Moderation
+- Moderation (insan onayı olmadan yayın yok; onay/düzeltme iste/red + moderasyon notu)
+- Moderasyon önizlemesi: tüm monetization engellerini bypass eden server-side `moderation_preview` yetkisi
 - Reports
 - Featured content
 - Basic revenue oversight
@@ -1651,6 +1723,7 @@ Deliverable'lar:
 - Revenue policy
 - Terms of Service
 - Privacy policy
+- Google Play IARC içerik derecelendirme anketi
 - Support process
 - Launch catalog
 

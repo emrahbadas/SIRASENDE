@@ -28,7 +28,7 @@ export async function approveSeries(formData: FormData) {
 
   const { error } = await supabase
     .from("series")
-    .update({ status: "published" })
+    .update({ status: "published", moderation_note: null })
     .eq("id", seriesId)
     .eq("status", "moderating");
 
@@ -59,10 +59,34 @@ export async function approveSeries(formData: FormData) {
 export async function rejectSeries(formData: FormData) {
   const supabase = await requireModerator();
   const seriesId = String(formData.get("series_id") ?? "");
+  const note = String(formData.get("note") ?? "").trim() || null;
 
   const { error } = await supabase
     .from("series")
-    .update({ status: "draft" })
+    .update({ status: "rejected", moderation_note: note })
+    .eq("id", seriesId)
+    .eq("status", "moderating");
+
+  if (error) {
+    redirect("/admin?error=" + encodeURIComponent(error.message));
+  }
+
+  revalidatePath("/admin");
+  redirect("/admin");
+}
+
+export async function requestChanges(formData: FormData) {
+  const supabase = await requireModerator();
+  const seriesId = String(formData.get("series_id") ?? "");
+  const note = String(formData.get("note") ?? "").trim();
+
+  if (!note) {
+    redirect("/admin?error=" + encodeURIComponent("Düzeltme isteğinde not zorunlu"));
+  }
+
+  const { error } = await supabase
+    .from("series")
+    .update({ status: "needs_changes", moderation_note: note })
     .eq("id", seriesId)
     .eq("status", "moderating");
 

@@ -8,6 +8,8 @@ const statusLabels: Record<string, { label: string; cls: string }> = {
   uploading: { label: "Yükleniyor", cls: "border-amber-700 text-amber-400" },
   processing: { label: "İşleniyor", cls: "border-amber-700 text-amber-400" },
   moderating: { label: "İncelemede", cls: "border-sky-700 text-sky-400" },
+  rejected: { label: "Reddedildi", cls: "border-rose-700 text-rose-400" },
+  needs_changes: { label: "Düzeltme bekliyor", cls: "border-amber-700 text-amber-400" },
   ready: { label: "Hazır", cls: "border-emerald-700 text-emerald-400" },
   published: { label: "Yayında", cls: "border-emerald-600 text-emerald-300" },
   blocked: { label: "Engellendi", cls: "border-rose-700 text-rose-400" },
@@ -33,7 +35,7 @@ export default async function ProductionDetailPage({
   const { data: production } = await supabase
     .from("productions")
     .select(
-      "id, title, description, production_type, series(id, title, status, primary_language, seasons(id, season_number, episodes(id, episode_number, title, status, created_at)))"
+      "id, title, description, production_type, series(id, title, status, moderation_note, primary_language, seasons(id, season_number, episodes(id, episode_number, title, status, created_at)))"
     )
     .eq("id", id)
     .is("deleted_at", null)
@@ -71,7 +73,7 @@ export default async function ProductionDetailPage({
             <p className="mt-3 text-zinc-400">{production.description}</p>
           )}
         </div>
-        {series?.status === "draft" && totalEpisodes > 0 && (
+        {series && ["draft", "rejected", "needs_changes"].includes(series.status) && totalEpisodes > 0 && (
           <form action={submitForReview}>
             <input type="hidden" name="series_id" value={series.id} />
             <input type="hidden" name="production_id" value={production.id} />
@@ -79,7 +81,7 @@ export default async function ProductionDetailPage({
               type="submit"
               className="shrink-0 rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium transition hover:bg-rose-500"
             >
-              Onaya gönder
+              {series.status === "draft" ? "Onaya gönder" : "Tekrar onaya gönder"}
             </button>
           </form>
         )}
@@ -89,6 +91,13 @@ export default async function ProductionDetailPage({
           </p>
         )}
       </header>
+
+      {series?.moderation_note && ["rejected", "needs_changes"].includes(series.status) && (
+        <div className="mb-6 rounded-xl border border-amber-800/60 bg-amber-950/30 p-4 text-sm">
+          <p className="font-semibold text-amber-300">Moderasyon notu</p>
+          <p className="mt-1 text-amber-200/90">{series.moderation_note}</p>
+        </div>
+      )}
 
       {error && (
         <p className="mb-6 rounded-lg border border-rose-900 bg-rose-950/50 p-3 text-sm text-rose-300">

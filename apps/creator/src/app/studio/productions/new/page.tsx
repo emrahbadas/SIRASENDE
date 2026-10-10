@@ -151,6 +151,29 @@ export default async function NewProductionPage({
           </div>
         </fieldset>
 
+        <fieldset className="rounded-xl border border-zinc-800 p-4">
+          <legend className="px-2 text-sm text-zinc-400">İçerik uyarıları (varsa işaretle)</legend>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {[
+              ["violence", "Şiddet"],
+              ["fear", "Korku öğeleri"],
+              ["profanity", "Argo / küfür"],
+              ["sensitive_themes", "Hassas temalar"],
+              ["substance_use", "Madde kullanımı"],
+            ].map(([value, label]) => (
+              <label key={value} className="flex items-center gap-2 text-sm text-zinc-400">
+                <input
+                  type="checkbox"
+                  name="content_warnings"
+                  value={value}
+                  className="accent-rose-600"
+                />
+                {label}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
         <div className="rounded-xl border border-amber-800/60 bg-amber-950/30 p-4">
           <h2 className="flex items-center gap-2 font-semibold text-amber-300">
             ⚠ İçerik Politikası — Lütfen Dikkatle Oku
