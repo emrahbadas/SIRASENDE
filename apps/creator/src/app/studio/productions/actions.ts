@@ -31,12 +31,12 @@ export async function createProduction(formData: FormData) {
 
   const title = String(formData.get("title") ?? "").trim();
   if (title.length < 2) {
-    redirect("/productions/new?error=" + encodeURIComponent("Başlık en az 2 karakter olmalı"));
+    redirect("/studio/productions/new?error=" + encodeURIComponent("Başlık en az 2 karakter olmalı"));
   }
 
   const rightsAccepted = formData.get("rights") === "on";
   if (!rightsAccepted) {
-    redirect("/productions/new?error=" + encodeURIComponent("Hak beyanını kabul etmelisin"));
+    redirect("/studio/productions/new?error=" + encodeURIComponent("Hak beyanını kabul etmelisin"));
   }
 
   const description = optional(formData.get("description"));
@@ -59,7 +59,7 @@ export async function createProduction(formData: FormData) {
     .single();
 
   if (pErr || !production) {
-    redirect("/productions/new?error=" + encodeURIComponent(pErr?.message ?? "Production oluşturulamadı"));
+    redirect("/studio/productions/new?error=" + encodeURIComponent(pErr?.message ?? "Production oluşturulamadı"));
   }
 
   const { data: series, error: sErr } = await supabase
@@ -74,13 +74,13 @@ export async function createProduction(formData: FormData) {
     .single();
 
   if (sErr || !series) {
-    redirect("/productions/new?error=" + encodeURIComponent(sErr?.message ?? "Series oluşturulamadı"));
+    redirect("/studio/productions/new?error=" + encodeURIComponent(sErr?.message ?? "Series oluşturulamadı"));
   }
 
   await supabase.from("seasons").insert({ series_id: series.id, season_number: 1 });
 
-  revalidatePath("/productions");
-  redirect(`/productions/${production.id}`);
+  revalidatePath("/studio/productions");
+  redirect(`/studio/productions/${production.id}`);
 }
 
 export async function createEpisode(formData: FormData) {
@@ -91,7 +91,7 @@ export async function createEpisode(formData: FormData) {
   const title = String(formData.get("title") ?? "").trim();
 
   if (title.length < 1) {
-    redirect(`/productions/${productionId}?error=` + encodeURIComponent("Bölüm başlığı gerekli"));
+    redirect(`/studio/productions/${productionId}?error=` + encodeURIComponent("Bölüm başlığı gerekli"));
   }
 
   const { data: last } = await supabase
@@ -112,11 +112,11 @@ export async function createEpisode(formData: FormData) {
   });
 
   if (error) {
-    redirect(`/productions/${productionId}?error=` + encodeURIComponent(error.message));
+    redirect(`/studio/productions/${productionId}?error=` + encodeURIComponent(error.message));
   }
 
-  revalidatePath(`/productions/${productionId}`);
-  redirect(`/productions/${productionId}`);
+  revalidatePath(`/studio/productions/${productionId}`);
+  redirect(`/studio/productions/${productionId}`);
 }
 
 export async function deleteEpisode(formData: FormData) {
@@ -128,6 +128,26 @@ export async function deleteEpisode(formData: FormData) {
   // Only draft episodes can be deleted from the UI
   await supabase.from("episodes").delete().eq("id", episodeId).eq("status", "draft");
 
-  revalidatePath(`/productions/${productionId}`);
-  redirect(`/productions/${productionId}`);
+  revalidatePath(`/studio/productions/${productionId}`);
+  redirect(`/studio/productions/${productionId}`);
+}
+
+export async function submitForReview(formData: FormData) {
+  const { supabase } = await getCreatorId();
+
+  const seriesId = String(formData.get("series_id") ?? "");
+  const productionId = String(formData.get("production_id") ?? "");
+
+  const { error } = await supabase
+    .from("series")
+    .update({ status: "moderating" })
+    .eq("id", seriesId)
+    .eq("status", "draft");
+
+  if (error) {
+    redirect(`/studio/productions/${productionId}?error=` + encodeURIComponent(error.message));
+  }
+
+  revalidatePath(`/studio/productions/${productionId}`);
+  redirect(`/studio/productions/${productionId}`);
 }

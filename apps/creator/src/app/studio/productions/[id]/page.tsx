@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { createEpisode, deleteEpisode } from "../actions";
+import { createEpisode, deleteEpisode, submitForReview } from "../actions";
 
 const statusLabels: Record<string, { label: string; cls: string }> = {
   draft: { label: "Taslak", cls: "border-zinc-700 text-zinc-400" },
   uploading: { label: "Yükleniyor", cls: "border-amber-700 text-amber-400" },
   processing: { label: "İşleniyor", cls: "border-amber-700 text-amber-400" },
+  moderating: { label: "İncelemede", cls: "border-sky-700 text-sky-400" },
   ready: { label: "Hazır", cls: "border-emerald-700 text-emerald-400" },
   published: { label: "Yayında", cls: "border-emerald-600 text-emerald-300" },
   blocked: { label: "Engellendi", cls: "border-rose-700 text-rose-400" },
@@ -42,30 +43,50 @@ export default async function ProductionDetailPage({
 
   const series = production.series?.[0];
   const seasons = (series?.seasons ?? []).sort((a, b) => a.season_number - b.season_number);
+  const totalEpisodes = seasons.reduce((sum, s) => sum + s.episodes.length, 0);
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-12">
-      <Link href="/productions" className="text-sm text-zinc-500 hover:text-zinc-300">
+      <Link href="/studio/productions" className="text-sm text-zinc-500 hover:text-zinc-300">
         ← My Productions
       </Link>
 
-      <header className="mt-2 mb-8">
-        <h1 className="text-2xl font-bold">{production.title}</h1>
-        <p className="mt-1 text-sm text-zinc-500">
-          {production.production_type}
-          {series && ` · ${series.primary_language.toUpperCase()}`}
-          {series && (
-            <span
-              className={`ml-2 rounded-full border px-2 py-0.5 text-xs ${
-                statusLabels[series.status]?.cls ?? "border-zinc-700 text-zinc-400"
-              }`}
-            >
-              {statusLabels[series.status]?.label ?? series.status}
-            </span>
+      <header className="mt-2 mb-8 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">{production.title}</h1>
+          <p className="mt-1 flex items-center gap-2 text-sm text-zinc-500">
+            <span>{production.production_type}</span>
+            {series && <span>· {series.primary_language.toUpperCase()}</span>}
+            {series && (
+              <span
+                className={`rounded-full border px-2 py-0.5 text-xs ${
+                  statusLabels[series.status]?.cls ?? "border-zinc-700 text-zinc-400"
+                }`}
+              >
+                {statusLabels[series.status]?.label ?? series.status}
+              </span>
+            )}
+          </p>
+          {production.description && (
+            <p className="mt-3 text-zinc-400">{production.description}</p>
           )}
-        </p>
-        {production.description && (
-          <p className="mt-3 text-zinc-400">{production.description}</p>
+        </div>
+        {series?.status === "draft" && totalEpisodes > 0 && (
+          <form action={submitForReview}>
+            <input type="hidden" name="series_id" value={series.id} />
+            <input type="hidden" name="production_id" value={production.id} />
+            <button
+              type="submit"
+              className="shrink-0 rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium transition hover:bg-rose-500"
+            >
+              Onaya gönder
+            </button>
+          </form>
+        )}
+        {series?.status === "moderating" && (
+          <p className="shrink-0 rounded-lg border border-sky-800 bg-sky-950/50 px-4 py-2 text-sm text-sky-300">
+            Platform incelemesinde
+          </p>
         )}
       </header>
 

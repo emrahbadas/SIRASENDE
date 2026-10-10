@@ -34,13 +34,13 @@ export default async function ProductionsPage() {
     <main className="mx-auto max-w-5xl px-6 py-12">
       <header className="mb-8 flex items-center justify-between">
         <div>
-          <Link href="/" className="text-sm text-zinc-500 hover:text-zinc-300">
+          <Link href="/studio" className="text-sm text-zinc-500 hover:text-zinc-300">
             ← Dashboard
           </Link>
           <h1 className="mt-1 text-2xl font-bold">My Productions</h1>
         </div>
         <Link
-          href="/productions/new"
+          href="/studio/productions/new"
           className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium transition hover:bg-rose-500"
         >
           + Yeni Production
@@ -61,7 +61,7 @@ export default async function ProductionsPage() {
             return (
               <li key={p.id}>
                 <Link
-                  href={`/productions/${p.id}`}
+                  href={`/studio/productions/${p.id}`}
                   className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 transition hover:border-rose-500/50"
                 >
                   <div>

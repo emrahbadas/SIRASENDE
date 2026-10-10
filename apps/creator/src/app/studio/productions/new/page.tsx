@@ -13,7 +13,7 @@ export default async function NewProductionPage({
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
-      <Link href="/productions" className="text-sm text-zinc-500 hover:text-zinc-300">
+      <Link href="/studio/productions" className="text-sm text-zinc-500 hover:text-zinc-300">
         ← My Productions
       </Link>
       <h1 className="mt-1 text-2xl font-bold">Yeni Production</h1>
