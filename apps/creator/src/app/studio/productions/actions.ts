@@ -34,9 +34,25 @@ export async function createProduction(formData: FormData) {
     redirect("/studio/productions/new?error=" + encodeURIComponent("Başlık en az 2 karakter olmalı"));
   }
 
-  const rightsAccepted = formData.get("rights") === "on";
-  if (!rightsAccepted) {
-    redirect("/studio/productions/new?error=" + encodeURIComponent("Hak beyanını kabul etmelisin"));
+  const categoryId = String(formData.get("category_id") ?? "");
+  if (!categoryId) {
+    redirect("/studio/productions/new?error=" + encodeURIComponent("Tür (kategori) seçimi zorunlu"));
+  }
+
+  const ageRating = String(formData.get("age_rating") ?? "");
+  if (!["7+", "13+", "16+", "18+"].includes(ageRating)) {
+    redirect("/studio/productions/new?error=" + encodeURIComponent("Yaş aralığı seçimi zorunlu"));
+  }
+
+  const policyAccepted =
+    formData.get("policy_content") === "on" &&
+    formData.get("policy_fiction") === "on" &&
+    formData.get("policy_copyright") === "on";
+  if (!policyAccepted) {
+    redirect(
+      "/studio/productions/new?error=" +
+        encodeURIComponent("Yayın için tüm içerik politikası beyanlarını kabul etmelisin")
+    );
   }
 
   const description = optional(formData.get("description"));
@@ -49,6 +65,7 @@ export async function createProduction(formData: FormData) {
       title,
       description,
       production_type: String(formData.get("production_type") ?? "human"),
+      age_rating: ageRating,
       script_source: optional(formData.get("script_source")),
       video_source: optional(formData.get("video_source")),
       voice_source: optional(formData.get("voice_source")),
@@ -61,6 +78,10 @@ export async function createProduction(formData: FormData) {
   if (pErr || !production) {
     redirect("/studio/productions/new?error=" + encodeURIComponent(pErr?.message ?? "Production oluşturulamadı"));
   }
+
+  await supabase
+    .from("production_categories")
+    .insert({ production_id: production.id, category_id: categoryId });
 
   const { data: series, error: sErr } = await supabase
     .from("series")

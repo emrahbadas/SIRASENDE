@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
 import { createProduction } from "../actions";
 
 const selectClass =
@@ -10,6 +11,12 @@ export default async function NewProductionPage({
   searchParams: Promise<{ error?: string }>;
 }) {
   const { error } = await searchParams;
+
+  const supabase = await createClient();
+  const { data: categories } = await supabase
+    .from("categories")
+    .select("id, name_tr")
+    .order("name_tr");
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
@@ -61,6 +68,35 @@ export default async function NewProductionPage({
             <select id="primary_language" name="primary_language" className={selectClass}>
               <option value="tr">Türkçe</option>
               <option value="en">English</option>
+            </select>
+          </div>
+          <div>
+            <label htmlFor="category_id" className="block text-sm text-zinc-400">
+              Tür (kategori) *
+            </label>
+            <select id="category_id" name="category_id" required defaultValue="" className={selectClass}>
+              <option value="" disabled>
+                Seç — zorunlu
+              </option>
+              {(categories ?? []).map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name_tr}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="age_rating" className="block text-sm text-zinc-400">
+              Yaş aralığı *
+            </label>
+            <select id="age_rating" name="age_rating" required defaultValue="" className={selectClass}>
+              <option value="" disabled>
+                Seç — zorunlu
+              </option>
+              <option value="7+">7+</option>
+              <option value="13+">13+</option>
+              <option value="16+">16+</option>
+              <option value="18+">18+</option>
             </select>
           </div>
         </div>
@@ -115,13 +151,61 @@ export default async function NewProductionPage({
           </div>
         </fieldset>
 
-        <label className="flex items-start gap-3 rounded-xl border border-zinc-800 p-4 text-sm text-zinc-400">
-          <input type="checkbox" name="rights" required className="mt-0.5 accent-rose-600" />
-          <span>
-            İçeriğin yayın haklarına sahibim; kullanılan görüntü, ses ve müzikler için gerekli
-            izinlere sahibim. Platform kurallarını kabul ediyorum.
-          </span>
-        </label>
+        <div className="rounded-xl border border-amber-800/60 bg-amber-950/30 p-4">
+          <h2 className="flex items-center gap-2 font-semibold text-amber-300">
+            ⚠ İçerik Politikası — Lütfen Dikkatle Oku
+          </h2>
+          <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-amber-200/90">
+            <li>
+              Sıra Sende&apos;de <strong>pornografik veya müstehcen içerik kesinlikle yasaktır</strong>.
+            </li>
+            <li>
+              Gerçek kişilerin <strong>gizli çekimleri, ifşa görüntüleri veya rızası olmayan
+              görüntüleri</strong> paylaşılamaz.
+            </li>
+            <li>
+              Hikâye ve senaryo kurgusu dışında <strong>siyasi propaganda ve gündem içeriği</strong>{" "}
+              yayınlanamaz.
+            </li>
+            <li>
+              Platform yalnızca <strong>tamamen kurgusal senaryo içeriklerine</strong> ve kişilerin{" "}
+              <strong>kendi hikâyelerinden türetilmiş dizilere</strong> yer verir.
+            </li>
+            <li>
+              Telif hakkı içeren materyallerin kullanımından doğacak tüm hukuki sorumluluk{" "}
+              <strong>creator&apos;a aittir</strong>.
+            </li>
+          </ul>
+          <p className="mt-3 text-xs text-amber-200/70">
+            Bu kurallara aykırı içerikler moderasyon sürecinde reddedilir; yayındaki ihlaller
+            kaldırılır ve hesap yaptırımı uygulanabilir.
+          </p>
+        </div>
+
+        <div className="space-y-3 rounded-xl border border-zinc-800 p-4 text-sm text-zinc-400">
+          <label className="flex items-start gap-3">
+            <input type="checkbox" name="policy_content" required className="mt-0.5 accent-rose-600" />
+            <span>
+              İçeriğimde pornografik/müstehcen görüntü, gerçek kişilerin gizli veya ifşa
+              görüntüleri ve senaryo dışı siyasi içerik <strong>bulunmadığını</strong> beyan
+              ediyorum.
+            </span>
+          </label>
+          <label className="flex items-start gap-3">
+            <input type="checkbox" name="policy_fiction" required className="mt-0.5 accent-rose-600" />
+            <span>
+              Bu yapımın <strong>tamamen kurgusal bir senaryoya</strong> veya{" "}
+              <strong>kendi hikâyemden türetilmiş</strong> bir anlatıya dayandığını onaylıyorum.
+            </span>
+          </label>
+          <label className="flex items-start gap-3">
+            <input type="checkbox" name="policy_copyright" required className="mt-0.5 accent-rose-600" />
+            <span>
+              Kullanılan görüntü, ses ve müziklerin yayın haklarına sahibim; telif ihlallerinden
+              doğacak tüm sorumluluğun <strong>bana ait olduğunu</strong> kabul ediyorum.
+            </span>
+          </label>
+        </div>
 
         <button
           type="submit"

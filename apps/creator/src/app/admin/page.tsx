@@ -31,7 +31,7 @@ export default async function AdminPage({
   const { data: pending } = await supabase
     .from("series")
     .select(
-      "id, title, description, primary_language, updated_at, productions(title, production_type, creator_profiles(creator_name)), seasons(episodes(id))"
+      "id, title, description, primary_language, updated_at, productions(title, production_type, age_rating, creator_profiles(creator_name), production_categories(categories(name_tr))), seasons(episodes(id))"
     )
     .eq("status", "moderating")
     .order("updated_at", { ascending: true });
@@ -44,7 +44,9 @@ export default async function AdminPage({
         </Link>
         <h1 className="mt-1 text-2xl font-bold">Moderasyon Kuyruğu</h1>
         <p className="mt-1 text-sm text-zinc-500">
-          Onaylanan diziler vitrine çıkar; reddedilenler taslağa döner.
+          Onaylanan diziler vitrine çıkar; reddedilenler taslağa döner. Moderatörler tüm
+          bölümleri reklam ve kilit engeline takılmadan izler (video önizleme Phase 3&apos;te
+          aktifleşecek).
         </p>
       </header>
 
@@ -67,6 +69,9 @@ export default async function AdminPage({
             );
             const production = one(s.productions);
             const creatorName = one(production?.creator_profiles)?.creator_name;
+            const categoryName = one(
+              one(production?.production_categories)?.categories
+            )?.name_tr;
             return (
               <li
                 key={s.id}
@@ -78,6 +83,12 @@ export default async function AdminPage({
                     <p className="mt-1 text-sm text-zinc-500">
                       {creatorName} · {production?.production_type} ·{" "}
                       {s.primary_language.toUpperCase()} · {episodeCount} bölüm
+                      {categoryName && <> · {categoryName}</>}
+                      {production?.age_rating && (
+                        <span className="ml-2 rounded border border-amber-700 px-1.5 py-0.5 text-xs text-amber-400">
+                          {production.age_rating}
+                        </span>
+                      )}
                     </p>
                     {s.description && (
                       <p className="mt-2 text-sm text-zinc-400">{s.description}</p>

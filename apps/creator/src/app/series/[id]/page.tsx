@@ -17,7 +17,7 @@ export default async function PublicSeriesPage({
   const { data: series } = await supabase
     .from("series")
     .select(
-      "id, title, description, poster_url, primary_language, status, productions(production_type, creator_profiles(creator_name)), seasons(season_number, episodes(id, episode_number, title, status, duration_seconds))"
+      "id, title, description, poster_url, primary_language, status, productions(production_type, age_rating, creator_profiles(creator_name)), seasons(season_number, episodes(id, episode_number, title, status, duration_seconds))"
     )
     .eq("id", id)
     .eq("status", "published")
@@ -52,8 +52,15 @@ export default async function PublicSeriesPage({
         <div>
           <h1 className="text-3xl font-bold">{series.title}</h1>
           {creatorName && <p className="mt-1 text-sm text-rose-400">{creatorName}</p>}
-          <p className="mt-1 text-xs uppercase text-zinc-600">
-            {series.primary_language} · {production?.production_type}
+          <p className="mt-1 flex items-center gap-2 text-xs uppercase text-zinc-600">
+            <span>
+              {series.primary_language} · {production?.production_type}
+            </span>
+            {production?.age_rating && (
+              <span className="rounded border border-amber-700/60 px-1.5 py-0.5 text-amber-400">
+                {production.age_rating}
+              </span>
+            )}
           </p>
           {series.description && <p className="mt-4 text-zinc-400">{series.description}</p>}
         </div>

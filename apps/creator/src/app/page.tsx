@@ -24,7 +24,7 @@ export default async function HomePage({
     supabase
       .from("series")
       .select(
-        "id, title, description, poster_url, primary_language, productions(production_type, production_categories(categories(slug)))"
+        "id, title, description, poster_url, primary_language, productions(production_type, age_rating, production_categories(categories(slug)))"
       )
       .eq("status", "published")
       .is("deleted_at", null)
@@ -133,8 +133,15 @@ export default async function HomePage({
                 <div className="p-4">
                   <h2 className="font-semibold">{s.title}</h2>
                   <p className="mt-1 line-clamp-2 text-sm text-zinc-500">{s.description}</p>
-                  <p className="mt-2 text-xs uppercase text-zinc-600">
-                    {s.primary_language} · {one(s.productions)?.production_type}
+                  <p className="mt-2 flex items-center gap-2 text-xs uppercase text-zinc-600">
+                    <span>
+                      {s.primary_language} · {one(s.productions)?.production_type}
+                    </span>
+                    {one(s.productions)?.age_rating && (
+                      <span className="rounded border border-amber-700/60 px-1.5 py-0.5 text-amber-400">
+                        {one(s.productions)?.age_rating}
+                      </span>
+                    )}
                   </p>
                 </div>
               </Link>
