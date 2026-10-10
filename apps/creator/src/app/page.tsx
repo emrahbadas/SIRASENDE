@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { logout } from "@/app/auth/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,14 @@ export default async function HomePage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  const { data: creatorProfile } = user
+    ? await supabase
+        .from("creator_profiles")
+        .select("id")
+        .eq("profile_id", user.id)
+        .maybeSingle()
+    : { data: null };
 
   const [{ data: categories }, { data: seriesList }] = await Promise.all([
     supabase.from("categories").select("slug, name_tr").order("name_tr"),
@@ -47,12 +56,31 @@ export default async function HomePage({
           </Link>
           <nav className="flex items-center gap-3 text-sm">
             {user ? (
-              <Link
-                href="/studio"
-                className="rounded-lg bg-rose-600 px-4 py-2 font-medium transition hover:bg-rose-500"
-              >
-                Creator Studio
-              </Link>
+              <>
+                {creatorProfile ? (
+                  <Link
+                    href="/studio"
+                    className="rounded-lg bg-rose-600 px-4 py-2 font-medium transition hover:bg-rose-500"
+                  >
+                    Creator Studio
+                  </Link>
+                ) : (
+                  <Link
+                    href="/onboarding"
+                    className="rounded-lg border border-rose-600/60 px-4 py-2 font-medium text-rose-400 transition hover:bg-rose-600/10"
+                  >
+                    Creator Ol
+                  </Link>
+                )}
+                <form action={logout}>
+                  <button
+                    type="submit"
+                    className="text-zinc-400 transition hover:text-zinc-200"
+                  >
+                    Çıkış
+                  </button>
+                </form>
+              </>
             ) : (
               <>
                 <Link href="/login" className="text-zinc-400 transition hover:text-zinc-200">

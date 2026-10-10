@@ -12,7 +12,7 @@ export default async function LoginPage({
     <main className="flex min-h-screen items-center justify-center px-6">
       <div className="w-full max-w-sm">
         <p className="text-sm font-medium text-rose-500">Sıra Sende</p>
-        <h1 className="mt-1 text-2xl font-bold">Creator Studio&apos;ya giriş</h1>
+        <h1 className="mt-1 text-2xl font-bold">Giriş yap</h1>
 
         {error && (
           <p className="mt-4 rounded-lg border border-rose-900 bg-rose-950/50 p-3 text-sm text-rose-300">

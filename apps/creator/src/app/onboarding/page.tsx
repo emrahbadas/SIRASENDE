@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { becomeCreator } from "@/app/auth/actions";
 
 export default async function OnboardingPage({
@@ -14,6 +15,13 @@ export default async function OnboardingPage({
         <h1 className="mt-1 text-2xl font-bold">Creator profilini oluştur</h1>
         <p className="mt-2 text-sm text-zinc-400">
           İzleyicilerin seni bu isimle görecek.
+        </p>
+        <p className="mt-2 rounded-lg border border-zinc-800 bg-zinc-900/50 p-3 text-xs text-zinc-500">
+          Bu adım tamamen opsiyonel — yalnızca kendi dizini yayınlamak istiyorsan gerekli.
+          İzlemek için creator olmana gerek yok.{" "}
+          <Link href="/" className="text-rose-400 hover:underline">
+            Vitrine dön ve izlemeye başla →
+          </Link>
         </p>
 
         {error && (

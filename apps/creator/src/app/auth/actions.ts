@@ -17,7 +17,7 @@ export async function login(formData: FormData) {
   }
 
   revalidatePath("/", "layout");
-  redirect("/studio");
+  redirect("/");
 }
 
 export async function signup(formData: FormData) {
