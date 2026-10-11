@@ -30,6 +30,7 @@ export default function HomeScreen() {
   const [resume, setResume] = useState<LocalProgress[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [category, setCategory] = useState<string | null>(null);
 
   const signedIn = !!session;
   const load = useCallback(async () => {
@@ -53,6 +54,12 @@ export default function HomeScreen() {
 
   const byId = new Map((series ?? []).map((s) => [s.id, s]));
   const resumable = resume.filter((p) => byId.has(p.seriesId));
+
+  // Only categories that currently have a published series
+  const categories = [
+    ...new Map((series ?? []).flatMap((s) => s.categories).map((c) => [c.slug, c])).values(),
+  ].sort((a, b) => a.name_tr.localeCompare(b.name_tr, "tr"));
+  const shown = (series ?? []).filter((s) => !category || s.categories.some((c) => c.slug === category));
 
   return (
     <SafeAreaView style={styles.screen} edges={["top"]}>
@@ -111,15 +118,38 @@ export default function HomeScreen() {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Keşfet</Text>
+          {categories.length > 0 && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.chips}
+              style={{ marginBottom: 14 }}
+            >
+              {[{ slug: null as string | null, name_tr: "Tümü" }, ...categories].map((c) => {
+                const active = category === c.slug;
+                return (
+                  <Pressable
+                    key={c.slug ?? "all"}
+                    onPress={() => setCategory(c.slug)}
+                    style={[styles.chip, active && styles.chipActive]}
+                  >
+                    <Text style={[styles.chipText, active && styles.chipTextActive]}>{c.name_tr}</Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          )}
           {error ? (
             <Text style={styles.error}>{error}</Text>
           ) : !series ? (
             <ActivityIndicator color={colors.muted} style={{ marginTop: 32 }} />
-          ) : series.length === 0 ? (
-            <Text style={styles.empty}>Henüz yayında dizi yok.</Text>
+          ) : shown.length === 0 ? (
+            <Text style={styles.empty}>
+              {series.length === 0 ? "Henüz yayında dizi yok." : "Bu kategoride henüz dizi yok."}
+            </Text>
           ) : (
             <View style={styles.grid}>
-              {series.map((s) => (
+              {shown.map((s) => (
                 <SeriesCard key={s.id} series={s} width={cardWidth} />
               ))}
             </View>
@@ -145,6 +175,11 @@ const styles = StyleSheet.create({
   section: { marginTop: 12 },
   sectionTitle: { color: colors.text, fontSize: 17, fontWeight: "700", marginBottom: 12 },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: GAP },
+  chips: { gap: 8 },
+  chip: { borderColor: colors.border, borderWidth: 1, borderRadius: 16, paddingHorizontal: 14, paddingVertical: 6 },
+  chipActive: { borderColor: colors.accent, backgroundColor: "rgba(225,29,72,0.12)" },
+  chipText: { color: colors.muted, fontSize: 13 },
+  chipTextActive: { color: "#fda4af", fontWeight: "600" },
   resumeCard: { width: 112 },
   resumePoster: {
     width: 112,

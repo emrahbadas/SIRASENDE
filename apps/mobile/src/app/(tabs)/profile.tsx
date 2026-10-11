@@ -1,10 +1,12 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { router, useFocusEffect } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import { useCallback, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { api, coinBalance, type Library } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import { colors } from "@/lib/config";
+import { colors, config } from "@/lib/config";
 import { setFollowing } from "@/lib/social";
 import { supabase } from "@/lib/supabase";
 
@@ -13,13 +15,34 @@ export default function ProfileScreen() {
   const signedIn = !!session;
   const [balance, setBalance] = useState<number | null>(null);
   const [following, setFollowingList] = useState<Library["following"]>([]);
+  const [roles, setRoles] = useState<{ creator: boolean; staff: boolean; pending: number }>({
+    creator: false,
+    staff: false,
+    pending: 0,
+  });
 
+  const userId = session?.user.id;
   const load = useCallback(async () => {
-    if (!signedIn) return;
-    const [coins, library] = await Promise.all([coinBalance(), api.library().catch(() => null)]);
+    if (!userId) return;
+    const [coins, library, { data: myRoles }] = await Promise.all([
+      coinBalance(),
+      api.library().catch(() => null),
+      supabase.from("user_roles").select("role").eq("profile_id", userId),
+    ]);
     setBalance(coins);
     if (library) setFollowingList(library.following);
-  }, [signedIn]);
+
+    const names = (myRoles ?? []).map((r) => r.role as string);
+    const staff = names.includes("admin") || names.includes("moderator");
+    // Moderators can read series under review (RLS)
+    const { count } = staff
+      ? await supabase.from("series").select("id", { count: "exact", head: true }).eq("status", "moderating")
+      : { count: 0 };
+    setRoles({ creator: names.includes("creator"), staff, pending: count ?? 0 });
+  }, [userId]);
+
+  // Studio and moderation live on the web; open them in the in-app browser
+  const openWeb = (path: string) => WebBrowser.openBrowserAsync(`${config.apiUrl}${path}`);
 
   useFocusEffect(
     useCallback(() => {
@@ -62,6 +85,22 @@ export default function ProfileScreen() {
           <Text style={styles.muted}>Coin satın alma ve ödüller yakında.</Text>
         </View>
 
+        <View style={styles.links}>
+          {roles.creator ? (
+            <WebLink icon="videocam" label="Creator Studio’yu aç" onPress={() => openWeb("/studio")} />
+          ) : (
+            <WebLink icon="sparkles" label="Creator ol — kendi dizini yayınla" onPress={() => openWeb("/onboarding")} />
+          )}
+          {roles.staff && (
+            <WebLink
+              icon="shield-checkmark"
+              label={roles.pending > 0 ? `Admin paneli · ${roles.pending} bekleyen` : "Admin paneli"}
+              onPress={() => openWeb("/admin")}
+            />
+          )}
+          <Text style={styles.hint}>Web’de açılır; ilk seferde orada da giriş yapman gerekir.</Text>
+        </View>
+
         <Text style={styles.section}>Takip ettiklerim</Text>
         {following.length === 0 ? (
           <Text style={styles.muted}>Henüz kimseyi takip etmiyorsun. Dizi sayfasında creator’ı takip edebilirsin.</Text>
@@ -84,7 +123,39 @@ export default function ProfileScreen() {
   );
 }
 
+function WebLink({
+  icon,
+  label,
+  onPress,
+}: {
+  icon: React.ComponentProps<typeof Ionicons>["name"];
+  label: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable style={styles.link} onPress={onPress}>
+      <Ionicons name={icon} size={20} color={colors.text} />
+      <Text style={styles.linkText}>{label}</Text>
+      <Ionicons name="open-outline" size={16} color={colors.faint} />
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
+  links: { marginTop: 20, gap: 8 },
+  link: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+  },
+  linkText: { color: colors.text, fontSize: 15, flex: 1 },
+  hint: { color: colors.faint, fontSize: 11, marginTop: 2 },
   screen: { flex: 1, backgroundColor: colors.background },
   centered: { alignItems: "center", justifyContent: "center", padding: 32, gap: 8 },
   content: { padding: 16, paddingBottom: 40, alignSelf: "center", width: "100%", maxWidth: 720 },
