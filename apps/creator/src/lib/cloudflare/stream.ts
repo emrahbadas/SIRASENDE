@@ -195,6 +195,11 @@ export function previewUrl(uid: string, startSeconds: number, durationSeconds = 
 
 // The account-specific playback domain. The legacy videodelivery.net domain
 // is unreachable from some Turkish networks, so it is never used.
+/** HLS manifest for native players (iOS requires the .m3u8 suffix). */
+export function hlsUrl(token: string) {
+  return `${playbackHost()}/${token}/manifest/video.m3u8`;
+}
+
 export function iframeUrl(token: string) {
   return `${playbackHost()}/${token}/iframe`;
 }

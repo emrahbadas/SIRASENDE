@@ -1,8 +1,9 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-// /watch decides access per episode (free window); webhooks authenticate by signature
-const PUBLIC_PREFIXES = ["/series", "/watch", "/login", "/signup", "/auth", "/api/webhooks"];
+// /watch decides access per episode (free window); webhooks authenticate by signature;
+// /api/v1 (mobile app) authenticates with a bearer token, not cookies
+const PUBLIC_PREFIXES = ["/series", "/watch", "/login", "/signup", "/auth", "/api/webhooks", "/api/v1"];
 
 function isPublicPath(path: string) {
   if (path === "/") return true;
