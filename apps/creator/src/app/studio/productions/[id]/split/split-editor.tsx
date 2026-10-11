@@ -12,6 +12,7 @@ import {
   type SplitJobState,
 } from "../../split-actions";
 import { MIN_SEGMENT_SECONDS, segmentsFromCuts, suggestCuts, validateCuts } from "@/lib/video/cuts";
+import { isLandscape, LANDSCAPE_HINT, probeVideo } from "@/lib/video/probe";
 
 // Decoding audio needs the whole file in memory; above this we space cuts evenly
 const MAX_ANALYSIS_BYTES = 1.5 * 1024 * 1024 * 1024;
@@ -24,23 +25,6 @@ const fmt = (s: number) => {
   const m = Math.floor(s / 60);
   return `${m}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 };
-
-function readDuration(file: File): Promise<number> {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const video = document.createElement("video");
-    video.preload = "metadata";
-    video.onloadedmetadata = () => {
-      URL.revokeObjectURL(url);
-      resolve(video.duration);
-    };
-    video.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("Video dosyası okunamadı"));
-    };
-    video.src = url;
-  });
-}
 
 /** RMS energy per ENERGY_STEP seconds, decoded at a low sample rate to save memory. */
 async function audioEnergy(file: File) {
@@ -89,6 +73,7 @@ export function SplitEditor({
   const [cuts, setCuts] = useState<number[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [landscape, setLandscape] = useState(false);
 
   // Server-measured duration wins once the source is processed
   const total = job?.durationSeconds ?? (duration ? Math.floor(duration) : null);
@@ -124,7 +109,9 @@ export function SplitEditor({
 
     let seconds: number;
     try {
-      seconds = await readDuration(file);
+      const probe = await probeVideo(file);
+      seconds = probe.duration;
+      setLandscape(isLandscape(probe));
     } catch (e) {
       return setError((e as Error).message);
     }
@@ -254,6 +241,12 @@ export function SplitEditor({
 
       {error && (
         <p className="rounded-lg border border-rose-900 bg-rose-950/50 p-3 text-sm text-rose-300">{error}</p>
+      )}
+
+      {landscape && (
+        <p className="rounded-lg border border-amber-800/60 bg-amber-950/30 p-3 text-sm text-amber-300">
+          ⚠ {LANDSCAPE_HINT}
+        </p>
       )}
 
       {fileUrl && total && (

@@ -1,6 +1,6 @@
 import { useEvent, useEventListener } from "expo";
 import { useVideoPlayer, VideoView, type VideoPlayer } from "expo-video";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { ApiError, api } from "@/lib/api";
 import { colors } from "@/lib/config";
@@ -35,8 +35,11 @@ export function EpisodePlayer({
     // muted there so playback really starts and the play state stays accurate
     if (Platform.OS === "web") p.muted = true;
   });
+  const viewRef = useRef<VideoView>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // width / height of the source; decides between filling and letterboxing
+  const [aspect, setAspect] = useState<number | null>(null);
   const { isPlaying } = useEvent(player, "playingChange", { isPlaying: player.playing });
   const { muted } = useEvent(player, "mutedChange", { muted: player.muted });
 
@@ -48,6 +51,7 @@ export function EpisodePlayer({
       .playback(episodeId)
       .then(async (pb) => {
         if (cancelled) return;
+        if (pb.width && pb.height) setAspect(pb.width / pb.height);
         await player.replaceAsync({ uri: pb.hlsUrl, contentType: "hls" });
         const duration = pb.durationSeconds ?? 0;
         if (pb.resumeAt > 0 && (!duration || pb.resumeAt < duration - RESUME_END_MARGIN_SECONDS)) {
@@ -69,6 +73,12 @@ export function EpisodePlayer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [episodeId, player]);
 
+  // Fallback when the API had no dimensions: read them from the loaded stream
+  useEventListener(player, "sourceLoad", ({ availableVideoTracks }) => {
+    const size = availableVideoTracks.find((t) => t.size.width > 0 && t.size.height > 0)?.size;
+    if (size) setAspect((current) => current ?? size.width / size.height);
+  });
+
   useEventListener(player, "timeUpdate", ({ currentTime }) => {
     if (currentTime > 0) onProgress(currentTime, false);
   });
@@ -77,14 +87,31 @@ export function EpisodePlayer({
     onEnded();
   });
 
+  // Vertical video fills the screen; horizontal video is shown whole
+  // (letterboxed) instead of losing two thirds of the frame to cropping,
+  // with a fullscreen button to watch it sideways.
+  const landscape = aspect !== null && aspect > 1;
+
   return (
     <Pressable style={StyleSheet.absoluteFill} onPress={() => (player.playing ? player.pause() : player.play())}>
-      <VideoView player={player} style={styles.video} contentFit="cover" nativeControls={false} />
+      <VideoView
+        ref={viewRef}
+        player={player}
+        style={styles.video}
+        contentFit={landscape ? "contain" : "cover"}
+        nativeControls={false}
+        fullscreenOptions={{ enable: true }}
+      />
       {loading && <ActivityIndicator size="large" color={colors.text} style={styles.center} />}
       {error && <Text style={[styles.center, styles.error]}>{error}</Text>}
       {muted && (
         <Pressable style={styles.unmute} onPress={() => unmute(player)} hitSlop={8}>
           <Text style={styles.unmuteText}>🔇 Sesi aç</Text>
+        </Pressable>
+      )}
+      {landscape && !loading && !error && (
+        <Pressable style={styles.fullscreen} onPress={() => viewRef.current?.enterFullscreen()} hitSlop={8}>
+          <Text style={styles.fullscreenText}>⤢ Tam ekran</Text>
         </Pressable>
       )}
       {!loading && !error && !isPlaying && (
@@ -105,4 +132,6 @@ const styles = StyleSheet.create({
   pausedIcon: { color: "#fff", fontSize: 30, marginLeft: 4 },
   unmute: { position: "absolute", right: 16, top: 64, backgroundColor: "rgba(0,0,0,0.55)", borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6 },
   unmuteText: { color: "#fff", fontSize: 13, fontWeight: "600" },
+  fullscreen: { position: "absolute", right: 16, bottom: 120, backgroundColor: "rgba(0,0,0,0.55)", borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6 },
+  fullscreenText: { color: "#fff", fontSize: 13, fontWeight: "600" },
 });

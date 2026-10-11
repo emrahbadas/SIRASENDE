@@ -36,7 +36,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   // Assets are not readable by viewers; access was checked above
   const { data: asset } = await createAdminClient()
     .from("video_assets")
-    .select("provider_asset_id, duration_seconds")
+    .select("provider_asset_id, duration_seconds, width, height")
     .eq("episode_id", id)
     .eq("status", "ready")
     .not("provider_asset_id", "is", null)
@@ -58,6 +58,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   return json({
     hlsUrl: hlsUrl(token),
     durationSeconds: asset.duration_seconds,
+    width: asset.width,
+    height: asset.height,
     resumeAt,
     expiresAt: new Date(Date.now() + TOKEN_TTL_SECONDS * 1000).toISOString(),
   });

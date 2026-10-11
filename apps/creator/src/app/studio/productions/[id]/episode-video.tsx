@@ -8,6 +8,7 @@ import {
   removeEpisodeVideo,
   startEpisodeUpload,
 } from "../video-actions";
+import { isLandscape, LANDSCAPE_HINT, probeVideo } from "@/lib/video/probe";
 
 export interface EpisodeAsset {
   id: string;
@@ -18,23 +19,6 @@ export interface EpisodeAsset {
 
 const MAX_BYTES = 200 * 1024 * 1024;
 const POLL_MS = 5000;
-
-function readDuration(file: File): Promise<number> {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const video = document.createElement("video");
-    video.preload = "metadata";
-    video.onloadedmetadata = () => {
-      URL.revokeObjectURL(url);
-      resolve(video.duration);
-    };
-    video.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("Video dosyası okunamadı"));
-    };
-    video.src = url;
-  });
-}
 
 function uploadFile(url: string, file: File, onProgress: (pct: number) => void) {
   return new Promise<void>((resolve, reject) => {
@@ -75,6 +59,7 @@ export function EpisodeVideo({
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [tooLong, setTooLong] = useState(false);
+  const [landscape, setLandscape] = useState(false);
 
   const status = asset?.status;
   const processing = status === "processing" || status === "pending_upload";
@@ -92,11 +77,15 @@ export function EpisodeVideo({
   async function onFile(file: File) {
     setError(null);
     setTooLong(false);
+    setLandscape(false);
     if (!file.type.startsWith("video/")) return setError("Lütfen bir video dosyası seç");
 
     setBusy(true);
     try {
-      const duration = await readDuration(file);
+      const probe = await probeVideo(file);
+      const duration = probe.duration;
+      // Allowed, but the viewer app letterboxes it: tell the creator up front
+      setLandscape(isLandscape(probe));
       // Long videos go through the split flow instead of failing here
       if (duration > maxEpisodeSeconds) {
         setTooLong(true);
@@ -177,6 +166,11 @@ export function EpisodeVideo({
       )}
 
       {error && <span className="max-w-48 truncate text-rose-400" title={error}>{error}</span>}
+      {landscape && (
+        <span className="cursor-help text-amber-400" title={LANDSCAPE_HINT}>
+          ⚠ Yatay video
+        </span>
+      )}
       {tooLong && (
         <span className="text-amber-400">
           {Math.floor(maxEpisodeSeconds / 60)} dakikadan uzun.{" "}

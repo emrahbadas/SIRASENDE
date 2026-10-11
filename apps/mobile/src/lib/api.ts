@@ -42,6 +42,9 @@ export interface SeriesDetail {
 export interface Playback {
   hlsUrl: string;
   durationSeconds: number | null;
+  /** Source dimensions in pixels (null for videos processed before they were recorded). */
+  width: number | null;
+  height: number | null;
   resumeAt: number;
   expiresAt: string;
 }

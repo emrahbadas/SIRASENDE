@@ -46,6 +46,10 @@ async function applyToEpisodeAsset(admin: SupabaseClient, video: StreamVideo) {
   }
 
   const duration = video.duration > 0 ? Math.ceil(video.duration) : null;
+  const dims =
+    video.input && video.input.width > 0 && video.input.height > 0
+      ? { width: video.input.width, height: video.input.height }
+      : {};
 
   const { error } = await admin
     .from("video_assets")
@@ -53,6 +57,7 @@ async function applyToEpisodeAsset(admin: SupabaseClient, video: StreamVideo) {
       status,
       error_message: errorMessage,
       ...(status === "ready" && duration ? { duration_seconds: duration } : {}),
+      ...(status === "ready" ? dims : {}),
     })
     .eq("id", asset.id);
   if (error) throw error;

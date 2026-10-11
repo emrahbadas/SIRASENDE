@@ -14,6 +14,8 @@ export interface StreamVideo {
   };
   meta?: Record<string, string>;
   created: string;
+  /** Uploaded file's dimensions (pixels); -1 until known. */
+  input?: { width: number; height: number };
 }
 
 export class StreamApiError extends Error {
