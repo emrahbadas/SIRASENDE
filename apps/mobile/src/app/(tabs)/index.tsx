@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SeriesCard } from "@/components/series-card";
+import { CreatorCta } from "@/components/creator-cta";
 import { api, type CatalogSeries } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/lib/config";
@@ -88,6 +89,8 @@ export default function HomeScreen() {
           />
         }
       >
+        <CreatorCta />
+
         {resumable.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Kaldığın yerden devam et</Text>
