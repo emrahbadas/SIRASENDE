@@ -20,7 +20,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const { data: series } = await supabase
     .from("series")
     .select(
-      "id, title, description, poster_url, free_episode_count, episode_coin_price, productions(age_rating, content_warnings, creator_profiles(creator_name))"
+      "id, title, description, poster_url, free_episode_count, episode_coin_price, productions(age_rating, content_warnings, creator_profiles(id, creator_name))"
     )
     .eq("id", id)
     .eq("status", "published")
@@ -43,26 +43,56 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     .map((e, i) => ({ e, position: i + 1 }))
     .filter(({ e }) => e.status === "published");
 
+  const production = one(series.productions);
+  const creator = one(production?.creator_profiles);
+  const ids = published.map(({ e }) => e.id);
+
+  // Public counts
+  const [{ data: likeCounts }, { data: followers }] = await Promise.all([
+    ids.length
+      ? supabase.rpc("episode_like_counts", { p_episode_ids: ids })
+      : Promise.resolve({ data: [] as { episode_id: string; likes: number }[] }),
+    creator ? supabase.rpc("creator_follower_count", { p_creator_id: creator.id }) : Promise.resolve({ data: 0 }),
+  ]);
+  const likes = new Map(
+    ((likeCounts ?? []) as { episode_id: string; likes: number }[]).map((l) => [l.episode_id, Number(l.likes)])
+  );
+
+  // The caller's own state (RLS returns only their rows)
   const unlocked = new Set<string>();
+  const liked = new Set<string>();
   const progress = new Map<string, { position: number; completed: boolean }>();
-  if (userId && published.length) {
-    const ids = published.map(({ e }) => e.id);
-    const [{ data: unlocks }, { data: watched }] = await Promise.all([
-      supabase.from("episode_unlocks").select("episode_id").in("episode_id", ids),
-      supabase.from("watch_progress").select("episode_id, position_seconds, completed").in("episode_id", ids),
-    ]);
+  let inWatchlist = false;
+  let following = false;
+  if (userId) {
+    const [{ data: unlocks }, { data: watched }, { data: myLikes }, { data: listed }, { data: follow }] =
+      await Promise.all([
+        supabase.from("episode_unlocks").select("episode_id").in("episode_id", ids),
+        supabase.from("watch_progress").select("episode_id, position_seconds, completed").in("episode_id", ids),
+        supabase.from("episode_likes").select("episode_id").in("episode_id", ids),
+        supabase.from("watchlist").select("series_id").eq("series_id", id).maybeSingle(),
+        creator
+          ? supabase.from("creator_follows").select("creator_id").eq("creator_id", creator.id).maybeSingle()
+          : Promise.resolve({ data: null }),
+      ]);
     for (const u of unlocks ?? []) unlocked.add(u.episode_id);
     for (const w of watched ?? []) progress.set(w.episode_id, { position: w.position_seconds, completed: w.completed });
+    for (const l of myLikes ?? []) liked.add(l.episode_id);
+    inWatchlist = !!listed;
+    following = !!follow;
   }
 
-  const production = one(series.productions);
   const covers = series.poster_url ? null : await getSeriesCovers(admin, [series]);
 
   return json({
     id: series.id,
     title: series.title,
     description: series.description,
-    creatorName: one(production?.creator_profiles)?.creator_name ?? null,
+    creatorName: creator?.creator_name ?? null,
+    creator: creator
+      ? { id: creator.id, name: creator.creator_name, followers: Number(followers ?? 0), following }
+      : null,
+    inWatchlist,
     ageRating: production?.age_rating ?? null,
     contentWarnings: production?.content_warnings ?? [],
     poster: series.poster_url ?? covers?.get(series.id)?.thumbnail ?? null,
@@ -77,6 +107,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         durationSeconds: e.duration_seconds,
         access: free ? "free" : unlocked.has(e.id) ? "unlocked" : "locked",
         progress: progress.get(e.id) ?? null,
+        likes: likes.get(e.id) ?? 0,
+        liked: liked.has(e.id),
       };
     }),
   });

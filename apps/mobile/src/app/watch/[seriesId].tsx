@@ -1,3 +1,4 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -16,6 +17,7 @@ import { LockedEpisode } from "@/components/locked-episode";
 import { api, type SeriesDetail, type SeriesEpisode } from "@/lib/api";
 import { colors } from "@/lib/config";
 import { saveProgress } from "@/lib/progress";
+import { setLiked } from "@/lib/social";
 
 /** Vertical, swipeable episode feed for one series (TikTok-style). */
 export default function WatchScreen() {
@@ -49,6 +51,21 @@ export default function WatchScreen() {
 
   const setAccess = useCallback((episodeId: string, access: SeriesEpisode["access"]) => {
     setEpisodes((list) => list.map((e) => (e.id === episodeId ? { ...e, access } : e)));
+  }, []);
+
+  // Optimistic like; reverted if the server refuses or the viewer must sign in
+  const toggleLike = useCallback(async (episode: SeriesEpisode) => {
+    const apply = (liked: boolean) =>
+      setEpisodes((list) =>
+        list.map((e) => (e.id === episode.id ? { ...e, liked, likes: Math.max(0, e.likes + (liked ? 1 : -1)) } : e))
+      );
+    const next = !episode.liked;
+    apply(next);
+    try {
+      if (!(await setLiked(episode.id, next))) apply(!next);
+    } catch {
+      apply(!next);
+    }
   }, []);
 
   if (error) return <Text style={styles.error}>{error}</Text>;
@@ -101,6 +118,17 @@ export default function WatchScreen() {
                 />
               ))}
 
+            {item.access !== "locked" && (
+              <Pressable
+                style={[styles.like, { bottom: insets.bottom + 180 }]}
+                onPress={() => toggleLike(item)}
+                hitSlop={10}
+              >
+                <Ionicons name={item.liked ? "heart" : "heart-outline"} size={34} color={item.liked ? colors.accent : "#fff"} />
+                <Text style={styles.likeCount}>{item.likes}</Text>
+              </Pressable>
+            )}
+
             <View style={[styles.caption, { paddingBottom: insets.bottom + 24 }]} pointerEvents="none">
               <Text style={styles.seriesTitle}>{series.title}</Text>
               <Text style={styles.episodeTitle}>
@@ -124,7 +152,9 @@ export default function WatchScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#000" },
-  caption: { position: "absolute", left: 16, right: 16, bottom: 0 },
+  caption: { position: "absolute", left: 16, right: 80, bottom: 0 },
+  like: { position: "absolute", right: 14, alignItems: "center" },
+  likeCount: { color: "#fff", fontSize: 12, fontWeight: "700", marginTop: 2, textShadowColor: "#000", textShadowRadius: 4 },
   seriesTitle: { color: colors.text, fontSize: 16, fontWeight: "800", textShadowColor: "#000", textShadowRadius: 6 },
   episodeTitle: { color: "#e4e4e7", fontSize: 14, marginTop: 4, textShadowColor: "#000", textShadowRadius: 6 },
   last: { color: colors.muted, fontSize: 12, marginTop: 6 },

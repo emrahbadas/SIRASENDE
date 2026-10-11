@@ -25,6 +25,8 @@ export interface SeriesEpisode {
   durationSeconds: number | null;
   access: EpisodeAccess;
   progress: { position: number; completed: boolean } | null;
+  likes: number;
+  liked: boolean;
 }
 
 export interface SeriesDetail {
@@ -32,6 +34,8 @@ export interface SeriesDetail {
   title: string;
   description: string | null;
   creatorName: string | null;
+  creator: { id: string; name: string; followers: number; following: boolean } | null;
+  inWatchlist: boolean;
   ageRating: string | null;
   contentWarnings: string[];
   poster: string | null;
@@ -47,6 +51,23 @@ export interface Playback {
   height: number | null;
   resumeAt: number;
   expiresAt: string;
+}
+
+export interface Library {
+  watchlist: { id: string; title: string; poster: string | null }[];
+  history: {
+    seriesId: string;
+    seriesTitle: string;
+    poster: string | null;
+    episodeId: string;
+    episodeNumber: number;
+    episodeTitle: string;
+    durationSeconds: number | null;
+    position: number;
+    completed: boolean;
+    updatedAt: string;
+  }[];
+  following: { id: string; name: string }[];
 }
 
 export class ApiError extends Error {
@@ -74,6 +95,7 @@ export const api = {
   catalog: () => get<{ series: CatalogSeries[] }>("/catalog").then((r) => r.series),
   series: (id: string) => get<SeriesDetail>(`/series/${id}`),
   playback: (episodeId: string) => get<Playback>(`/episodes/${episodeId}/playback`),
+  library: () => get<Library>("/me/library"),
 };
 
 const unlockMessages: Record<string, string> = {

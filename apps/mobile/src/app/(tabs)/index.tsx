@@ -17,7 +17,6 @@ import { api, type CatalogSeries } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/lib/config";
 import { continueWatching, type LocalProgress } from "@/lib/progress";
-import { supabase } from "@/lib/supabase";
 
 const GAP = 12;
 const PADDING = 16;
@@ -61,11 +60,7 @@ export default function HomeScreen() {
         <Text style={styles.logo}>
           <Text style={{ color: colors.accent }}>Sıra</Text> Sende
         </Text>
-        {session ? (
-          <Pressable onPress={() => supabase.auth.signOut()}>
-            <Text style={styles.headerLink}>Çıkış</Text>
-          </Pressable>
-        ) : (
+        {!session && (
           <Link href="/login" style={styles.headerLink}>
             Giriş yap
           </Link>

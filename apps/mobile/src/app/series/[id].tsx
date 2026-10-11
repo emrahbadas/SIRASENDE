@@ -1,9 +1,10 @@
 import { Image } from "expo-image";
 import { router, Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { api, type SeriesDetail } from "@/lib/api";
 import { colors } from "@/lib/config";
+import { setFollowing, setInWatchlist } from "@/lib/social";
 
 const warningLabels: Record<string, string> = {
   violence: "Şiddet",
@@ -29,6 +30,36 @@ export default function SeriesScreen() {
   if (error) return <Text style={styles.error}>{error}</Text>;
   if (!series) return <ActivityIndicator color={colors.muted} style={{ marginTop: 48 }} />;
 
+  // Optimistic toggles; revert if the server refuses
+  async function toggleWatchlist() {
+    const next = !series!.inWatchlist;
+    setSeries((s) => s && { ...s, inWatchlist: next });
+    try {
+      if (!(await setInWatchlist(series!.id, next))) setSeries((s) => s && { ...s, inWatchlist: !next });
+    } catch (e) {
+      setSeries((s) => s && { ...s, inWatchlist: !next });
+      Alert.alert((e as Error).message);
+    }
+  }
+
+  async function toggleFollow() {
+    const creator = series!.creator!;
+    const next = !creator.following;
+    const apply = (following: boolean) =>
+      setSeries((s) =>
+        s?.creator
+          ? { ...s, creator: { ...s.creator, following, followers: s.creator.followers + (following ? 1 : -1) } }
+          : s
+      );
+    apply(next);
+    try {
+      if (!(await setFollowing(creator.id, next))) apply(!next);
+    } catch (e) {
+      apply(!next);
+      Alert.alert((e as Error).message);
+    }
+  }
+
   // Resume where the viewer left off, otherwise start from episode 1
   const resume = series.episodes.find((e) => e.progress && !e.progress.completed) ?? series.episodes[0];
   const watch = (episodeId: string) =>
@@ -43,7 +74,25 @@ export default function SeriesScreen() {
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.title}>{series.title}</Text>
-          {series.creatorName && <Text style={styles.creator}>{series.creatorName}</Text>}
+          {series.creator && (
+            <View style={styles.creatorRow}>
+              <View style={{ flexShrink: 1 }}>
+                <Text style={styles.creator} numberOfLines={1}>
+                  {series.creator.name}
+                </Text>
+                <Text style={styles.followers}>{series.creator.followers} takipçi</Text>
+              </View>
+              <Pressable
+                style={[styles.follow, series.creator.following && styles.followActive]}
+                onPress={toggleFollow}
+                hitSlop={6}
+              >
+                <Text style={[styles.followText, series.creator.following && styles.followTextActive]}>
+                  {series.creator.following ? "Takip ediliyor" : "Takip et"}
+                </Text>
+              </Pressable>
+            </View>
+          )}
           <View style={styles.tags}>
             {series.ageRating && <Text style={styles.age}>{series.ageRating}</Text>}
             {series.contentWarnings.map((w) => (
@@ -57,13 +106,18 @@ export default function SeriesScreen() {
 
       {series.description && <Text style={styles.description}>{series.description}</Text>}
 
-      {resume && (
-        <Pressable style={styles.play} onPress={() => watch(resume.id)}>
-          <Text style={styles.playText}>
-            {resume.progress ? `▶ Devam et · Bölüm ${resume.episodeNumber}` : "▶ 1. bölümden izle"}
-          </Text>
+      <View style={styles.actions}>
+        {resume && (
+          <Pressable style={[styles.play, { flex: 1 }]} onPress={() => watch(resume.id)}>
+            <Text style={styles.playText}>
+              {resume.progress ? `▶ Devam et · Bölüm ${resume.episodeNumber}` : "▶ 1. bölümden izle"}
+            </Text>
+          </Pressable>
+        )}
+        <Pressable style={styles.listButton} onPress={toggleWatchlist}>
+          <Text style={styles.listButtonText}>{series.inWatchlist ? "✓ Listemde" : "＋ Listeme ekle"}</Text>
         </Pressable>
-      )}
+      </View>
 
       <Text style={styles.sectionTitle}>{series.episodes.length} bölüm</Text>
       {series.episodes.map((e) => (
@@ -98,7 +152,23 @@ const styles = StyleSheet.create({
   header: { flexDirection: "row", gap: 16 },
   poster: { width: 110, height: 160, borderRadius: 10, overflow: "hidden", backgroundColor: colors.surface },
   title: { color: colors.text, fontSize: 22, fontWeight: "800" },
-  creator: { color: colors.accent, marginTop: 4 },
+  creator: { color: colors.accent, fontWeight: "600" },
+  creatorRow: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 6 },
+  followers: { color: colors.faint, fontSize: 11, marginTop: 1 },
+  follow: { borderColor: colors.accent, borderWidth: 1, borderRadius: 14, paddingHorizontal: 10, paddingVertical: 4 },
+  followActive: { borderColor: colors.border, backgroundColor: colors.surface },
+  followText: { color: colors.accent, fontSize: 12, fontWeight: "700" },
+  followTextActive: { color: colors.muted },
+  actions: { flexDirection: "row", gap: 10, marginTop: 20 },
+  listButton: {
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    justifyContent: "center",
+    backgroundColor: colors.surface,
+  },
+  listButtonText: { color: colors.text, fontWeight: "600", fontSize: 13 },
   tags: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 10 },
   age: {
     color: "#fbbf24",
@@ -111,7 +181,7 @@ const styles = StyleSheet.create({
   },
   tag: { color: colors.muted, borderColor: colors.border, borderWidth: 1, borderRadius: 10, paddingHorizontal: 8, fontSize: 11 },
   description: { color: colors.muted, marginTop: 16, lineHeight: 20 },
-  play: { backgroundColor: colors.accent, borderRadius: 10, paddingVertical: 14, alignItems: "center", marginTop: 20 },
+  play: { backgroundColor: colors.accent, borderRadius: 10, paddingVertical: 14, alignItems: "center" },
   playText: { color: "#fff", fontWeight: "700", fontSize: 15 },
   sectionTitle: { color: colors.text, fontSize: 16, fontWeight: "700", marginTop: 28, marginBottom: 8 },
   episode: {

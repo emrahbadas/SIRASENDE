@@ -14,7 +14,7 @@ export default function RootLayout() {
       <ThemeProvider value={theme}>
         <StatusBar style="light" />
         <Stack screenOptions={{ headerTintColor: colors.text, headerBackTitle: "Geri" }}>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="series/[id]" options={{ title: "" }} />
           <Stack.Screen name="watch/[seriesId]" options={{ headerShown: false, animation: "fade" }} />
           <Stack.Screen name="login" options={{ title: "Giriş yap", presentation: "modal" }} />
