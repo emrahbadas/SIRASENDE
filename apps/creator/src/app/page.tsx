@@ -28,6 +28,23 @@ export default async function HomePage({
         .maybeSingle()
     : { data: null };
 
+  const { data: staffRoles } = user
+    ? await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("profile_id", user.id)
+        .in("role", ["admin", "moderator"])
+    : { data: null };
+  const isStaff = (staffRoles?.length ?? 0) > 0;
+
+  // Moderators can read series under review (series_moderation_read)
+  const { count: pendingReview } = isStaff
+    ? await supabase
+        .from("series")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "moderating")
+    : { count: 0 };
+
   const [{ data: categories }, { data: seriesList }] = await Promise.all([
     supabase.from("categories").select("slug, name_tr").order("name_tr"),
     supabase
@@ -57,6 +74,19 @@ export default async function HomePage({
           <nav className="flex items-center gap-3 text-sm">
             {user ? (
               <>
+                {isStaff && (
+                  <Link
+                    href="/admin"
+                    className="flex items-center gap-2 rounded-lg border border-zinc-700 px-3 py-2 text-zinc-300 transition hover:border-zinc-500"
+                  >
+                    Admin
+                    {(pendingReview ?? 0) > 0 && (
+                      <span className="rounded-full bg-sky-600 px-1.5 text-xs font-semibold text-white">
+                        {pendingReview}
+                      </span>
+                    )}
+                  </Link>
+                )}
                 {creatorProfile ? (
                   <Link
                     href="/studio"

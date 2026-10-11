@@ -1628,6 +1628,18 @@ Deliverable'lar:
 
 Durum: **Implemented** — Cloudflare Stream direct upload (tarayıcıdan doğrudan, ≤200 MB), yükleme öncesi kota rezervasyonu, işleme durumu takibi (webhook + Studio'dan durum sorgulama), imzalı oynatma (`requireSignedURLs`, 1 saatlik token, hesaba özel `customer-<code>.cloudflarestream.com` alan adı — `videodelivery.net` bazı Türkiye ağlarında erişilemediği için kullanılmaz). Webhook kaydı (`PUT /stream/webhook`) yayına alınca yapılacak; secret `CLOUDFLARE_STREAM_WEBHOOK_SECRET` olarak tutulur.
 
+**Bölüm uzunluğu ve otomatik bölme (Decided):** Her bölüm geçişinde reklam gösterilebilmesi için bölümler en fazla 3 dakikadır (`platform_settings.max_episode_seconds`, veritabanı trigger'ı ile zorunlu). Daha uzun bir video tek seferde yüklenir (tus, 200 MB üstü dahil, en fazla 2 saat) ve bölümlere ayrılır:
+
+```text
+Uzun video (tus upload) ──► video_split_jobs (kota rezervasyonu)
+  ──► tarayıcı sesi analiz eder, kesimleri konuşma duraklamalarına yerleştirir (~2,5 dk hedef)
+  ──► creator kesimleri önizler / kaydırır / onaylar
+  ──► Cloudflare Stream clip API: her aralık ayrı video → yeni bölüm (sezon sonuna eklenir)
+  ──► tüm klipler hazır olunca kaynak video silinir, kota yalnızca bölümlerden sayılır
+```
+
+Phase 4'te kesimler transcript cümle sonlarına göre iyileştirilecek.
+
 Deliverable'lar:
 
 - Video provider integration
@@ -1662,6 +1674,19 @@ Deliverable'lar:
 - Watch history
 - Watchlist
 - Follow and like
+
+#### UI Polish (referans: ReelShort / NetShort tarzı arayüzler)
+
+İskelet oturduktan sonra izleyici arayüzü aşağıdaki kalıplara göre cilalanacak. Referans ekran görüntüleri ürün sahibinde; rakip görselleri repo'ya eklenmez.
+
+- **Alt sekme çubuğu:** Keşfet · Kısa (dikey kaydırmalı akış) · Ödüller · Listem · Profil
+- **Ana sayfa:** Üstte öne çıkan diziyi öneren arama çubuğu; yatay kategori sekmeleri (Popüler, Yeni, Öne Çıkan, Top Listesi + tür filtreleri); 3 sütunlu dikey poster ızgarası (poster üzerinde izlenme sayısı); köşe rozetleri (Yeni, Gündemde, Dublajlı, İzliyorum); poster altında tür etiketi veya sıralama etiketi ("No3 En Çok İzlenenler")
+- **Kaldığın yerden devam:** Ekranın köşesinde yüzen mini kart (poster + "Bölüm 3"), kapatılabilir
+- **Ödüller sayfası:** Coin bakiyesi başlığı; 7 günlük giriş serisi (gün gün artan bonus, seri bozulursa sıfırlanır); "Reklam izle, bonus kazan" görev listesi (rewarded ad, günlük limitli); arkadaş davet görevi
+- **Profil:** Kullanıcı kartı; cüzdan kartı (satın alınan coin ve bonus coin ayrı, "Şarj" butonu); abonelik/VIP kartı (V2); menü: Ödüller, Çevrimdışı indirme, Oynatma geçmişi, Kategorilerim, SSS, Geri bildirim, Dil, Ayarlar
+- **Görsel dil:** Koyu tema, altın/turuncu coin vurguları, rozet ve CTA'larda sıcak renkler
+
+Bu kalıpların ekonomiye etkisi (aşağıdaki **Open Decisions**'a bakınız): giriş serisi ve görev ödülleri **bonus coin** üretir. Bonus coin gerçek parayla alınmadığı için ledger'da ayrı bir para birimi olmalı ve bonus coin ile açılan bölümün creator payı ayrıca belirlenmelidir. Oyun/offerwall ve VIP abonelik V2 kapsamındadır.
 
 ### Phase 6 — Analytics and Revenue
 
@@ -1803,6 +1828,7 @@ Aşağıdaki konular henüz kesinleşmemiştir:
 - Notification provider
 - iOS launch timing
 - Coin launch timing
+- Bonus coin (giriş serisi / görev ödülü) ekonomisi: ayrı para birimi, son kullanma süresi, bonus coin ile açılan bölümde creator payı
 - VIP pricing
 - AI dubbing provider
 - Global expansion sıralaması

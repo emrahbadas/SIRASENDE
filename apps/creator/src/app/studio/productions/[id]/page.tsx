@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createEpisode, deleteEpisode, submitForReview } from "../actions";
 import { EpisodeVideo, type EpisodeAsset } from "./episode-video";
+import { getVideoSettings } from "@/lib/settings";
 
 const statusLabels: Record<string, { label: string; cls: string }> = {
   draft: { label: "Taslak", cls: "border-zinc-700 text-zinc-400" },
@@ -54,6 +55,17 @@ export default async function ProductionDetailPage({
     (assets ?? [])
       .filter((a) => a.status !== "deleted")
       .sort((a, b) => b.created_at.localeCompare(a.created_at))[0] ?? null;
+
+  const settings = await getVideoSettings(supabase);
+  const maxMinutes = Math.floor(settings.maxEpisodeSeconds / 60);
+
+  // Split jobs still in progress, per season
+  const { data: splitJobs } = await supabase
+    .from("video_split_jobs")
+    .select("id, season_id, status, duration_seconds, reserved_seconds, error_message, created_at")
+    .in("season_id", seasons.map((s) => s.id))
+    .in("status", ["pending_upload", "processing", "ready", "splitting", "failed"])
+    .order("created_at", { ascending: false });
 
   const { data: storage } = await supabase.rpc("my_storage_summary").maybeSingle<{
     quota_minutes: number;
@@ -145,7 +157,49 @@ export default async function ProductionDetailPage({
         );
         return (
           <section key={season.id} className="mb-10">
-            <h2 className="mb-4 text-lg font-semibold">Sezon {season.season_number}</h2>
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Sezon {season.season_number}</h2>
+              {editable && (
+                <Link
+                  href={`/studio/productions/${production.id}/split?season=${season.id}`}
+                  className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 transition hover:border-rose-600 hover:text-rose-300"
+                >
+                  ✂ Uzun videoyu bölümlere ayır
+                </Link>
+              )}
+            </div>
+
+            {(splitJobs ?? [])
+              .filter((j) => j.season_id === season.id)
+              .map((j) => {
+                const minutes = Math.ceil((j.duration_seconds ?? j.reserved_seconds) / 60);
+                const label: Record<string, string> = {
+                  pending_upload: "Yükleme yarım kaldı",
+                  processing: "Kaynak video işleniyor",
+                  ready: "Kesimler onay bekliyor",
+                  splitting: "Bölümler oluşturuluyor",
+                  failed: j.error_message ?? "Bölme başarısız",
+                };
+                const resumable = j.status === "processing" || j.status === "ready";
+                return (
+                  <div
+                    key={j.id}
+                    className="mb-3 flex items-center justify-between rounded-xl border border-sky-900/60 bg-sky-950/20 px-4 py-2 text-sm"
+                  >
+                    <span className="text-sky-300">
+                      ✂ {minutes} dk video · {label[j.status]}
+                    </span>
+                    {resumable && (
+                      <Link
+                        href={`/studio/productions/${production.id}/split?season=${season.id}&job=${j.id}`}
+                        className="text-xs text-sky-300 underline hover:text-sky-200"
+                      >
+                        Devam et
+                      </Link>
+                    )}
+                  </div>
+                );
+              })}
 
             {episodes.length === 0 ? (
               <p className="mb-4 rounded-xl border border-dashed border-zinc-800 p-6 text-center text-sm text-zinc-500">
@@ -174,6 +228,8 @@ export default async function ProductionDetailPage({
                           episodeId={ep.id}
                           asset={currentAsset(ep.video_assets)}
                           editable={editable}
+                          maxEpisodeSeconds={settings.maxEpisodeSeconds}
+                          splitHref={`/studio/productions/${production.id}/split?season=${season.id}`}
                         />
                         {ep.status === "draft" && (
                           <form action={deleteEpisode}>
@@ -204,7 +260,7 @@ export default async function ProductionDetailPage({
                 name="title"
                 type="text"
                 required
-                placeholder={`Bölüm ${episodes.length + 1} başlığı`}
+                placeholder={`Bölüm ${episodes.length + 1} başlığı (video en fazla ${maxMinutes} dk)`}
                 className="flex-1 rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-rose-500"
               />
               <button

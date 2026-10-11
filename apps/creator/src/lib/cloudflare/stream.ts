@@ -68,6 +68,58 @@ export function createDirectUpload(params: {
   });
 }
 
+/**
+ * Starts a resumable (tus) upload for large files. Returns the provider's
+ * upload Location the browser continues with, plus the new video uid.
+ */
+export async function createTusUpload(params: {
+  uploadLength: number;
+  maxDurationSeconds: number;
+  name: string;
+}) {
+  const { accountId, token } = config();
+  const b64 = (v: string) => Buffer.from(v).toString("base64");
+  const res = await fetch(`${API}/accounts/${accountId}/stream?direct_user=true`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Tus-Resumable": "1.0.0",
+      "Upload-Length": String(params.uploadLength),
+      "Upload-Metadata": [
+        `maxdurationseconds ${b64(String(params.maxDurationSeconds))}`,
+        "requiresignedurls",
+        `name ${b64(params.name)}`,
+      ].join(","),
+    },
+    cache: "no-store",
+  });
+  const location = res.headers.get("location");
+  const uid = res.headers.get("stream-media-id");
+  if (!res.ok || !location || !uid) {
+    throw new StreamApiError(`Cloudflare Stream tus request failed (${res.status})`, res.status);
+  }
+  return { location, uid };
+}
+
+/** Cuts [start, end) of an existing video into a new, separately stored video. */
+export function createClip(params: {
+  sourceUid: string;
+  startSeconds: number;
+  endSeconds: number;
+  meta: Record<string, string>;
+}) {
+  return call<{ uid: string }>("/clip", {
+    method: "POST",
+    body: JSON.stringify({
+      clippedFromVideoUID: params.sourceUid,
+      startTimeSeconds: params.startSeconds,
+      endTimeSeconds: params.endSeconds,
+      requireSignedURLs: true,
+      meta: params.meta,
+    }),
+  });
+}
+
 export function getVideo(uid: string) {
   return call<StreamVideo>(`/${uid}`);
 }

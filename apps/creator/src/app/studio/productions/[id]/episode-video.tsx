@@ -60,16 +60,21 @@ export function EpisodeVideo({
   episodeId,
   asset,
   editable,
+  maxEpisodeSeconds,
+  splitHref,
 }: {
   episodeId: string;
   asset: EpisodeAsset | null;
   editable: boolean;
+  maxEpisodeSeconds: number;
+  splitHref: string;
 }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [progress, setProgress] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [tooLong, setTooLong] = useState(false);
 
   const status = asset?.status;
   const processing = status === "processing" || status === "pending_upload";
@@ -86,12 +91,18 @@ export function EpisodeVideo({
 
   async function onFile(file: File) {
     setError(null);
+    setTooLong(false);
     if (!file.type.startsWith("video/")) return setError("Lütfen bir video dosyası seç");
-    if (file.size > MAX_BYTES) return setError("Video en fazla 200 MB olabilir");
 
     setBusy(true);
     try {
       const duration = await readDuration(file);
+      // Long videos go through the split flow instead of failing here
+      if (duration > maxEpisodeSeconds) {
+        setTooLong(true);
+        return;
+      }
+      if (file.size > MAX_BYTES) throw new Error("Video en fazla 200 MB olabilir");
       const start = await startEpisodeUpload({
         episodeId,
         durationSeconds: duration,
@@ -166,6 +177,14 @@ export function EpisodeVideo({
       )}
 
       {error && <span className="max-w-48 truncate text-rose-400" title={error}>{error}</span>}
+      {tooLong && (
+        <span className="text-amber-400">
+          {Math.floor(maxEpisodeSeconds / 60)} dakikadan uzun.{" "}
+          <a href={splitHref} className="underline hover:text-amber-300">
+            Bölümlere ayır
+          </a>
+        </span>
+      )}
 
       {picker}
       {editable && asset && status === "ready" && (

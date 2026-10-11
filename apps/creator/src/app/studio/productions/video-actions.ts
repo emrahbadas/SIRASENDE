@@ -10,6 +10,7 @@ import {
   getVideo,
 } from "@/lib/cloudflare/stream";
 import { applyStreamVideo } from "@/lib/video/sync";
+import { getVideoSettings } from "@/lib/settings";
 
 // Basic (single POST) uploads are limited to 200 MB by Cloudflare Stream.
 const MAX_UPLOAD_BYTES = 200 * 1024 * 1024;
@@ -94,6 +95,13 @@ export async function startEpisodeUpload(input: {
   if (!(input.durationSeconds > 0) || input.durationSeconds > MAX_DURATION_SECONDS) {
     return { ok: false, error: "Videonun süresi okunamadı" };
   }
+  const { maxEpisodeSeconds } = await getVideoSettings(await createClient());
+  if (input.durationSeconds > maxEpisodeSeconds) {
+    return {
+      ok: false,
+      error: `Bölüm en fazla ${Math.floor(maxEpisodeSeconds / 60)} dakika olabilir. Uzun videoyu "bölümlere ayır" ile yükle.`,
+    };
+  }
 
   const admin = createAdminClient();
   await retireActiveAssets(admin, owned.episodeId);
@@ -112,6 +120,9 @@ export async function startEpisodeUpload(input: {
     .single();
 
   if (insertError || !asset) {
+    if (insertError?.message.includes("episode_too_long")) {
+      return { ok: false, error: 'Bölüm çok uzun. Uzun videoyu "bölümlere ayır" ile yükle.' };
+    }
     if (insertError?.message.includes("storage_quota_exceeded")) {
       return {
         ok: false,
