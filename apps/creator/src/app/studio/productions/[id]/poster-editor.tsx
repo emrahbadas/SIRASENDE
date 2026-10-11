@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { removePoster, uploadPoster } from "../poster-actions";
 
-const MAX_BYTES = 5 * 1024 * 1024;
+const MAX_BYTES = 4 * 1024 * 1024;
 const TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 export function PosterEditor({
@@ -32,7 +32,7 @@ export function PosterEditor({
   async function onFile(file: File) {
     setError(null);
     if (!TYPES.includes(file.type)) return setError("JPG, PNG veya WebP seç");
-    if (file.size > MAX_BYTES) return setError("En fazla 5 MB");
+    if (file.size > MAX_BYTES) return setError("En fazla 4 MB");
 
     const local = URL.createObjectURL(file);
     setPreview(local);

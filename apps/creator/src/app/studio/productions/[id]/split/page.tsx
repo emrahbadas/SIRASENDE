@@ -4,6 +4,9 @@ import { createClient } from "@/lib/supabase/server";
 import { getVideoSettings } from "@/lib/settings";
 import { SplitEditor } from "./split-editor";
 
+// Confirming a split creates one provider clip per episode (up to ~50 calls)
+export const maxDuration = 300;
+
 const one = <T,>(v: T | T[] | null | undefined): T | null =>
   Array.isArray(v) ? (v[0] ?? null) : (v ?? null);
 

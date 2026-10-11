@@ -1652,6 +1652,16 @@ Deliverable'lar:
 
 ### Phase 4 — Subtitle Pipeline
 
+Durum: **Deferred (açık borç)** — bilinçli olarak en sona bırakıldı. Başka hiçbir phase'in ön koşulu değil: videolar altyazısız oynar, `subtitle_tracks` tablosu hazır, bölme akışı kesimleri ses sessizliğine göre önerir. Ertelemenin bedeli: İngilizce izleyiciye ve işitme engelli izleyiciye hitap edilemez, moderasyon transcript'ten yararlanamaz. Döndüğümüzde mevcut videolar toplu bir işle altyazılanır.
+
+Araştırma notları (2026-10):
+
+- Cloudflare Stream'in otomatik altyazısı **Türkçeyi desteklemiyor**; ancak dışarıda üretilen WebVTT dosyası dil etiketiyle (`tr`, `en`) Stream'e yüklenebilir ve mevcut player'da görünür (`PUT /stream/{uid}/captions/{lang}`).
+- Konuşma tanıma adayı: ElevenLabs Scribe v2 (~0,22 $/saat, kelime zamanları, konuşmacı ayrımı). Alternatifler: OpenAI gpt-4o-transcribe (~0,36 $/saat), Deepgram Nova-3 (~0,26–0,31 $/saat). Türkçeye özel bağımsız benchmark yok; seçimden önce gerçek bölümlerle karşılaştırma yapılmalı. Sağlayıcı `TRANSCRIPTION_PROVIDER` ile değiştirilebilir olmalı.
+- Çeviri adayı: Claude Opus 5.5 (bağlam ve karakter tonunu koruyarak cue bazlı çeviri; bölüm başına ~2 cent). Yüksek hacimde Claude Haiku 5.5 seçeneği.
+- Tahmini toplam: 2 dakikalık bölüm başına < 3 cent.
+- Transcript cümle zamanları, bölme akışındaki kesim önerilerini cümle sonlarına oturtmak için kullanılacak.
+
 Deliverable'lar:
 
 - Audio extraction

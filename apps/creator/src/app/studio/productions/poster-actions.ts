@@ -6,7 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const BUCKET = "posters";
-const MAX_BYTES = 5 * 1024 * 1024;
+// Vercel caps request bodies at 4.5 MB, so posters stay under it
+const MAX_BYTES = 4 * 1024 * 1024;
 const EXTENSIONS: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/png": "png",
@@ -53,7 +54,7 @@ export async function uploadPoster(formData: FormData): Promise<PosterResult> {
   if (!(file instanceof File) || file.size === 0) return { ok: false, error: "Bir resim seç" };
   const ext = EXTENSIONS[file.type];
   if (!ext) return { ok: false, error: "Poster JPG, PNG veya WebP olmalı" };
-  if (file.size > MAX_BYTES) return { ok: false, error: "Poster en fazla 5 MB olabilir" };
+  if (file.size > MAX_BYTES) return { ok: false, error: "Poster en fazla 4 MB olabilir" };
 
   const admin = createAdminClient();
   const path = `${seriesId}/${randomUUID()}.${ext}`;
