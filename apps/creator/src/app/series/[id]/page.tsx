@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getSeriesCovers } from "@/lib/video/covers";
 
 // PostgREST to-one relations are inferred as arrays without generated DB types
 const one = <T,>(v: T | T[] | null | undefined): T | null =>
@@ -35,6 +37,10 @@ export default async function PublicSeriesPage({
   if (!series) notFound();
 
   const seasons = (series.seasons ?? []).sort((a, b) => a.season_number - b.season_number);
+  const cover = series.poster_url
+    ? null
+    : (await getSeriesCovers(createAdminClient(), [series])).get(series.id);
+  const posterSrc = series.poster_url ?? cover?.thumbnail ?? null;
   const production = one(series.productions);
   const creatorName = one(production?.creator_profiles)?.creator_name;
 
@@ -53,10 +59,10 @@ export default async function PublicSeriesPage({
 
       <header className="mt-4 flex gap-6">
         <div className="flex aspect-9/13 w-40 shrink-0 items-center justify-center rounded-xl border border-zinc-800 bg-linear-to-br from-zinc-900 to-zinc-950">
-          {series.poster_url ? (
+          {posterSrc ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={series.poster_url}
+              src={posterSrc}
               alt={series.title}
               className="h-full w-full rounded-xl object-cover"
             />

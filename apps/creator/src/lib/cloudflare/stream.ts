@@ -1,5 +1,5 @@
 // Cloudflare Stream API client. Server-only: reads secrets from process.env.
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac, createSign, timingSafeEqual } from "node:crypto";
 
 const API = "https://api.cloudflare.com/client/v4";
 
@@ -132,9 +132,30 @@ export async function deleteVideo(uid: string) {
   });
 }
 
+/**
+ * Signs a Stream token locally with the account signing key (RS256 JWT), so
+ * pages listing many videos need no API call per video. Null if no key is set.
+ */
+function signLocally(uid: string, exp: number) {
+  const keyId = process.env.CLOUDFLARE_STREAM_SIGNING_KEY_ID;
+  const pem = process.env.CLOUDFLARE_STREAM_SIGNING_KEY_PEM;
+  if (!keyId || !pem) return null;
+
+  const b64url = (v: string | Buffer) => Buffer.from(v).toString("base64url");
+  const header = b64url(JSON.stringify({ alg: "RS256", kid: keyId }));
+  const payload = b64url(JSON.stringify({ sub: uid, kid: keyId, exp }));
+  const signature = createSign("RSA-SHA256")
+    .update(`${header}.${payload}`)
+    .sign(Buffer.from(pem, "base64").toString("utf8"));
+  return `${header}.${payload}.${b64url(signature)}`;
+}
+
 /** Short-lived signed playback token (videos require signed URLs). */
 export async function createPlaybackToken(uid: string, ttlSeconds = 60 * 60) {
   const exp = Math.floor(Date.now() / 1000) + ttlSeconds;
+  const local = signLocally(uid, exp);
+  if (local) return local;
+
   const { token } = await call<{ token: string }>(`/${uid}/token`, {
     method: "POST",
     body: JSON.stringify({ exp }),
@@ -142,12 +163,40 @@ export async function createPlaybackToken(uid: string, ttlSeconds = 60 * 60) {
   return token;
 }
 
+function playbackHost() {
+  const code = process.env.CLOUDFLARE_STREAM_CUSTOMER_CODE;
+  if (!code) throw new StreamApiError("CLOUDFLARE_STREAM_CUSTOMER_CODE is not set", 500);
+  return `https://customer-${code}.cloudflarestream.com`;
+}
+
+/**
+ * Token for listing images. Expiry is rounded to the hour so the URL stays the
+ * same for a while and browsers/CDN can cache the image (valid 1–2 hours).
+ */
+function listingToken(uid: string) {
+  const hour = 60 * 60;
+  const exp = (Math.floor(Date.now() / 1000 / hour) + 2) * hour;
+  return signLocally(uid, exp);
+}
+
+/** Still frame from the video, or null when no signing key is configured. */
+export function thumbnailUrl(uid: string, atSeconds: number, height = 640) {
+  const token = listingToken(uid);
+  if (!token) return null;
+  return `${playbackHost()}/${token}/thumbnails/thumbnail.jpg?time=${atSeconds}s&height=${height}`;
+}
+
+/** Short silent animated preview (GIF) for hover, or null without a signing key. */
+export function previewUrl(uid: string, startSeconds: number, durationSeconds = 4, height = 360) {
+  const token = listingToken(uid);
+  if (!token) return null;
+  return `${playbackHost()}/${token}/thumbnails/thumbnail.gif?time=${startSeconds}s&duration=${durationSeconds}s&height=${height}&fps=10`;
+}
+
 // The account-specific playback domain. The legacy videodelivery.net domain
 // is unreachable from some Turkish networks, so it is never used.
 export function iframeUrl(token: string) {
-  const code = process.env.CLOUDFLARE_STREAM_CUSTOMER_CODE;
-  if (!code) throw new StreamApiError("CLOUDFLARE_STREAM_CUSTOMER_CODE is not set", 500);
-  return `https://customer-${code}.cloudflarestream.com/${token}/iframe`;
+  return `${playbackHost()}/${token}/iframe`;
 }
 
 /**

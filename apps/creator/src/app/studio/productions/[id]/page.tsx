@@ -4,6 +4,9 @@ import { createClient } from "@/lib/supabase/server";
 import { createEpisode, deleteEpisode, submitForReview } from "../actions";
 import { EpisodeVideo, type EpisodeAsset } from "./episode-video";
 import { getVideoSettings } from "@/lib/settings";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getSeriesCovers } from "@/lib/video/covers";
+import { PosterEditor } from "./poster-editor";
 
 const statusLabels: Record<string, { label: string; cls: string }> = {
   draft: { label: "Taslak", cls: "border-zinc-700 text-zinc-400" },
@@ -37,7 +40,7 @@ export default async function ProductionDetailPage({
   const { data: production } = await supabase
     .from("productions")
     .select(
-      "id, title, description, production_type, series(id, title, status, moderation_note, primary_language, seasons(id, season_number, episodes(id, episode_number, title, status, created_at, video_assets(id, status, duration_seconds, error_message, created_at))))"
+      "id, title, description, production_type, series(id, title, status, moderation_note, primary_language, poster_url, free_episode_count, seasons(id, season_number, episodes(id, episode_number, title, status, created_at, video_assets(id, status, duration_seconds, error_message, created_at))))"
     )
     .eq("id", id)
     .is("deleted_at", null)
@@ -57,6 +60,12 @@ export default async function ProductionDetailPage({
       .sort((a, b) => b.created_at.localeCompare(a.created_at))[0] ?? null;
 
   const settings = await getVideoSettings(supabase);
+
+  // Same rule as the vitrine: auto cover only from a free, published first episode
+  const autoCover =
+    series && !series.poster_url
+      ? ((await getSeriesCovers(createAdminClient(), [series])).get(series.id)?.thumbnail ?? null)
+      : null;
   const maxMinutes = Math.floor(settings.maxEpisodeSeconds / 60);
 
   // Split jobs still in progress, per season
@@ -79,7 +88,16 @@ export default async function ProductionDetailPage({
       </Link>
 
       <header className="mt-2 mb-8 flex items-start justify-between gap-4">
-        <div>
+        {series && (
+          <PosterEditor
+            seriesId={series.id}
+            title={series.title}
+            posterUrl={series.poster_url}
+            autoCoverUrl={autoCover}
+            editable={editable}
+          />
+        )}
+        <div className="flex-1">
           <h1 className="text-2xl font-bold">{production.title}</h1>
           <p className="mt-1 flex items-center gap-2 text-sm text-zinc-500">
             <span>{production.production_type}</span>

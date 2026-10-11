@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { logout } from "@/app/auth/actions";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getSeriesCovers } from "@/lib/video/covers";
+import { SeriesCard } from "./series-card";
 
 export const dynamic = "force-dynamic";
 
@@ -50,7 +53,7 @@ export default async function HomePage({
     supabase
       .from("series")
       .select(
-        "id, title, description, poster_url, primary_language, productions(production_type, age_rating, production_categories(categories(slug)))"
+        "id, title, description, poster_url, primary_language, free_episode_count, productions(production_type, age_rating, production_categories(categories(slug)))"
       )
       .eq("status", "published")
       .is("deleted_at", null)
@@ -63,6 +66,9 @@ export default async function HomePage({
       one(s.productions)?.production_categories?.map((pc) => one(pc.categories)?.slug) ?? [];
     return slugs.includes(category);
   });
+
+  // Video assets are not public; covers only use episodes inside the free window
+  const covers = await getSeriesCovers(createAdminClient(), filtered);
 
   return (
     <main className="min-h-screen">
@@ -173,21 +179,13 @@ export default async function HomePage({
         ) : (
           <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {filtered.map((s) => (
-              <Link
+              <SeriesCard
                 key={s.id}
                 href={`/series/${s.id}`}
-                className="group overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/50 transition hover:border-rose-500/50"
+                title={s.title}
+                poster={s.poster_url ?? covers.get(s.id)?.thumbnail ?? null}
+                preview={covers.get(s.id)?.preview ?? null}
               >
-                <div className="flex aspect-9/13 items-center justify-center bg-linear-to-br from-zinc-900 to-zinc-950">
-                  {s.poster_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={s.poster_url} alt={s.title} className="h-full w-full object-cover" />
-                  ) : (
-                    <span className="px-4 text-center text-lg font-bold text-zinc-700 transition group-hover:text-rose-500/70">
-                      {s.title}
-                    </span>
-                  )}
-                </div>
                 <div className="p-4">
                   <h2 className="font-semibold">{s.title}</h2>
                   <p className="mt-1 line-clamp-2 text-sm text-zinc-500">{s.description}</p>
@@ -202,7 +200,7 @@ export default async function HomePage({
                     )}
                   </p>
                 </div>
-              </Link>
+              </SeriesCard>
             ))}
           </div>
         )}

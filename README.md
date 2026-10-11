@@ -1682,6 +1682,8 @@ Deliverable'lar:
 - **Alt sekme çubuğu:** Keşfet · Kısa (dikey kaydırmalı akış) · Ödüller · Listem · Profil
 - **Ana sayfa:** Üstte öne çıkan diziyi öneren arama çubuğu; yatay kategori sekmeleri (Popüler, Yeni, Öne Çıkan, Top Listesi + tür filtreleri); 3 sütunlu dikey poster ızgarası (poster üzerinde izlenme sayısı); köşe rozetleri (Yeni, Gündemde, Dublajlı, İzliyorum); poster altında tür etiketi veya sıralama etiketi ("No3 En Çok İzlenenler")
 - **Kaldığın yerden devam:** Ekranın köşesinde yüzen mini kart (poster + "Bölüm 3"), kapatılabilir
+- **Vitrin hiçbir zaman boş görünmez:** Creator poster yüklemediyse kapak, 1. bölümün Cloudflare Stream küçük resminden otomatik üretilir (`thumbnails/thumbnail.jpg?time=…`)
+- **Üzerine gelince önizleme:** Masaüstünde kartın üzerine gelince (mobilde uzun basınca) 1. bölümden 3–4 saniyelik sessiz, döngülü önizleme oynar. Tam player yerine Stream'in hafif animasyonlu önizlemesi (`thumbnail.gif?time=…&duration=4s`) kullanılır. Videolar imzalı olduğu için küçük resim ve önizleme için de kısa süreli imzalı token gerekir; vitrinde her kart için API çağrısı yapmamak adına tokenlar Stream signing key ile sunucuda yerel olarak üretilir ve önbelleğe alınır
 - **Ödüller sayfası:** Coin bakiyesi başlığı; 7 günlük giriş serisi (gün gün artan bonus, seri bozulursa sıfırlanır); "Reklam izle, bonus kazan" görev listesi (rewarded ad, günlük limitli); arkadaş davet görevi
 - **Profil:** Kullanıcı kartı; cüzdan kartı (satın alınan coin ve bonus coin ayrı, "Şarj" butonu); abonelik/VIP kartı (V2); menü: Ödüller, Çevrimdışı indirme, Oynatma geçmişi, Kategorilerim, SSS, Geri bildirim, Dil, Ayarlar
 - **Görsel dil:** Koyu tema, altın/turuncu coin vurguları, rozet ve CTA'larda sıcak renkler
