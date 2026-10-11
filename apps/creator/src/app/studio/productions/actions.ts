@@ -166,6 +166,26 @@ export async function submitForReview(formData: FormData) {
   const seriesId = String(formData.get("series_id") ?? "");
   const productionId = String(formData.get("production_id") ?? "");
 
+  // Every episode needs a processed video before the series can be reviewed
+  const { data: episodes } = await supabase
+    .from("episodes")
+    .select("episode_number, seasons!inner(series_id), video_assets(status)")
+    .eq("seasons.series_id", seriesId);
+  const missing = (episodes ?? []).filter(
+    (e) => !(e.video_assets ?? []).some((a: { status: string }) => a.status === "ready")
+  );
+  if (!episodes?.length || missing.length) {
+    const which = missing.map((e) => e.episode_number).join(", ");
+    redirect(
+      `/studio/productions/${productionId}?error=` +
+        encodeURIComponent(
+          episodes?.length
+            ? `Onaya göndermeden önce her bölümün videosu hazır olmalı (eksik: ${which})`
+            : "Onaya göndermek için en az bir bölüm gerekli"
+        )
+    );
+  }
+
   const { error } = await supabase
     .from("series")
     .update({ status: "moderating", moderation_note: null })

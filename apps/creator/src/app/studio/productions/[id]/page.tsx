@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createEpisode, deleteEpisode, submitForReview } from "../actions";
+import { EpisodeVideo, type EpisodeAsset } from "./episode-video";
 
 const statusLabels: Record<string, { label: string; cls: string }> = {
   draft: { label: "Taslak", cls: "border-zinc-700 text-zinc-400" },
@@ -35,7 +36,7 @@ export default async function ProductionDetailPage({
   const { data: production } = await supabase
     .from("productions")
     .select(
-      "id, title, description, production_type, series(id, title, status, moderation_note, primary_language, seasons(id, season_number, episodes(id, episode_number, title, status, created_at)))"
+      "id, title, description, production_type, series(id, title, status, moderation_note, primary_language, seasons(id, season_number, episodes(id, episode_number, title, status, created_at, video_assets(id, status, duration_seconds, error_message, created_at))))"
     )
     .eq("id", id)
     .is("deleted_at", null)
@@ -46,6 +47,18 @@ export default async function ProductionDetailPage({
   const series = production.series?.[0];
   const seasons = (series?.seasons ?? []).sort((a, b) => a.season_number - b.season_number);
   const totalEpisodes = seasons.reduce((sum, s) => sum + s.episodes.length, 0);
+  const editable = !!series && ["draft", "rejected", "needs_changes"].includes(series.status);
+
+  // Latest non-deleted video per episode
+  const currentAsset = (assets: (EpisodeAsset & { created_at: string })[] | null) =>
+    (assets ?? [])
+      .filter((a) => a.status !== "deleted")
+      .sort((a, b) => b.created_at.localeCompare(a.created_at))[0] ?? null;
+
+  const { data: storage } = await supabase.rpc("my_storage_summary").maybeSingle<{
+    quota_minutes: number;
+    used_seconds: number;
+  }>();
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-12">
@@ -92,6 +105,27 @@ export default async function ProductionDetailPage({
         )}
       </header>
 
+      {storage && (
+        <div className="mb-6 rounded-xl border border-zinc-800 bg-zinc-900/40 p-4 text-sm">
+          <div className="flex items-center justify-between text-zinc-400">
+            <span>Depolama</span>
+            <span>
+              {Math.ceil(storage.used_seconds / 60)} / {storage.quota_minutes} dk
+            </span>
+          </div>
+          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-zinc-800">
+            <div
+              className={`h-full ${
+                storage.used_seconds >= storage.quota_minutes * 60 * 0.9 ? "bg-rose-500" : "bg-emerald-500"
+              }`}
+              style={{
+                width: `${Math.min(100, (storage.used_seconds / Math.max(1, storage.quota_minutes * 60)) * 100)}%`,
+              }}
+            />
+          </div>
+        </div>
+      )}
+
       {series?.moderation_note && ["rejected", "needs_changes"].includes(series.status) && (
         <div className="mb-6 rounded-xl border border-amber-800/60 bg-amber-950/30 p-4 text-sm">
           <p className="font-semibold text-amber-300">Moderasyon notu</p>
@@ -136,9 +170,11 @@ export default async function ProductionDetailPage({
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-zinc-600">
-                          Video yükleme Phase 3&apos;te
-                        </span>
+                        <EpisodeVideo
+                          episodeId={ep.id}
+                          asset={currentAsset(ep.video_assets)}
+                          editable={editable}
+                        />
                         {ep.status === "draft" && (
                           <form action={deleteEpisode}>
                             <input type="hidden" name="episode_id" value={ep.id} />

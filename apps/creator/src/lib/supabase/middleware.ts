@@ -1,7 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PREFIXES = ["/series", "/login", "/signup", "/auth"];
+// /watch decides access per episode (free window); webhooks authenticate by signature
+const PUBLIC_PREFIXES = ["/series", "/watch", "/login", "/signup", "/auth", "/api/webhooks"];
 
 function isPublicPath(path: string) {
   if (path === "/") return true;

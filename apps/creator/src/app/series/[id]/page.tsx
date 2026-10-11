@@ -25,7 +25,7 @@ export default async function PublicSeriesPage({
   const { data: series } = await supabase
     .from("series")
     .select(
-      "id, title, description, poster_url, primary_language, status, productions(production_type, age_rating, content_warnings, creator_profiles(creator_name)), seasons(season_number, episodes(id, episode_number, title, status, duration_seconds))"
+      "id, title, description, poster_url, primary_language, status, free_episode_count, episode_coin_price, productions(production_type, age_rating, content_warnings, creator_profiles(creator_name)), seasons(season_number, episodes(id, episode_number, title, status, duration_seconds))"
     )
     .eq("id", id)
     .eq("status", "published")
@@ -37,6 +37,13 @@ export default async function PublicSeriesPage({
   const seasons = (series.seasons ?? []).sort((a, b) => a.season_number - b.season_number);
   const production = one(series.productions);
   const creatorName = one(production?.creator_profiles)?.creator_name;
+
+  // Absolute position across seasons decides the free window (matches can_watch_episode)
+  const positions = new Map(
+    seasons
+      .flatMap((s) => [...s.episodes].sort((a, b) => a.episode_number - b.episode_number))
+      .map((e, i) => [e.id, i + 1])
+  );
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-10">
@@ -95,20 +102,27 @@ export default async function PublicSeriesPage({
           <section key={season.season_number} className="mt-10">
             <h2 className="mb-4 text-lg font-semibold">Sezon {season.season_number}</h2>
             <ul className="space-y-2">
-              {episodes.map((ep) => (
-                <li
-                  key={ep.id}
-                  className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-3"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="w-8 text-center font-mono text-sm text-zinc-500">
-                      {ep.episode_number}
-                    </span>
-                    <span className="font-medium">{ep.title}</span>
-                  </div>
-                  <span className="text-xs text-zinc-600">Video yakında</span>
-                </li>
-              ))}
+              {episodes.map((ep) => {
+                const locked = (positions.get(ep.id) ?? 0) > series.free_episode_count;
+                return (
+                  <li key={ep.id}>
+                    <Link
+                      href={`/watch/${ep.id}`}
+                      className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-3 transition hover:border-rose-700"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="w-8 text-center font-mono text-sm text-zinc-500">
+                          {ep.episode_number}
+                        </span>
+                        <span className="font-medium">{ep.title}</span>
+                      </div>
+                      <span className={`text-xs ${locked ? "text-amber-400" : "text-emerald-400"}`}>
+                        {locked ? `🔒 ${series.episode_coin_price} coin` : "Ücretsiz izle"}
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </section>
         );

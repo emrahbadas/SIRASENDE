@@ -1626,6 +1626,8 @@ Deliverable'lar:
 
 ### Phase 3 — Video Pipeline
 
+Durum: **Implemented** — Cloudflare Stream direct upload (tarayıcıdan doğrudan, ≤200 MB), yükleme öncesi kota rezervasyonu, işleme durumu takibi (webhook + Studio'dan durum sorgulama), imzalı oynatma (`requireSignedURLs`, 1 saatlik token, hesaba özel `customer-<code>.cloudflarestream.com` alan adı — `videodelivery.net` bazı Türkiye ağlarında erişilemediği için kullanılmaz). Webhook kaydı (`PUT /stream/webhook`) yayına alınca yapılacak; secret `CLOUDFLARE_STREAM_WEBHOOK_SECRET` olarak tutulur.
+
 Deliverable'lar:
 
 - Video provider integration
