@@ -269,6 +269,11 @@ Başlangıç kategorileri:
 - Mystery
 - Fantasy
 - Action
+- Faith (Manevi) — inanç temalı diziler
+- Stage (Sahne) — tiyatro skeçleri, bölümlere ayrılmış sahne kayıtları
+- Talks & Learning (Bilgi & Sohbet) — kısa sohbet / mini ders serileri
+
+Tüm kategoriler aynı biçimdedir: en fazla 3 dakikalık dikey bölümler, bölüm aralarında reklam. Uzun tek parça içerik (saatlik sohbet, tam oyun kaydı) bölümlere ayrılarak yayınlanır. Sesli kitap ayrı bir oynatıcı, yayınevi lisansı ve farklı gelir modeli gerektirdiği için V2'ye bırakılmıştır.
 
 Keşif koleksiyonları:
 
@@ -309,7 +314,7 @@ Ayrıca her production için **zorunlu** sınıflandırma alanları:
 
 | Alan | Değerler |
 | --- | --- |
-| Tür (kategori) | Romance, Drama, Crime, Thriller, Horror, Sci-Fi, Comedy, Mystery, Fantasy, Action |
+| Tür (kategori) | Romance, Drama, Crime, Thriller, Horror, Sci-Fi, Comedy, Mystery, Fantasy, Action, Faith, Stage, Talks & Learning |
 | Yaş aralığı | 7+, 13+, 16+, 18+ |
 | İçerik uyarıları | Şiddet, Korku, Argo/Küfür, Hassas temalar, Madde kullanımı (opsiyonel çoklu seçim) |
 
@@ -1101,9 +1106,12 @@ User Generated Content nedeniyle moderasyon core feature'dır.
 
 ### Platform Sınırı
 
-Sıra Sende genel bir UGC/sosyal medya platformu değildir; **yalnızca senaryolu video-dizi ve kısa film yayın platformudur**.
+Sıra Sende genel bir UGC/sosyal medya platformu değildir; **yalnızca bölümlü dikey video yayın platformudur** (senaryolu dizi, kısa film ve sohbet / mini ders serisi).
 
-- Yalnızca tamamen kurgusal senaryo içerikleri ve kişilerin kendi hikâyelerinden türetilmiş diziler yayınlanır.
+- Kurgusal senaryo içerikleri, kişilerin kendi hikâyelerinden türetilmiş diziler ve creator'ın kendi hazırladığı sohbet / mini ders serileri yayınlanır.
+- Manevi içerikler saygılı bir dille anlatılır; başka inanç ve gruplara yönelik aşağılama veya nefret söylemi kabul edilmez.
+- Bilgi & Sohbet içerikleri tıbbi, psikolojik veya hukuki tavsiye yerine geçmez ve tedavi vaadi içeremez; psikoloji konulu seriler bunu belirtir.
+- Sahne kayıtlarında creator oyun metninin ve kaydın yayın haklarına sahip olduğunu beyan eder.
 - İçerik gerçek hayattan esinlenebilir; ancak gerçek kişilerin mahremiyetini ihlal eden ifşa içeriği veya belgesiz suçlama/gündem yayını olamaz.
 - Pornografik veya açık cinsel içerik, rıza dışı/gizli çekim, özel hayat görüntüsü, gerçek kişilere yönelik taciz/itibar saldırısı kabul edilmez.
 - Haber/gündem paylaşımı, propaganda ve siyasi kampanya içeriği kabul edilmez. Siyasi tema ancak açıkça senaryolu kurgu, drama, parodi veya hiciv niteliğinde olabilir.

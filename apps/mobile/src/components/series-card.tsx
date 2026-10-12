@@ -1,6 +1,7 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Image } from "expo-image";
 import { Link } from "expo-router";
+import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { CatalogSeries } from "@/lib/api";
 import { colors } from "@/lib/config";
@@ -24,9 +25,17 @@ export function SeriesCard({
   /** Shown under the poster instead of the genre, e.g. "No 1 · En çok izlenen" */
   label?: string | null;
 }) {
+  // Long press plays the first episode's short silent preview over the poster
+  const [previewing, setPreviewing] = useState(false);
+
   return (
     <Link href={{ pathname: "/series/[id]", params: { id: series.id } }} asChild>
-      <Pressable style={{ width }}>
+      <Pressable
+        style={{ width }}
+        delayLongPress={250}
+        onLongPress={series.preview ? () => setPreviewing(true) : undefined}
+        onPressOut={() => setPreviewing(false)}
+      >
         <View style={[styles.poster, { width, height: width * (13 / 9) }]}>
           {series.poster ? (
             <Image source={{ uri: series.poster }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} />
@@ -35,9 +44,18 @@ export function SeriesCard({
               {series.title}
             </Text>
           )}
-          {badge && <Text style={[styles.badge, { backgroundColor: BADGE_COLORS[badge] }]}>{badge}</Text>}
-          {series.ageRating && <Text style={styles.age}>{series.ageRating}</Text>}
-          {series.views > 0 && (
+          {previewing && series.preview && (
+            <>
+              <Image source={{ uri: series.preview }} style={StyleSheet.absoluteFill} contentFit="cover" />
+              <View style={styles.previewTag}>
+                <Ionicons name="eye" size={10} color="#fff" />
+                <Text style={styles.viewsText}>Önizleme</Text>
+              </View>
+            </>
+          )}
+          {!previewing && badge && <Text style={[styles.badge, { backgroundColor: BADGE_COLORS[badge] }]}>{badge}</Text>}
+          {!previewing && series.ageRating && <Text style={styles.age}>{series.ageRating}</Text>}
+          {!previewing && series.views > 0 && (
             <View style={styles.views}>
               <Ionicons name="play" size={10} color="#fff" />
               <Text style={styles.viewsText}>{formatViews(series.views)}</Text>
@@ -92,6 +110,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 3,
     backgroundColor: "rgba(0,0,0,0.55)",
+    borderRadius: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+  },
+  previewTag: {
+    position: "absolute",
+    left: 6,
+    bottom: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    backgroundColor: "rgba(234,88,12,0.85)",
     borderRadius: 4,
     paddingHorizontal: 5,
     paddingVertical: 1,

@@ -191,8 +191,21 @@ export default async function NewProductionPage({
               yayınlanamaz.
             </li>
             <li>
-              Platform yalnızca <strong>tamamen kurgusal senaryo içeriklerine</strong> ve kişilerin{" "}
-              <strong>kendi hikâyelerinden türetilmiş dizilere</strong> yer verir.
+              Platform <strong>kurgusal senaryo içeriklerine</strong>, kişilerin{" "}
+              <strong>kendi hikâyelerinden türetilmiş dizilere</strong> ve creator&apos;ın{" "}
+              <strong>kendi hazırladığı sohbet / ders serilerine</strong> yer verir.
+            </li>
+            <li>
+              <strong>Manevi</strong> içerikler saygılı bir dille anlatılır; başka inanç ve gruplara
+              yönelik aşağılama veya nefret söylemi yayınlanamaz.
+            </li>
+            <li>
+              <strong>Bilgi &amp; Sohbet</strong> içerikleri tıbbi, psikolojik veya hukuki tavsiye
+              yerine geçmez; tedavi vaadi içeremez. Psikoloji konulu serilerde bunu belirtmen gerekir.
+            </li>
+            <li>
+              <strong>Sahne</strong> kayıtlarında oyun metninin ve kaydın yayın haklarına sahip
+              olmalısın (yazar / topluluk izni).
             </li>
             <li>
               Telif hakkı içeren materyallerin kullanımından doğacak tüm hukuki sorumluluk{" "}
@@ -217,8 +230,9 @@ export default async function NewProductionPage({
           <label className="flex items-start gap-3">
             <input type="checkbox" name="policy_fiction" required className="mt-0.5 accent-orange-600" />
             <span>
-              Bu yapımın <strong>tamamen kurgusal bir senaryoya</strong> veya{" "}
-              <strong>kendi hikâyemden türetilmiş</strong> bir anlatıya dayandığını onaylıyorum.
+              Bu yapımın <strong>kurgusal bir senaryoya</strong>,{" "}
+              <strong>kendi hikâyemden türetilmiş</strong> bir anlatıya ya da{" "}
+              <strong>kendi hazırladığım bir sohbet / ders serisine</strong> dayandığını onaylıyorum.
             </span>
           </label>
           <label className="flex items-start gap-3">
