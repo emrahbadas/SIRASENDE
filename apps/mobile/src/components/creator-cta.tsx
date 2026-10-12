@@ -1,4 +1,3 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import * as WebBrowser from "expo-web-browser";
 import { useEffect, useState } from "react";
@@ -7,23 +6,14 @@ import { useAuth } from "@/lib/auth";
 import { colors, config } from "@/lib/config";
 import { supabase } from "@/lib/supabase";
 
-const DISMISSED_KEY = "creator-cta-dismissed";
-
 /**
- * Compact reminder that Sıra Sende is not only for watching: viewers can
- * publish their own series. Dismissible; the choice is remembered per device.
+ * Permanent reminder of what makes Sıra Sende different: viewers can publish
+ * their own series. Creators get a shortcut to Studio instead.
  */
 export function CreatorCta() {
   const { session } = useAuth();
   const userId = session?.user.id;
-  const [dismissed, setDismissed] = useState<boolean | null>(null);
   const [isCreator, setIsCreator] = useState(false);
-
-  useEffect(() => {
-    AsyncStorage.getItem(DISMISSED_KEY)
-      .then((v) => setDismissed(v === "1"))
-      .catch(() => setDismissed(false));
-  }, []);
 
   useEffect(() => {
     if (!userId) return;
@@ -35,37 +25,28 @@ export function CreatorCta() {
       .then(({ data }) => setIsCreator(!!data));
   }, [userId]);
 
-  // Wait for storage so a dismissed card never flashes; signed-out viewers are never creators
-  if (dismissed !== false) return null;
+  // Signed-out viewers are never creators
   const creator = !!userId && isCreator;
 
-  function dismiss() {
-    setDismissed(true);
-    AsyncStorage.setItem(DISMISSED_KEY, "1").catch(() => undefined);
-  }
-
   return (
-    <View style={styles.card}>
+    <Pressable
+      style={styles.card}
+      onPress={() => WebBrowser.openBrowserAsync(`${config.apiUrl}${creator ? "/studio" : "/onboarding"}`)}
+      accessibilityRole="link"
+    >
       <View style={{ flex: 1 }}>
         <Text style={styles.eyebrow}>İzledin. Şimdi sıra sende.</Text>
         <Text style={styles.text}>
           {creator
             ? "Yeni bölümün hazır mı? Studio’da yükle, izleyicilerine ulaşsın."
-            : "Kendi dikey dizini çek, yükle ve izlendikçe kazan."}
+            : "Kısa dikey diziler — bölüm bölüm izle, hikâyeni üret, yayınla, kazan."}
         </Text>
-        <Pressable
-          style={styles.cta}
-          onPress={() => WebBrowser.openBrowserAsync(`${config.apiUrl}${creator ? "/studio" : "/onboarding"}`)}
-          hitSlop={6}
-        >
+        <View style={styles.cta}>
           <Text style={styles.ctaText}>{creator ? "Studio’yu aç" : "Creator ol"}</Text>
           <Ionicons name="arrow-forward" size={14} color={colors.accent} />
-        </Pressable>
+        </View>
       </View>
-      <Pressable onPress={dismiss} hitSlop={10} accessibilityLabel="Kapat">
-        <Ionicons name="close" size={18} color={colors.faint} />
-      </Pressable>
-    </View>
+    </Pressable>
   );
 }
 

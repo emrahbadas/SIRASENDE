@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SeriesCard } from "@/components/series-card";
 import { CreatorCta } from "@/components/creator-cta";
+import { FloatingResume } from "@/components/floating-resume";
 import { api, type CatalogSeries } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/lib/config";
@@ -37,6 +38,9 @@ export default function HomeScreen() {
   const [category, setCategory] = useState<string | null>(null);
   const [tab, setTab] = useState<SortTab>("popular");
   const [query, setQuery] = useState("");
+  // Bottom edge of the "continue watching" row; the floating card shows once it scrolls away
+  const [rowBottom, setRowBottom] = useState<number | null>(null);
+  const [pastRow, setPastRow] = useState(false);
 
   const signedIn = !!session;
   const load = useCallback(async () => {
@@ -89,6 +93,11 @@ export default function HomeScreen() {
 
       <ScrollView
         contentContainerStyle={styles.content}
+        scrollEventThrottle={32}
+        onScroll={(e) => {
+          const past = rowBottom !== null && e.nativeEvent.contentOffset.y > rowBottom;
+          if (past !== pastRow) setPastRow(past);
+        }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -122,7 +131,10 @@ export default function HomeScreen() {
         {!searching && <CreatorCta />}
 
         {!searching && resumable.length > 0 && (
-          <View style={styles.section}>
+          <View
+            style={styles.section}
+            onLayout={(e) => setRowBottom(e.nativeEvent.layout.y + e.nativeEvent.layout.height)}
+          >
             <Text style={styles.sectionTitle}>Kaldığın yerden devam et</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: GAP }}>
               {resumable.map((p) => {
@@ -206,6 +218,13 @@ export default function HomeScreen() {
           )}
         </View>
       </ScrollView>
+
+      <FloatingResume
+        visible={pastRow && !searching}
+        progress={resumable[0]}
+        title={resumable[0] ? byId.get(resumable[0].seriesId)?.title : undefined}
+        poster={resumable[0] ? byId.get(resumable[0].seriesId)?.poster : undefined}
+      />
     </SafeAreaView>
   );
 }
