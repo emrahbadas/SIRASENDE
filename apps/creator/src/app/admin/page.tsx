@@ -68,6 +68,12 @@ export default async function AdminPage({
           </Link>
           <div className="flex gap-2">
             <Link
+              href="/admin/feedback"
+              className="rounded-lg border border-zinc-800 px-3 py-1.5 text-sm text-zinc-300 hover:border-zinc-600"
+            >
+              Geri bildirim →
+            </Link>
+            <Link
               href="/admin/payouts"
               className="rounded-lg border border-zinc-800 px-3 py-1.5 text-sm text-zinc-300 hover:border-zinc-600"
             >

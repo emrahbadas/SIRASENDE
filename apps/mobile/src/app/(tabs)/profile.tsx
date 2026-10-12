@@ -1,36 +1,42 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
+import Constants from "expo-constants";
 import { router, useFocusEffect } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useCallback, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { api, coinBalance, type Library } from "@/lib/api";
+import { MenuRow, MenuSection } from "@/components/menu-row";
+import { api, coinBalance } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { colors, config } from "@/lib/config";
-import { setFollowing } from "@/lib/social";
 import { supabase } from "@/lib/supabase";
+
+type Profile = { username: string; display_name: string | null };
+type Roles = { creator: boolean; admin: boolean; moderator: boolean; pending: number };
+
+const version = Constants.expoConfig?.version ?? "";
 
 export default function ProfileScreen() {
   const { session } = useAuth();
-  const signedIn = !!session;
-  const [balance, setBalance] = useState<number | null>(null);
-  const [following, setFollowingList] = useState<Library["following"]>([]);
-  const [roles, setRoles] = useState<{ creator: boolean; staff: boolean; pending: number }>({
-    creator: false,
-    staff: false,
-    pending: 0,
-  });
-
   const userId = session?.user.id;
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [balance, setBalance] = useState<number | null>(null);
+  const [counts, setCounts] = useState({ watched: 0, listed: 0, following: 0 });
+  const [roles, setRoles] = useState<Roles>({ creator: false, admin: false, moderator: false, pending: 0 });
+
   const load = useCallback(async () => {
     if (!userId) return;
-    const [coins, library, { data: myRoles }] = await Promise.all([
+    const [coins, library, { data: me }, { data: myRoles }] = await Promise.all([
       coinBalance(),
       api.library().catch(() => null),
+      supabase.from("profiles").select("username, display_name").eq("id", userId).maybeSingle(),
       supabase.from("user_roles").select("role").eq("profile_id", userId),
     ]);
     setBalance(coins);
-    if (library) setFollowingList(library.following);
+    setProfile(me);
+    if (library) {
+      setCounts({ watched: library.history.length, listed: library.watchlist.length, following: library.following.length });
+    }
 
     const names = (myRoles ?? []).map((r) => r.role as string);
     const staff = names.includes("admin") || names.includes("moderator");
@@ -38,11 +44,13 @@ export default function ProfileScreen() {
     const { count } = staff
       ? await supabase.from("series").select("id", { count: "exact", head: true }).eq("status", "moderating")
       : { count: 0 };
-    setRoles({ creator: names.includes("creator"), staff, pending: count ?? 0 });
+    setRoles({
+      creator: names.includes("creator"),
+      admin: names.includes("admin"),
+      moderator: names.includes("moderator"),
+      pending: count ?? 0,
+    });
   }, [userId]);
-
-  // Studio and moderation live on the web; open them in the in-app browser
-  const openWeb = (path: string) => WebBrowser.openBrowserAsync(`${config.apiUrl}${path}`);
 
   useFocusEffect(
     useCallback(() => {
@@ -50,135 +58,200 @@ export default function ProfileScreen() {
     }, [load])
   );
 
-  async function unfollow(id: string) {
-    try {
-      await setFollowing(id, false);
-      setFollowingList((list) => list.filter((c) => c.id !== id));
-    } catch (e) {
-      Alert.alert((e as Error).message);
-    }
-  }
+  // Studio and moderation live on the web; open them in the in-app browser
+  const openWeb = (path: string) => WebBrowser.openBrowserAsync(`${config.apiUrl}${path}`);
 
-  if (!signedIn) {
+  if (!session) {
     return (
       <SafeAreaView style={[styles.screen, styles.centered]}>
-        <Text style={styles.title}>Profil</Text>
-        <Text style={styles.muted}>Coin bakiyeni, listeni ve takip ettiklerini görmek için giriş yap.</Text>
-        <Pressable style={styles.button} onPress={() => router.push("/login")}>
-          <Text style={styles.buttonText}>Giriş yap</Text>
+        <View style={[styles.avatar, styles.avatarLarge]}>
+          <Ionicons name="person" size={34} color={colors.muted} />
+        </View>
+        <Text style={styles.name}>Sıra Sende’ye katıl</Text>
+        <Text style={styles.centerText}>
+          Listeni, izleme geçmişini ve coin bakiyeni tüm cihazlarında görmek için giriş yap.
+        </Text>
+        <Pressable style={styles.primary} onPress={() => router.push("/login")}>
+          <Text style={styles.primaryText}>Giriş yap</Text>
         </Pressable>
+        <View style={{ alignSelf: "stretch", marginTop: 12 }}>
+          <MenuSection>
+            <MenuRow icon="help-circle-outline" label="Sık sorulan sorular" onPress={() => router.push("/faq")} last />
+          </MenuSection>
+        </View>
       </SafeAreaView>
     );
   }
 
+  const name = profile?.display_name || profile?.username || session.user.email?.split("@")[0] || "";
+  const chips = [roles.creator && "Creator", roles.admin ? "Admin" : roles.moderator && "Moderatör"].filter(
+    Boolean
+  ) as string[];
+
   return (
     <SafeAreaView style={styles.screen} edges={["top"]}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Profil</Text>
-        <Text style={styles.email}>{session.user.email}</Text>
-
-        <View style={styles.card}>
-          <Text style={styles.cardLabel}>Cüzdanım</Text>
-          <Text style={styles.coins}>
-            {balance ?? "–"} <Text style={styles.coinUnit}>coin</Text>
-          </Text>
-          <Text style={styles.muted}>Coin satın alma ve ödüller yakında.</Text>
+        {/* User card */}
+        <View style={styles.userCard}>
+          <View style={styles.avatar}>
+            <Text style={styles.initial}>{name.charAt(0).toLocaleUpperCase("tr")}</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.name} numberOfLines={1}>
+              {name}
+            </Text>
+            <Text style={styles.handle} numberOfLines={1}>
+              {profile ? `@${profile.username}` : session.user.email}
+            </Text>
+            {chips.length > 0 && (
+              <View style={styles.chips}>
+                {chips.map((c) => (
+                  <Text key={c} style={styles.chip}>
+                    {c}
+                  </Text>
+                ))}
+              </View>
+            )}
+          </View>
+          <Pressable onPress={() => router.push("/settings")} hitSlop={10} accessibilityLabel="Ayarlar">
+            <Ionicons name="settings-outline" size={22} color={colors.muted} />
+          </Pressable>
         </View>
 
-        <View style={styles.links}>
+        {/* Wallet */}
+        <View style={styles.wallet}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.walletLabel}>Coin bakiyem</Text>
+            <View style={styles.coinRow}>
+              <Ionicons name="logo-bitcoin" size={22} color={colors.coin} />
+              <Text style={styles.coins}>{balance ?? "–"}</Text>
+            </View>
+            <Text style={styles.walletHint}>Kilitli bölümleri reklam izleyerek de açabilirsin.</Text>
+          </View>
+          <Pressable
+            style={styles.topUp}
+            onPress={() => Alert.alert("Çok yakında", "Coin satın alma uygulama mağazaya çıktığında açılacak.")}
+          >
+            <Text style={styles.topUpText}>Şarj et</Text>
+          </Pressable>
+        </View>
+
+        {/* Stats */}
+        <View style={styles.stats}>
+          <Stat value={counts.watched} label="İzlenen" onPress={() => router.push("/library")} />
+          <Stat value={counts.listed} label="Listem" onPress={() => router.push("/library")} />
+          <Stat value={counts.following} label="Takip" onPress={() => router.push("/following")} />
+        </View>
+
+        <MenuSection title="İzleme">
+          <MenuRow icon="time-outline" label="Oynatma geçmişi" onPress={() => router.push("/library")} />
+          <MenuRow icon="people-outline" label="Takip ettiklerim" onPress={() => router.push("/following")} last />
+        </MenuSection>
+
+        <MenuSection title="Creator">
           {roles.creator ? (
-            <WebLink icon="videocam" label="Creator Studio’yu aç" onPress={() => openWeb("/studio")} />
+            <MenuRow icon="videocam-outline" label="Creator Studio" onPress={() => openWeb("/studio")} external last={!roles.admin && !roles.moderator} />
           ) : (
-            <WebLink icon="sparkles" label="Creator ol — kendi dizini yayınla" onPress={() => openWeb("/onboarding")} />
-          )}
-          {roles.staff && (
-            <WebLink
-              icon="shield-checkmark"
-              label={roles.pending > 0 ? `Admin paneli · ${roles.pending} bekleyen` : "Admin paneli"}
-              onPress={() => openWeb("/admin")}
+            <MenuRow
+              icon="sparkles-outline"
+              label="Creator ol — dizini yayınla"
+              onPress={() => openWeb("/onboarding")}
+              external
+              last={!roles.admin && !roles.moderator}
             />
           )}
-          <Text style={styles.hint}>Web’de açılır; ilk seferde orada da giriş yapman gerekir.</Text>
-        </View>
+          {(roles.admin || roles.moderator) && (
+            <MenuRow
+              icon="shield-checkmark-outline"
+              label="Admin paneli"
+              detail={roles.pending > 0 ? `${roles.pending} bekleyen` : undefined}
+              onPress={() => openWeb("/admin")}
+              external
+              last
+            />
+          )}
+        </MenuSection>
 
-        <Text style={styles.section}>Takip ettiklerim</Text>
-        {following.length === 0 ? (
-          <Text style={styles.muted}>Henüz kimseyi takip etmiyorsun. Dizi sayfasında creator’ı takip edebilirsin.</Text>
-        ) : (
-          following.map((c) => (
-            <View key={c.id} style={styles.row}>
-              <Text style={styles.rowText}>{c.name}</Text>
-              <Pressable onPress={() => unfollow(c.id)} hitSlop={8}>
-                <Text style={styles.unfollow}>Takibi bırak</Text>
-              </Pressable>
-            </View>
-          ))
-        )}
+        <MenuSection title="Destek">
+          <MenuRow icon="help-circle-outline" label="Sık sorulan sorular" onPress={() => router.push("/faq")} />
+          <MenuRow icon="chatbubble-ellipses-outline" label="Geri bildirim gönder" onPress={() => router.push("/feedback")} />
+          <MenuRow icon="settings-outline" label="Ayarlar" onPress={() => router.push("/settings")} last />
+        </MenuSection>
 
-        <Pressable style={styles.signOut} onPress={() => supabase.auth.signOut()}>
-          <Text style={styles.signOutText}>Çıkış yap</Text>
-        </Pressable>
+        <Text style={styles.version}>Sıra Sende {version}</Text>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-function WebLink({
-  icon,
-  label,
-  onPress,
-}: {
-  icon: React.ComponentProps<typeof Ionicons>["name"];
-  label: string;
-  onPress: () => void;
-}) {
+function Stat({ value, label, onPress }: { value: number; label: string; onPress: () => void }) {
   return (
-    <Pressable style={styles.link} onPress={onPress}>
-      <Ionicons name={icon} size={20} color={colors.text} />
-      <Text style={styles.linkText}>{label}</Text>
-      <Ionicons name="open-outline" size={16} color={colors.faint} />
+    <Pressable style={styles.stat} onPress={onPress}>
+      <Text style={styles.statValue}>{value}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  links: { marginTop: 20, gap: 8 },
-  link: {
+  screen: { flex: 1, backgroundColor: colors.background },
+  centered: { alignItems: "center", justifyContent: "center", padding: 24, gap: 8 },
+  centerText: { color: colors.muted, textAlign: "center", lineHeight: 20 },
+  content: { padding: 16, paddingBottom: 40, alignSelf: "center", width: "100%", maxWidth: 720 },
+  userCard: { flexDirection: "row", alignItems: "center", gap: 14 },
+  avatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: colors.accent,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarLarge: { width: 76, height: 76, borderRadius: 38, backgroundColor: colors.surface, marginBottom: 6 },
+  initial: { color: "#fff", fontSize: 26, fontWeight: "800" },
+  name: { color: colors.text, fontSize: 20, fontWeight: "800" },
+  handle: { color: colors.muted, marginTop: 2 },
+  chips: { flexDirection: "row", gap: 6, marginTop: 6 },
+  chip: {
+    color: "#fdba74",
+    fontSize: 11,
+    fontWeight: "700",
+    borderColor: "rgba(234,88,12,0.5)",
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    overflow: "hidden",
+  },
+  wallet: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+    marginTop: 20,
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: "#1c1206",
+    borderColor: "rgba(245,158,11,0.35)",
+    borderWidth: 1,
+  },
+  walletLabel: { color: colors.muted, fontSize: 13, fontWeight: "600" },
+  coinRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 },
+  coins: { color: colors.coin, fontSize: 30, fontWeight: "800" },
+  walletHint: { color: colors.faint, fontSize: 12, marginTop: 4 },
+  topUp: { backgroundColor: colors.coin, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10 },
+  topUpText: { color: "#1c1206", fontWeight: "800" },
+  stats: {
+    flexDirection: "row",
+    marginTop: 14,
     backgroundColor: colors.surface,
     borderColor: colors.border,
     borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
+    borderRadius: 14,
   },
-  linkText: { color: colors.text, fontSize: 15, flex: 1 },
-  hint: { color: colors.faint, fontSize: 11, marginTop: 2 },
-  screen: { flex: 1, backgroundColor: colors.background },
-  centered: { alignItems: "center", justifyContent: "center", padding: 32, gap: 8 },
-  content: { padding: 16, paddingBottom: 40, alignSelf: "center", width: "100%", maxWidth: 720 },
-  title: { color: colors.text, fontSize: 22, fontWeight: "800" },
-  email: { color: colors.muted, marginTop: 4 },
-  card: { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: 14, padding: 16, marginTop: 20, gap: 6 },
-  cardLabel: { color: colors.text, fontWeight: "700" },
-  coins: { color: colors.coin, fontSize: 30, fontWeight: "800" },
-  coinUnit: { fontSize: 15, color: colors.muted, fontWeight: "600" },
-  section: { color: colors.text, fontSize: 17, fontWeight: "700", marginTop: 28, marginBottom: 8 },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 12,
-    borderBottomColor: colors.border,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  rowText: { color: colors.text, fontSize: 15 },
-  unfollow: { color: colors.faint, fontSize: 13 },
-  muted: { color: colors.faint, textAlign: "left" },
-  button: { backgroundColor: colors.accent, borderRadius: 10, paddingVertical: 12, paddingHorizontal: 28, marginTop: 12 },
-  buttonText: { color: "#fff", fontWeight: "700" },
-  signOut: { marginTop: 40, alignSelf: "center", padding: 12 },
-  signOutText: { color: "#fb7185", fontWeight: "600" },
+  stat: { flex: 1, alignItems: "center", paddingVertical: 12 },
+  statValue: { color: colors.text, fontSize: 18, fontWeight: "800" },
+  statLabel: { color: colors.faint, fontSize: 12, marginTop: 2 },
+  primary: { backgroundColor: colors.accent, borderRadius: 10, paddingVertical: 12, paddingHorizontal: 32, marginTop: 12 },
+  primaryText: { color: "#fff", fontWeight: "700" },
+  version: { color: colors.faint, fontSize: 12, textAlign: "center", marginTop: 28 },
 });

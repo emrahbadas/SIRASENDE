@@ -19,6 +19,10 @@ export default function RootLayout() {
           <Stack.Screen name="series/[id]" options={{ title: "" }} />
           <Stack.Screen name="watch/[seriesId]" options={{ headerShown: false, animation: "fade" }} />
           <Stack.Screen name="login" options={{ title: "Giriş yap", presentation: "modal" }} />
+          <Stack.Screen name="following" options={{ title: "Takip ettiklerim" }} />
+          <Stack.Screen name="faq" options={{ title: "Sık sorulan sorular" }} />
+          <Stack.Screen name="feedback" options={{ title: "Geri bildirim" }} />
+          <Stack.Screen name="settings" options={{ title: "Ayarlar" }} />
         </Stack>
         <CurtainIntro />
       </ThemeProvider>
