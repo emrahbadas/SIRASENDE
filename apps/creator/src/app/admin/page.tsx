@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { approveSeries, rejectSeries, requestChanges } from "./actions";
+import { ModerationForm } from "./moderation-form";
 
 const warningLabels: Record<string, string> = {
   violence: "Şiddet",
@@ -53,8 +53,7 @@ export default async function AdminPage({
         <h1 className="mt-1 text-2xl font-bold">Moderasyon Kuyruğu</h1>
         <p className="mt-1 text-sm text-zinc-500">
           Onaylanan diziler vitrine çıkar; reddedilenler taslağa döner. Moderatörler tüm
-          bölümleri reklam ve kilit engeline takılmadan izler (video önizleme Phase 3&apos;te
-          aktifleşecek).
+          bölümleri reklam ve kilit engeline takılmadan izler.
         </p>
       </header>
 
@@ -114,37 +113,19 @@ export default async function AdminPage({
                   )}
                 </div>
 
-                <form className="mt-4 space-y-3" action={approveSeries}>
-                  <input type="hidden" name="series_id" value={s.id} />
-                  <textarea
-                    name="note"
-                    rows={2}
-                    placeholder="Red / düzeltme notu — creator bu notu görecek (onayda boş bırakılabilir)"
-                    className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-rose-500"
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      type="submit"
-                      className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium transition hover:bg-emerald-500"
-                    >
-                      Onayla
-                    </button>
-                    <button
-                      type="submit"
-                      formAction={requestChanges}
-                      className="rounded-lg border border-sky-800 px-4 py-2 text-sm text-sky-400 transition hover:bg-sky-950"
-                    >
-                      Düzeltme iste
-                    </button>
-                    <button
-                      type="submit"
-                      formAction={rejectSeries}
-                      className="rounded-lg border border-rose-800 px-4 py-2 text-sm text-rose-400 transition hover:bg-rose-950"
-                    >
-                      Reddet
-                    </button>
-                  </div>
-                </form>
+                <div className="mt-4 flex items-center gap-3">
+                  <Link
+                    href={`/admin/review/${s.id}`}
+                    className="rounded-lg bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-900 transition hover:bg-white"
+                  >
+                    ▶ Bölümleri izle ve incele
+                  </Link>
+                  <span className="text-xs text-zinc-500">Onaydan önce tüm bölümleri izle.</span>
+                </div>
+
+                <div className="mt-4">
+                  <ModerationForm seriesId={s.id} />
+                </div>
               </li>
             );
           })}
