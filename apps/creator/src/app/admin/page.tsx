@@ -66,12 +66,20 @@ export default async function AdminPage({
           <Link href="/" className="text-sm text-zinc-500 hover:text-zinc-300">
             ← Vitrin
           </Link>
-          <Link
-            href="/admin/productions"
-            className="rounded-lg border border-zinc-800 px-3 py-1.5 text-sm text-zinc-300 hover:border-zinc-600"
-          >
-            Tüm yapımlar →
-          </Link>
+          <div className="flex gap-2">
+            <Link
+              href="/admin/payouts"
+              className="rounded-lg border border-zinc-800 px-3 py-1.5 text-sm text-zinc-300 hover:border-zinc-600"
+            >
+              Ödemeler →
+            </Link>
+            <Link
+              href="/admin/productions"
+              className="rounded-lg border border-zinc-800 px-3 py-1.5 text-sm text-zinc-300 hover:border-zinc-600"
+            >
+              Tüm yapımlar →
+            </Link>
+          </div>
         </div>
         <h1 className="mt-1 text-2xl font-bold">Moderasyon Kuyruğu</h1>
         <p className="mt-1 text-sm text-zinc-500">

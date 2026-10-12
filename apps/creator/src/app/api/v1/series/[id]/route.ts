@@ -28,7 +28,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     .maybeSingle();
   if (!series) return json({ error: "not_found" }, 404);
 
-  // Positions count every episode (as can_watch_episode does), so read all of them
+  // Positions count published episodes only (as can_watch_episode does)
   const admin = createAdminClient();
   const { data: all } = await admin
     .from("episodes")
@@ -40,8 +40,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       one(a.seasons)!.season_number - one(b.seasons)!.season_number || a.episode_number - b.episode_number
   );
   const published = ordered
-    .map((e, i) => ({ e, position: i + 1 }))
-    .filter(({ e }) => e.status === "published");
+    .filter((e) => e.status === "published")
+    .map((e, i) => ({ e, position: i + 1 }));
 
   const production = one(series.productions);
   const creator = one(production?.creator_profiles);

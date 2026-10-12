@@ -126,3 +126,26 @@ export async function coinBalance(): Promise<number | null> {
     .maybeSingle();
   return data?.balance ?? 0;
 }
+
+/**
+ * Asks the server to unlock an episode after a rewarded ad. The unlock is
+ * granted by AdMob's signed callback, which can arrive a few seconds after
+ * the ad closes, so a `pending` answer is retried for a while.
+ */
+export async function unlockWithAd(episodeId: string): Promise<void> {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  if (!token) throw new Error(unlockMessages.not_authenticated);
+
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const res = await fetch(`${config.apiUrl}/api/v1/episodes/${episodeId}/ad-unlock`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const body = await res.json().catch(() => ({}));
+    if (res.ok && body.unlocked) return;
+    if (res.status !== 202) throw new Error(unlockMessages[body.error] ?? "Bölüm açılamadı");
+    await new Promise((r) => setTimeout(r, 1500));
+  }
+  throw new Error("Reklam doğrulanamadı, birazdan tekrar dene");
+}

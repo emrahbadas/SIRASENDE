@@ -31,7 +31,7 @@ export async function getSeriesCovers(
       series.map((s) => s.id)
     );
 
-  // First published episode per series, with its absolute position (as can_watch_episode counts)
+  // First published episode per series; it is position 1 (can_watch_episode counts published only)
   const firstBySeries = new Map<string, { episodeId: string; position: number }>();
   const bySeries = new Map<string, NonNullable<typeof episodes>>();
   for (const e of episodes ?? []) {
@@ -43,8 +43,8 @@ export async function getSeriesCovers(
       (a, b) =>
         one(a.seasons)!.season_number - one(b.seasons)!.season_number || a.episode_number - b.episode_number
     );
-    const index = ordered.findIndex((e) => e.status === "published");
-    if (index >= 0) firstBySeries.set(seriesId, { episodeId: ordered[index]!.id, position: index + 1 });
+    const first = ordered.find((e) => e.status === "published");
+    if (first) firstBySeries.set(seriesId, { episodeId: first.id, position: 1 });
   }
 
   const freeFirst = series.filter((s) => {

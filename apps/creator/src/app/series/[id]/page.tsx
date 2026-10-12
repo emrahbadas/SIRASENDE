@@ -44,10 +44,11 @@ export default async function PublicSeriesPage({
   const production = one(series.productions);
   const creatorName = one(production?.creator_profiles)?.creator_name;
 
-  // Absolute position across seasons decides the free window (matches can_watch_episode)
+  // Position among published episodes decides the free window (matches can_watch_episode)
   const positions = new Map(
     seasons
       .flatMap((s) => [...s.episodes].sort((a, b) => a.episode_number - b.episode_number))
+      .filter((e) => e.status === "published")
       .map((e, i) => [e.id, i + 1])
   );
 

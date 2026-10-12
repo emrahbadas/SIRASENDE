@@ -161,3 +161,26 @@ export async function adminDeleteProduction(formData: FormData) {
   revalidateAll();
   redirect("/admin/productions");
 }
+
+/** Admin marks a payout as sent to the bank (with a reference) or rejects it (earnings refunded). */
+export async function resolvePayout(formData: FormData) {
+  const { supabase, isAdmin } = await requireModerator();
+  if (!isAdmin) back(formData, "Ödemeleri yalnızca adminler sonuçlandırabilir");
+
+  const paid = formData.get("paid") === "1";
+  const reference = String(formData.get("reference") ?? "").trim() || null;
+  const note = String(formData.get("note") ?? "").trim() || null;
+  if (paid && !reference) back(formData, "Ödendi işaretlemek için banka işlem referansını gir");
+  if (!paid && !note) back(formData, "Reddederken creator'a bir sebep yaz");
+
+  const { error } = await supabase.rpc("resolve_payout", {
+    p_payout_id: String(formData.get("payout_id") ?? ""),
+    p_paid: paid,
+    p_reference: reference,
+    p_note: note,
+  });
+  if (error) back(formData, error.message.includes("payout_not_open") ? "Bu talep zaten sonuçlanmış" : error.message);
+
+  revalidatePath("/admin/payouts");
+  back(formData);
+}

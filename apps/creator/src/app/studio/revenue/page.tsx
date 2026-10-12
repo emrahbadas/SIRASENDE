@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { formatTry, requireCreator } from "../require-creator";
-import { requestPayout } from "./actions";
+import { formatIban } from "@/lib/iban";
+import { requestPayout, savePayoutAccount } from "./actions";
 
 const one = <T,>(v: T | T[] | null | undefined): T | null =>
   Array.isArray(v) ? (v[0] ?? null) : (v ?? null);
@@ -30,12 +31,12 @@ const bps = (v: number) => `%${v / 100}`;
 export default async function RevenuePage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; requested?: string }>;
+  searchParams: Promise<{ error?: string; requested?: string; saved?: string }>;
 }) {
-  const { error, requested } = await searchParams;
+  const { error, requested, saved } = await searchParams;
   const { supabase, creator } = await requireCreator();
 
-  const [{ data: wallet }, { data: payouts }, { data: policy }, { data: storage }] = await Promise.all([
+  const [{ data: wallet }, { data: payouts }, { data: policy }, { data: storage }, { data: account }] = await Promise.all([
     supabase
       .from("wallet_accounts")
       .select("id, balance")
@@ -57,6 +58,7 @@ export default async function RevenuePage({
       .limit(1)
       .maybeSingle(),
     supabase.rpc("my_storage_summary").maybeSingle<{ quota_minutes: number; used_seconds: number }>(),
+    supabase.from("creator_payout_accounts").select("account_holder, iban").eq("creator_id", creator.id).maybeSingle(),
   ]);
 
   const { data: entries } = wallet
@@ -78,7 +80,7 @@ export default async function RevenuePage({
   const balance = wallet?.balance ?? 0;
   const minPayout = policy?.min_payout_minor ?? 50000;
   const pending = (payouts ?? []).some((p) => p.status === "requested" || p.status === "processing");
-  const canRequest = balance >= minPayout && !pending;
+  const canRequest = balance >= minPayout && !pending && !!account;
 
   const usedMinutes = Math.ceil((storage?.used_seconds ?? 0) / 60);
   const quota = storage?.quota_minutes ?? 0;
@@ -93,6 +95,11 @@ export default async function RevenuePage({
       {error && (
         <p className="mt-6 rounded-lg border border-rose-900 bg-rose-950/50 p-3 text-sm text-rose-300">
           {decodeURIComponent(error)}
+        </p>
+      )}
+      {saved && (
+        <p className="mt-6 rounded-lg border border-emerald-900 bg-emerald-950/40 p-3 text-sm text-emerald-300">
+          Ödeme hesabın kaydedildi.
         </p>
       )}
       {requested && (
@@ -128,9 +135,11 @@ export default async function RevenuePage({
             </button>
           </form>
           <p className="mt-2 text-xs text-zinc-500">
-            {pending
-              ? "Bekleyen bir talebin var; sonuçlanınca yenisini açabilirsin."
-              : `Minimum ödeme: ${formatTry(minPayout)}`}
+            {!account
+              ? "Ödeme talep etmek için aşağıdan IBAN'ını kaydet."
+              : pending
+                ? "Bekleyen bir talebin var; sonuçlanınca yenisini açabilirsin."
+                : `Minimum ödeme: ${formatTry(minPayout)}`}
           </p>
         </section>
 
@@ -153,6 +162,40 @@ export default async function RevenuePage({
           )}
         </section>
       </div>
+
+      <section className="mt-4 rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
+        <p className="text-sm text-zinc-500">Ödeme hesabı</p>
+        {account && (
+          <p className="mt-1 text-sm">
+            {account.account_holder} · <span className="font-mono">{formatIban(account.iban)}</span>
+          </p>
+        )}
+        <form action={savePayoutAccount} className="mt-3 grid gap-2 sm:grid-cols-[1fr_1.4fr_auto]">
+          <input
+            name="account_holder"
+            defaultValue={account?.account_holder ?? ""}
+            placeholder="Hesap sahibinin adı soyadı"
+            required
+            className="rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-rose-500"
+          />
+          <input
+            name="iban"
+            defaultValue={account ? formatIban(account.iban) : ""}
+            placeholder="TR00 0000 0000 0000 0000 0000 00"
+            required
+            className="rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 font-mono text-sm outline-none focus:border-rose-500"
+          />
+          <button
+            type="submit"
+            className="rounded-lg border border-zinc-700 px-4 py-2 text-sm text-zinc-200 transition hover:border-zinc-500"
+          >
+            {account ? "Güncelle" : "Kaydet"}
+          </button>
+        </form>
+        <p className="mt-2 text-xs text-zinc-500">
+          Hesap senin adına olmalı. Değişiklik yalnızca bundan sonraki talepleri etkiler.
+        </p>
+      </section>
 
       <section className="mt-4 rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
         <div className="flex items-baseline justify-between">
