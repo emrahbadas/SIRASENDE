@@ -10,7 +10,7 @@ const QUESTIONS: { q: string; a: string }[] = [
   },
   {
     q: "Hangi bölümler ücretsiz?",
-    a: "Her dizinin ilk bölümleri ücretsiz (dizinin yaklaşık beşte biri, en az bir bölüm). Diğer bölümleri kısa bir reklam izleyerek ya da coin ile açabilirsin.",
+    a: "Her dizinin ilk bölümleri ücretsiz: dizinin yaklaşık beşte biri, en az 1, en fazla 8 bölüm. Diğer bölümleri kısa bir reklam izleyerek ya da coin ile açabilirsin.",
   },
   {
     q: "Açtığım bölüm tekrar kilitlenir mi?",

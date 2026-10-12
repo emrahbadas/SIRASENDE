@@ -31,6 +31,7 @@ Platform; mobil izleme deneyimini, creator ekonomisini, vertical discovery akı�
 - [Moderation and Copyright](#moderation-and-copyright)
 - [Security](#security)
 - [Recommendation Strategy](#recommendation-strategy)
+- [Creator Growth Program](#creator-growth-program)
 - [KPI Framework](#kpi-framework)
 - [MVP Scope](#mvp-scope)
 - [Non-Goals and V2 Scope](#non-goals-and-v2-scope)
@@ -1337,6 +1338,69 @@ User History
 - Creator discovery optimization
 
 Recommendation sistemi ayrı bir servis veya domain katmanı gibi düşünülmelidir. Mobile UI içine gömülmemelidir.
+
+---
+
+## Creator Growth Program
+
+Amaç: creator'a yalnızca "depolama ücreti öde" demek yerine, başarısıyla kazanabileceği avantajlar sunmak ve creator'lar arasında sağlıklı rekabet oluşturmak. İlk 90 gün başlangıç kampanyasıdır (ilk 100 creator); sonrası creator'ın başarısıyla yeniden kazandığı avantajlardır.
+
+Ödül **yükleme sayısına veya ham izlenmeye değil, kaliteye ve gerçek izleyiciye** bağlıdır; aksi hâlde kaliteli hikâye yerine çok bölüm yüklemeyi ve yapay izlenmeyi teşvik eder.
+
+### Neden ham izlenme değil
+
+- Playback sayacı (`series_daily_views`) her oynatma bağlantısında artar; tekrar açarak şişirilebilir. Ödül hesabında kullanılmaz, yalnızca vitrin sıralamasında kullanılır.
+- Yalnızca toplam izlenmeye bakılırsa büyük hesaplar sürekli kazanır, yeni gelen "ben zaten yetişemem" der. Bu yüzden iki ayrı yarış alanı vardır.
+- Para ödülü vergi/stopaj ve kötüye kullanım riski taşır; başlangıçta ödüller **platform içi avantaj**dır.
+
+### Açılışların sayılması
+
+| Açılış türü | Ne gösterir | Ödül sayacında |
+|---|---|---|
+| Satın alınmış coinle | Gelir başarısı | Tam sayılır (farklı izleyiciler) |
+| Reklamla | İlgi + reklam geliri | Gerçekleşen reklam geliri ve izlenme gideriyle birlikte değerlendirilir |
+| Bonus coinle | İzleyici ilgisi | İlgi sinyali; ücretli satış gibi sayılmaz |
+| Tekrar izleme | Bağlılık | Yeni açılış sayılmaz |
+
+Sayılmayanlar: aynı kişinin aynı bölümü tekrar oynatması, creator'ın kendi hesabı, admin/moderatör izlemeleri, iade edilmiş satın almalar.
+
+### Başarılar ve ödüller
+
+| Başarı | Nasıl ölçülür | Ödül |
+|---|---|---|
+| İlk Sezon | Onaylanmış bölümlerle tamamlanmış ilk dizi | "İlk Sezon" rozeti, tanıtımda yer alma fırsatı |
+| İzleyicinin Seçimi | Yeterli sayıda farklı izleyicide bölüm tamamlama ve sonraki bölüme geçiş | Rozet, keşfette süreli tanıtım |
+| Ücretli bölümleri ilgi görüyor | Farklı izleyicilerin satın alınmış coinle geçerli açılışları | Bir sonraki ay depolama desteği |
+| Düzenli başarı | Birkaç ay boyunca izleyici devamlılığı ve pozitif platform katkısı | Süreli gelir payı artışı (aşağıda) |
+| Aylık kampanya kazananı | Önceden açıklanan ölçütler | Bütçesi sınırlı özel bonus veya yeni proje desteği |
+
+### İki yarış alanı
+
+| Alan | Kim | Amaç |
+|---|---|---|
+| Yükselen Creator | İlk yapımını yakın zamanda yayınlayanlar; benzer yayın yaşı ve yeterli izleyici örneğiyle karşılaştırılır | Yeni başlayanların da görünürlük ve ödül kazanabilmesi |
+| Ayın Başarılı Dizisi | Tüm yerleşik diziler, kategori bazında | Güçlü performansı ödüllendirmek |
+
+Performans puanı bileşenleri (ağırlıklar pilotta ayarlanır): farklı giriş yapmış izleyici, bölüm geçiş oranı, tamamlama oranı, coinle açılış, takipçi artışı. Moderasyon ihlali olan creator o dönem yarışa giremez.
+
+### Gelir payı artışı (sınırlı)
+
+- Örnek: kampanya kazananına bir sonraki ay, belirli bir kazanç tavanına kadar %60 yerine %65.
+- 5 puanlık artış platform payını %40'tan %35'e indirir; platform payından göreli **%12,5** fedakârlıktır. Bütçesiz dağıtılmaz.
+- Kalıcı değil, süreli ve tavanlı; gerçek gelir ve izlenme verisi oluştuktan sonra eklenir.
+
+### Başlangıç kapsamı
+
+- **İlk sürüm:** rozet + süreli tanıtım + bir aylık depolama desteği.
+- **Sonra:** sınırlı %65 kampanyası.
+- Eşikler ("1.000 açılış" gibi) şimdiden sabitlenmez; pilotta ulaşılabilirlik ve maliyet görülerek belirlenir.
+- Tüm ödüllerin aylık maliyeti, platform payının en fazla %10'u ile sınırlıdır (bonus coin bütçesiyle aynı havuz).
+
+### Altyapı
+
+- **creator_grants** tablosu (ilk 100 creator kampanyasıyla ortak): creator, tür (`storage_minutes`, `featured`, `share_bonus_bps` + kazanç tavanı, `badge`), değer, başlangıç/bitiş, kaynak kampanya, veren admin. Kotalar ve pay hesabı yalnızca süresi geçmemiş hakları dikkate alır.
+- **Admin creator sıralaması**: dönem, kategori ve yarış alanı filtreli tablo (farklı izleyici, geçiş, tamamlama, açılış türleri, takipçi); satırdan hak atama.
+- Hak tablosu ilk 100 creator kampanyasıyla birlikte kurulur; sıralama sayfası ölçütlerin anlamlı olacağı ölçekte (≈20+ aktif creator) açılır.
 
 ---
 
