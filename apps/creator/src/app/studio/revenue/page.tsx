@@ -51,7 +51,7 @@ export default async function RevenuePage({
       .limit(10),
     supabase
       .from("revenue_policies")
-      .select("version, ad_creator_share_bps, download_creator_share_bps, coin_unlock_creator_share_bps, coin_value_minor, min_payout_minor")
+      .select("version, ad_creator_share_bps, download_creator_share_bps, coin_unlock_creator_share_bps, min_payout_minor")
       .lte("effective_from", new Date().toISOString())
       .order("effective_from", { ascending: false })
       .order("version", { ascending: false })
@@ -156,8 +156,9 @@ export default async function RevenuePage({
           {policy && (
             <p className="mt-4 border-t border-zinc-800 pt-3 text-xs text-zinc-500">
               Senin payın: reklam {bps(policy.ad_creator_share_bps)} · coin ile açma{" "}
-              {bps(policy.coin_unlock_creator_share_bps)} · indirme {bps(policy.download_creator_share_bps)}. 1 coin ={" "}
-              {formatTry(policy.coin_value_minor)}.
+              {bps(policy.coin_unlock_creator_share_bps)} · indirme {bps(policy.download_creator_share_bps)}. Coin
+              ile açılan bölümde pay; izleyicinin ödediği tutardan KDV, mağaza komisyonu ve bölümün video dağıtım
+              maliyeti düşüldükten sonra hesaplanır.
             </p>
           )}
         </section>
