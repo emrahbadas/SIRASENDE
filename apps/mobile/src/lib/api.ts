@@ -134,25 +134,42 @@ export async function coinBalance(): Promise<number | null> {
   return data?.balance ?? 0;
 }
 
-/**
- * Asks the server to unlock an episode after a rewarded ad. The unlock is
- * granted by AdMob's signed callback, which can arrive a few seconds after
- * the ad closes, so a `pending` answer is retried for a while.
- */
-export async function unlockWithAd(episodeId: string): Promise<void> {
+export interface AdUnlockStatus {
+  unlocked: boolean;
+  adsWatched: number;
+  adsRequired: number;
+  dailyLimit: number;
+  dailyRemaining: number;
+  resetsAt: string;
+}
+
+async function adUnlockCall(episodeId: string, method: "GET" | "POST"): Promise<AdUnlockStatus> {
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
   if (!token) throw new Error(unlockMessages.not_authenticated);
+  const res = await fetch(`${config.apiUrl}/api/v1/episodes/${episodeId}/ad-unlock`, {
+    method,
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(unlockMessages[body.error] ?? "Bölüm açılamadı");
+  return body as AdUnlockStatus;
+}
 
+/** Ad progress for a locked episode and the viewer's ad unlocks left today. */
+export const adUnlockStatus = (episodeId: string) => adUnlockCall(episodeId, "GET");
+
+/**
+ * Reports an earned rewarded ad and waits until the server has counted it.
+ * In production AdMob's signed callback does the counting and can arrive a
+ * few seconds after the ad closes, so progress is polled.
+ */
+export async function reportRewardedAd(episodeId: string, before: AdUnlockStatus): Promise<AdUnlockStatus> {
+  let s = await adUnlockCall(episodeId, "POST");
   for (let attempt = 0; attempt < 8; attempt++) {
-    const res = await fetch(`${config.apiUrl}/api/v1/episodes/${episodeId}/ad-unlock`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const body = await res.json().catch(() => ({}));
-    if (res.ok && body.unlocked) return;
-    if (res.status !== 202) throw new Error(unlockMessages[body.error] ?? "Bölüm açılamadı");
+    if (s.unlocked || s.adsWatched > before.adsWatched) return s;
     await new Promise((r) => setTimeout(r, 1500));
+    s = await adUnlockCall(episodeId, "GET");
   }
   throw new Error("Reklam doğrulanamadı, birazdan tekrar dene");
 }

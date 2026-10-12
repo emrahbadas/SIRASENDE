@@ -3,11 +3,14 @@ import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { adsAvailable, showRewardedAd } from "@/lib/ads";
-import { coinBalance, unlockWithAd, unlockWithCoins } from "@/lib/api";
+import { adUnlockStatus, coinBalance, reportRewardedAd, unlockWithCoins, type AdUnlockStatus } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/lib/config";
 
-/** Shown instead of the player for a locked episode: watch an ad or spend coins. */
+/**
+ * Shown instead of the player for a locked episode: watch rewarded ads
+ * (N per episode, daily limit) or spend coins.
+ */
 export function LockedEpisode({
   episodeId,
   price,
@@ -19,20 +22,21 @@ export function LockedEpisode({
 }) {
   const { session } = useAuth();
   const [balance, setBalance] = useState<number | null>(null);
+  const [ad, setAd] = useState<AdUnlockStatus | null>(null);
   const [busy, setBusy] = useState<"ad" | "coins" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     coinBalance().then(setBalance);
-  }, [session?.user.id]);
+    if (session && adsAvailable) adUnlockStatus(episodeId).then(setAd, () => setAd(null));
+  }, [session, episodeId]);
 
-  async function run(kind: "ad" | "coins", action: () => Promise<void>) {
+  async function run(kind: "ad" | "coins", action: () => Promise<boolean>) {
     if (!session) return router.push("/login");
     setBusy(kind);
     setError(null);
     try {
-      await action();
-      onUnlocked();
+      if (await action()) onUnlocked();
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -42,18 +46,35 @@ export function LockedEpisode({
 
   const watchAd = () =>
     run("ad", async () => {
+      const before = ad ?? (await adUnlockStatus(episodeId));
       const result = await showRewardedAd({ userId: session!.user.id, episodeId });
-      if (result === "dismissed") throw new Error("Bölümü açmak için reklamı sonuna kadar izlemelisin");
+      if (result === "dismissed") throw new Error("Reklamı sonuna kadar izlersen sayılır");
       if (result === "unavailable") throw new Error("Şu an reklam yok, birazdan tekrar dene");
-      await unlockWithAd(episodeId);
+      const next = await reportRewardedAd(episodeId, before);
+      setAd(next);
+      return next.unlocked;
     });
+
+  const coins = () =>
+    run("coins", async () => {
+      await unlockWithCoins(episodeId);
+      return true;
+    });
+
+  const limitReached = !!ad && ad.dailyRemaining === 0;
+  const adsLeft = ad ? Math.max(ad.adsRequired - ad.adsWatched, 1) : 2;
+  const resetTime = ad
+    ? new Date(ad.resetsAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Istanbul" })
+    : "00:00";
 
   return (
     <View style={styles.wrap}>
       <Text style={styles.lock}>🔒</Text>
       <Text style={styles.title}>Bu bölüm kilitli</Text>
       <Text style={styles.text}>
-        {adsAvailable ? `Kısa bir reklam izle ya da ${price} coin ile hemen aç.` : `${price} coin ile hemen aç.`}
+        {adsAvailable && !limitReached
+          ? `${adsLeft} kısa reklam izle ya da ${price} coin ile hemen aç.`
+          : `${price} coin ile hemen aç.`}
       </Text>
 
       {!session ? (
@@ -62,21 +83,34 @@ export function LockedEpisode({
         </Pressable>
       ) : (
         <>
-          {adsAvailable && (
+          {adsAvailable && !limitReached && (
             <Pressable style={styles.button} onPress={watchAd} disabled={!!busy}>
               {busy === "ad" ? (
                 <ActivityIndicator color="#fff" />
               ) : (
                 <View style={styles.row}>
                   <Ionicons name="play-circle" size={18} color="#fff" />
-                  <Text style={styles.buttonText}>Reklam izle, ücretsiz aç</Text>
+                  <Text style={styles.buttonText}>
+                    {ad && ad.adsWatched > 0
+                      ? `Reklam izle (${ad.adsWatched}/${ad.adsRequired})`
+                      : adsLeft > 1
+                        ? `${adsLeft} reklam izle, ücretsiz aç`
+                        : "Reklam izle, ücretsiz aç"}
+                  </Text>
                 </View>
               )}
             </Pressable>
           )}
+          {adsAvailable && ad && (
+            <Text style={styles.quota}>
+              {limitReached
+                ? `Bugünkü reklam hakkın bitti · ${resetTime}'da yenilenir`
+                : `Bugün reklamla ${ad.dailyRemaining} bölüm daha açabilirsin`}
+            </Text>
+          )}
           <Pressable
-            style={[styles.button, adsAvailable && styles.secondary]}
-            onPress={() => run("coins", () => unlockWithCoins(episodeId))}
+            style={[styles.button, adsAvailable && !limitReached && styles.secondary]}
+            onPress={coins}
             disabled={!!busy}
           >
             {busy === "coins" ? (
@@ -102,6 +136,7 @@ const styles = StyleSheet.create({
   secondary: { backgroundColor: "transparent", borderColor: colors.coin, borderWidth: 1 },
   row: { flexDirection: "row", alignItems: "center", gap: 8 },
   buttonText: { color: "#fff", fontWeight: "700", fontSize: 15 },
+  quota: { color: colors.faint, fontSize: 12, marginTop: 8, textAlign: "center" },
   balance: { color: colors.coin, marginTop: 12 },
   error: { color: "#fb7185", marginTop: 10, textAlign: "center" },
 });
