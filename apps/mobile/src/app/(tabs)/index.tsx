@@ -1,3 +1,4 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useFocusEffect, Link, router } from "expo-router";
 import { Image } from "expo-image";
 import { useCallback, useState } from "react";
@@ -8,6 +9,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   useWindowDimensions,
   View,
 } from "react-native";
@@ -18,6 +20,7 @@ import { api, type CatalogSeries } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/lib/config";
 import { continueWatching, type LocalProgress } from "@/lib/progress";
+import { badgesFor, matchesSearch, rankLabel, SORT_TABS, sortSeries, type SortTab } from "@/lib/ranking";
 
 const GAP = 12;
 const PADDING = 16;
@@ -32,6 +35,8 @@ export default function HomeScreen() {
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [category, setCategory] = useState<string | null>(null);
+  const [tab, setTab] = useState<SortTab>("popular");
+  const [query, setQuery] = useState("");
 
   const signedIn = !!session;
   const load = useCallback(async () => {
@@ -60,7 +65,14 @@ export default function HomeScreen() {
   const categories = [
     ...new Map((series ?? []).flatMap((s) => s.categories).map((c) => [c.slug, c])).values(),
   ].sort((a, b) => a.name_tr.localeCompare(b.name_tr, "tr"));
-  const shown = (series ?? []).filter((s) => !category || s.categories.some((c) => c.slug === category));
+  const shown = sortSeries(
+    (series ?? []).filter(
+      (s) => (!category || s.categories.some((c) => c.slug === category)) && matchesSearch(s, query)
+    ),
+    tab
+  );
+  const badges = badgesFor(series ?? [], new Set(resumable.map((p) => p.seriesId)));
+  const searching = query.trim().length > 0;
 
   return (
     <SafeAreaView style={styles.screen} edges={["top"]}>
@@ -89,9 +101,27 @@ export default function HomeScreen() {
           />
         }
       >
-        <CreatorCta />
+        <View style={styles.search}>
+          <Ionicons name="search" size={16} color={colors.faint} />
+          <TextInput
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Dizi, creator veya tür ara"
+            placeholderTextColor={colors.faint}
+            style={styles.searchInput}
+            returnKeyType="search"
+            autoCorrect={false}
+          />
+          {searching && (
+            <Pressable onPress={() => setQuery("")} hitSlop={10} accessibilityLabel="Aramayı temizle">
+              <Ionicons name="close-circle" size={16} color={colors.faint} />
+            </Pressable>
+          )}
+        </View>
 
-        {resumable.length > 0 && (
+        {!searching && <CreatorCta />}
+
+        {!searching && resumable.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Kaldığın yerden devam et</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: GAP }}>
@@ -120,7 +150,14 @@ export default function HomeScreen() {
         )}
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Keşfet</Text>
+          <View style={styles.tabs}>
+            {SORT_TABS.map((t) => (
+              <Pressable key={t.key} onPress={() => setTab(t.key)} hitSlop={6}>
+                <Text style={[styles.tab, tab === t.key && styles.tabActive]}>{t.label}</Text>
+                {tab === t.key && <View style={styles.tabBar} />}
+              </Pressable>
+            ))}
+          </View>
           {categories.length > 0 && (
             <ScrollView
               horizontal
@@ -148,12 +185,22 @@ export default function HomeScreen() {
             <ActivityIndicator color={colors.muted} style={{ marginTop: 32 }} />
           ) : shown.length === 0 ? (
             <Text style={styles.empty}>
-              {series.length === 0 ? "Henüz yayında dizi yok." : "Bu kategoride henüz dizi yok."}
+              {series.length === 0
+                ? "Henüz yayında dizi yok."
+                : searching
+                  ? `"${query.trim()}" için sonuç yok.`
+                  : "Bu kategoride henüz dizi yok."}
             </Text>
           ) : (
             <View style={styles.grid}>
-              {shown.map((s) => (
-                <SeriesCard key={s.id} series={s} width={cardWidth} />
+              {shown.map((s, i) => (
+                <SeriesCard
+                  key={s.id}
+                  series={s}
+                  width={cardWidth}
+                  badge={badges.get(s.id)}
+                  label={category || searching ? null : rankLabel(tab, i, s)}
+                />
               ))}
             </View>
           )}
@@ -178,6 +225,22 @@ const styles = StyleSheet.create({
   section: { marginTop: 12 },
   sectionTitle: { color: colors.text, fontSize: 17, fontWeight: "700", marginBottom: 12 },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: GAP },
+  search: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    marginBottom: 10,
+  },
+  searchInput: { flex: 1, color: colors.text, fontSize: 14, paddingVertical: 9 },
+  tabs: { flexDirection: "row", gap: 20, marginBottom: 12 },
+  tab: { color: colors.faint, fontSize: 16, fontWeight: "700", paddingBottom: 6 },
+  tabActive: { color: colors.text },
+  tabBar: { height: 3, borderRadius: 2, backgroundColor: colors.accent, marginTop: -3 },
   chips: { gap: 8 },
   chip: { borderColor: colors.border, borderWidth: 1, borderRadius: 16, paddingHorizontal: 14, paddingVertical: 6 },
   chipActive: { borderColor: colors.accent, backgroundColor: "rgba(234,88,12,0.14)" },

@@ -1,10 +1,29 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { Image } from "expo-image";
 import { Link } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { CatalogSeries } from "@/lib/api";
 import { colors } from "@/lib/config";
+import { formatViews, type Badge } from "@/lib/ranking";
 
-export function SeriesCard({ series, width }: { series: CatalogSeries; width: number }) {
+const BADGE_COLORS: Record<Badge, string> = {
+  İzliyorum: "#2563EB",
+  Gündemde: colors.accent,
+  Yeni: "#16A34A",
+};
+
+export function SeriesCard({
+  series,
+  width,
+  badge,
+  label,
+}: {
+  series: CatalogSeries;
+  width: number;
+  badge?: Badge;
+  /** Shown under the poster instead of the genre, e.g. "No 1 · En çok izlenen" */
+  label?: string | null;
+}) {
   return (
     <Link href={{ pathname: "/series/[id]", params: { id: series.id } }} asChild>
       <Pressable style={{ width }}>
@@ -16,20 +35,43 @@ export function SeriesCard({ series, width }: { series: CatalogSeries; width: nu
               {series.title}
             </Text>
           )}
+          {badge && <Text style={[styles.badge, { backgroundColor: BADGE_COLORS[badge] }]}>{badge}</Text>}
           {series.ageRating && <Text style={styles.age}>{series.ageRating}</Text>}
+          {series.views > 0 && (
+            <View style={styles.views}>
+              <Ionicons name="play" size={10} color="#fff" />
+              <Text style={styles.viewsText}>{formatViews(series.views)}</Text>
+            </View>
+          )}
         </View>
         <Text style={styles.title} numberOfLines={2}>
           {series.title}
         </Text>
-        {series.categories[0] && (
-          <Text style={styles.tag} numberOfLines={1}>
-            {series.categories[0].name_tr}
+        {label ? (
+          <Text style={styles.rank} numberOfLines={1}>
+            {label}
           </Text>
+        ) : (
+          series.categories[0] && (
+            <Text style={styles.tag} numberOfLines={1}>
+              {series.categories[0].name_tr}
+            </Text>
+          )
         )}
       </Pressable>
     </Link>
   );
 }
+
+const chip = {
+  position: "absolute",
+  fontSize: 10,
+  fontWeight: "700",
+  paddingHorizontal: 5,
+  paddingVertical: 1,
+  borderRadius: 4,
+  overflow: "hidden",
+} as const;
 
 const styles = StyleSheet.create({
   poster: {
@@ -40,19 +82,22 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   placeholder: { color: colors.faint, fontWeight: "700", textAlign: "center", paddingHorizontal: 8 },
-  age: {
+  badge: { ...chip, top: 6, left: 6, color: "#fff" },
+  age: { ...chip, top: 6, right: 6, color: "#fbbf24", backgroundColor: "rgba(0,0,0,0.6)" },
+  views: {
     position: "absolute",
-    top: 6,
-    right: 6,
-    color: "#fbbf24",
-    fontSize: 10,
-    fontWeight: "700",
-    backgroundColor: "rgba(0,0,0,0.6)",
+    left: 6,
+    bottom: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    borderRadius: 4,
     paddingHorizontal: 5,
     paddingVertical: 1,
-    borderRadius: 4,
-    overflow: "hidden",
   },
+  viewsText: { color: "#fff", fontSize: 10, fontWeight: "700" },
   title: { color: colors.text, fontSize: 13, fontWeight: "600", marginTop: 6 },
   tag: { color: colors.faint, fontSize: 11, marginTop: 2 },
+  rank: { color: colors.coin, fontSize: 11, fontWeight: "700", marginTop: 2 },
 });

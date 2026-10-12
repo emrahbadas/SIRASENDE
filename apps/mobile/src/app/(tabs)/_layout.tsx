@@ -20,6 +20,13 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="shorts"
+        options={{
+          title: "Kısa",
+          tabBarIcon: ({ color, size }) => <Ionicons name="play-circle" color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
         name="library"
         options={{
           title: "Listem",

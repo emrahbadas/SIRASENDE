@@ -34,7 +34,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   }
 
   // Assets are not readable by viewers; access was checked above
-  const { data: asset } = await createAdminClient()
+  const admin = createAdminClient();
+  const { data: asset } = await admin
     .from("video_assets")
     .select("provider_asset_id, duration_seconds, width, height")
     .eq("episode_id", id)
@@ -43,7 +44,14 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     .maybeSingle();
   if (!asset?.provider_asset_id) return json({ error: "video_not_ready" }, 404);
 
-  const token = await createPlaybackToken(asset.provider_asset_id, TOKEN_TTL_SECONDS);
+  const [token] = await Promise.all([
+    createPlaybackToken(asset.provider_asset_id, TOKEN_TTL_SECONDS),
+    // Home-screen view counts (popular / trending); best effort
+    admin.rpc("record_series_view", { p_episode_id: id }).then(
+      () => undefined,
+      () => undefined
+    ),
+  ]);
 
   let resumeAt = 0;
   if (userId) {

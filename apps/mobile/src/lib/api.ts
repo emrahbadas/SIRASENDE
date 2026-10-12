@@ -11,8 +11,15 @@ export interface CatalogSeries {
   poster: string | null;
   preview: string | null;
   episodeCount: number;
+  /** First published episode (Shorts feed) */
+  firstEpisodeId: string | null;
   freeEpisodeCount: number;
   episodeCoinPrice: number;
+  /** Playback starts, all time and over the last 7 days */
+  views: number;
+  views7d: number;
+  /** When the first episode went on air */
+  publishedAt: string;
 }
 
 export type EpisodeAccess = "free" | "unlocked" | "locked";
