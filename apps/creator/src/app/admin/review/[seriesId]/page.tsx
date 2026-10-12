@@ -3,6 +3,18 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createPlaybackToken, iframeUrl } from "@/lib/cloudflare/stream";
 import { ModerationForm } from "../../moderation-form";
+import { ConfirmSubmit } from "@/components/confirm-submit";
+import { adminDeleteEpisode, adminDeleteProduction, setEpisodeBlocked, setSeriesBlocked } from "../../actions";
+
+const episodeLabels: Record<string, { label: string; cls: string }> = {
+  moderating: { label: "Yeni · inceleniyor", cls: "border-sky-800 text-sky-300" },
+  published: { label: "Yayında", cls: "border-emerald-800 text-emerald-400" },
+  paused: { label: "Creator durdurdu", cls: "border-zinc-700 text-zinc-400" },
+  blocked: { label: "Kaldırıldı", cls: "border-rose-800 text-rose-400" },
+  draft: { label: "Taslak", cls: "border-zinc-700 text-zinc-500" },
+  rejected: { label: "Reddedildi", cls: "border-rose-800 text-rose-400" },
+  needs_changes: { label: "Düzeltme bekliyor", cls: "border-amber-800 text-amber-400" },
+};
 
 const one = <T,>(v: T | T[] | null | undefined): T | null =>
   Array.isArray(v) ? (v[0] ?? null) : (v ?? null);
@@ -24,10 +36,10 @@ export default async function ReviewPage({
   searchParams,
 }: {
   params: Promise<{ seriesId: string }>;
-  searchParams: Promise<{ ep?: string }>;
+  searchParams: Promise<{ ep?: string; error?: string }>;
 }) {
   const { seriesId } = await params;
-  const { ep } = await searchParams;
+  const { ep, error } = await searchParams;
   const supabase = await createClient();
 
   const {
@@ -41,13 +53,15 @@ export default async function ReviewPage({
     .eq("profile_id", user.id)
     .in("role", ["admin", "moderator"]);
   if (!roles?.length) redirect("/");
+  const isAdmin = roles.some((r) => r.role === "admin");
 
   const { data: series } = await supabase
     .from("series")
     .select(
-      "id, title, description, status, poster_url, productions(title, creator_profiles(creator_name)), seasons(season_number, episodes(id, episode_number, title, description, duration_seconds, video_assets(provider_asset_id, status, duration_seconds, width, height)))"
+      "id, title, description, status, poster_url, production_id, moderation_note, productions(title, creator_profiles(creator_name)), seasons(season_number, episodes(id, episode_number, title, description, status, duration_seconds, video_assets(provider_asset_id, status, duration_seconds, width, height)))"
     )
     .eq("id", seriesId)
+    .is("deleted_at", null)
     .maybeSingle();
   if (!series) notFound();
 
@@ -62,7 +76,12 @@ export default async function ReviewPage({
     )
     .sort((a, b) => a.season - b.season || a.episode_number - b.episode_number);
 
-  const current = episodes.find((e) => e.id === ep) ?? episodes[0] ?? null;
+  // Open on the first episode awaiting review, if any
+  const current =
+    episodes.find((e) => e.id === ep) ?? episodes.find((e) => e.status === "moderating") ?? episodes[0] ?? null;
+  const reviewCount = episodes.filter((e) => e.status === "moderating").length;
+  const inReview = series.status === "moderating" || reviewCount > 0;
+  const here = `/admin/review/${series.id}${current ? `?ep=${current.id}` : ""}`;
   const currentIndex = current ? episodes.indexOf(current) : -1;
   const next = currentIndex >= 0 ? episodes[currentIndex + 1] : undefined;
 
@@ -92,6 +111,16 @@ export default async function ReviewPage({
           </span>
         )}
       </p>
+      {series.status === "published" && reviewCount > 0 && (
+        <p className="mt-3 rounded-lg border border-sky-900 bg-sky-950/30 p-3 text-sm text-sky-200">
+          Dizi yayında; {reviewCount} yeni bölüm onay bekliyor. Karar yalnızca bu yeni bölümleri etkiler.
+        </p>
+      )}
+      {error && (
+        <p className="mt-3 rounded-lg border border-rose-900 bg-rose-950/50 p-3 text-sm text-rose-300">
+          {decodeURIComponent(error)}
+        </p>
+      )}
       {notReady > 0 && (
         <p className="mt-3 rounded-lg border border-amber-900 bg-amber-950/40 p-3 text-sm text-amber-300">
           {notReady} bölümün videosu hazır değil; bunlar izlenemez.
@@ -125,6 +154,46 @@ export default async function ReviewPage({
                 S{current.season} · B{current.episode_number} — {current.title}
               </p>
               {current.description && <p className="mt-1 text-sm text-zinc-400">{current.description}</p>}
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                {(current.status === "published" || current.status === "paused") && (
+                  <form action={setEpisodeBlocked}>
+                    <input type="hidden" name="episode_id" value={current.id} />
+                    <input type="hidden" name="block" value="1" />
+                    <input type="hidden" name="return_to" value={here} />
+                    <ConfirmSubmit
+                      message="Bu bölüm yayından kaldırılsın mı? Creator tekrar yayına alamaz."
+                      className="rounded-lg border border-amber-800 px-3 py-1.5 text-xs text-amber-400 hover:bg-amber-950"
+                    >
+                      Bölümü yayından kaldır
+                    </ConfirmSubmit>
+                  </form>
+                )}
+                {current.status === "blocked" && (
+                  <form action={setEpisodeBlocked}>
+                    <input type="hidden" name="episode_id" value={current.id} />
+                    <input type="hidden" name="block" value="0" />
+                    <input type="hidden" name="return_to" value={here} />
+                    <button
+                      type="submit"
+                      className="rounded-lg border border-emerald-800 px-3 py-1.5 text-xs text-emerald-400 hover:bg-emerald-950"
+                    >
+                      Bölümü yayına geri al
+                    </button>
+                  </form>
+                )}
+                {isAdmin && (
+                  <form action={adminDeleteEpisode}>
+                    <input type="hidden" name="episode_id" value={current.id} />
+                    <input type="hidden" name="return_to" value={`/admin/review/${series.id}`} />
+                    <ConfirmSubmit
+                      message={`"${current.title}" ve videosu kalıcı olarak silinecek. Emin misin?`}
+                      className="rounded-lg border border-rose-800 px-3 py-1.5 text-xs text-rose-400 hover:bg-rose-950"
+                    >
+                      Bölümü sil
+                    </ConfirmSubmit>
+                  </form>
+                )}
+              </div>
               {next && (
                 <Link
                   href={`/admin/review/${series.id}?ep=${next.id}`}
@@ -162,18 +231,77 @@ export default async function ReviewPage({
                         {e.asset?.status ?? "video yok"}
                       </span>
                     )}
+                    {episodeLabels[e.status] && (
+                      <span className={`rounded border px-1.5 text-xs ${episodeLabels[e.status]!.cls}`}>
+                        {episodeLabels[e.status]!.label}
+                      </span>
+                    )}
                   </Link>
                 </li>
               );
             })}
           </ol>
 
-          {series.status === "moderating" && (
+          {inReview && (
             <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5">
-              <h2 className="mb-3 font-semibold">Karar</h2>
-              <ModerationForm seriesId={series.id} />
+              <h2 className="mb-3 font-semibold">
+                Karar{series.status === "published" && ` · ${reviewCount} yeni bölüm`}
+              </h2>
+              <ModerationForm seriesId={series.id} returnTo={here} />
             </div>
           )}
+
+          <div className="rounded-xl border border-rose-950 p-5">
+            <h2 className="font-semibold">Yayın yönetimi</h2>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {["published", "paused", "moderating"].includes(series.status) && (
+                <form action={setSeriesBlocked} className="flex flex-wrap items-center gap-2">
+                  <input type="hidden" name="series_id" value={series.id} />
+                  <input type="hidden" name="block" value="1" />
+                  <input type="hidden" name="return_to" value={here} />
+                  <input
+                    name="note"
+                    placeholder="Sebep (creator görür)"
+                    className="w-48 rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-1.5 text-xs outline-none focus:border-rose-500"
+                  />
+                  <ConfirmSubmit
+                    message={`"${series.title}" yayından kaldırılsın mı? Creator tekrar yayına alamaz.`}
+                    className="rounded-lg border border-amber-800 px-3 py-1.5 text-sm text-amber-400 hover:bg-amber-950"
+                  >
+                    Diziyi yayından kaldır
+                  </ConfirmSubmit>
+                </form>
+              )}
+              {series.status === "blocked" && (
+                <form action={setSeriesBlocked}>
+                  <input type="hidden" name="series_id" value={series.id} />
+                  <input type="hidden" name="block" value="0" />
+                  <input type="hidden" name="return_to" value={here} />
+                  <button
+                    type="submit"
+                    className="rounded-lg border border-emerald-800 px-3 py-1.5 text-sm text-emerald-400 hover:bg-emerald-950"
+                  >
+                    Diziyi yayına geri al
+                  </button>
+                </form>
+              )}
+              {isAdmin && (
+                <form action={adminDeleteProduction}>
+                  <input type="hidden" name="production_id" value={series.production_id} />
+                  <input type="hidden" name="return_to" value="/admin/productions" />
+                  <ConfirmSubmit
+                    message={`"${series.title}" ve tüm videoları kalıcı olarak silinecek. Geri alınamaz. Emin misin?`}
+                    className="rounded-lg border border-rose-800 px-3 py-1.5 text-sm text-rose-400 hover:bg-rose-950"
+                  >
+                    Yapımı sil
+                  </ConfirmSubmit>
+                </form>
+              )}
+            </div>
+            {series.status === "blocked" && series.moderation_note && (
+              <p className="mt-2 text-xs text-rose-300/80">Kaldırma sebebi: {series.moderation_note}</p>
+            )}
+          </div>
         </div>
       </div>
     </main>

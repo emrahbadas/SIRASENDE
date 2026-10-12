@@ -36,24 +36,47 @@ export default async function AdminPage({
 
   if (!roles?.length) redirect("/");
 
-  const { data: pending } = await supabase
-    .from("series")
-    .select(
-      "id, title, description, primary_language, updated_at, productions(title, production_type, age_rating, content_warnings, creator_profiles(creator_name), production_categories(categories(name_tr))), seasons(episodes(id))"
-    )
-    .eq("status", "moderating")
-    .order("updated_at", { ascending: true });
+  // New series under review, plus published series with new episodes to review
+  const [{ data: newSeries }, { data: newEpisodes }] = await Promise.all([
+    supabase.from("series").select("id").eq("status", "moderating").is("deleted_at", null),
+    supabase.from("episodes").select("seasons!inner(series_id)").eq("status", "moderating"),
+  ]);
+  const ids = [
+    ...new Set([
+      ...(newSeries ?? []).map((s) => s.id),
+      ...(newEpisodes ?? []).map((e) => one(e.seasons)!.series_id as string),
+    ]),
+  ];
+
+  const { data: pending } = ids.length
+    ? await supabase
+        .from("series")
+        .select(
+          "id, title, description, status, primary_language, updated_at, productions(title, production_type, age_rating, content_warnings, creator_profiles(creator_name), production_categories(categories(name_tr))), seasons(episodes(id, status))"
+        )
+        .in("id", ids)
+        .is("deleted_at", null)
+        .order("updated_at", { ascending: true })
+    : { data: [] };
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-12">
       <header className="mb-8">
-        <Link href="/" className="text-sm text-zinc-500 hover:text-zinc-300">
-          ← Vitrin
-        </Link>
+        <div className="flex items-center justify-between">
+          <Link href="/" className="text-sm text-zinc-500 hover:text-zinc-300">
+            ← Vitrin
+          </Link>
+          <Link
+            href="/admin/productions"
+            className="rounded-lg border border-zinc-800 px-3 py-1.5 text-sm text-zinc-300 hover:border-zinc-600"
+          >
+            Tüm yapımlar →
+          </Link>
+        </div>
         <h1 className="mt-1 text-2xl font-bold">Moderasyon Kuyruğu</h1>
         <p className="mt-1 text-sm text-zinc-500">
-          Onaylanan diziler vitrine çıkar; reddedilenler taslağa döner. Moderatörler tüm
-          bölümleri reklam ve kilit engeline takılmadan izler.
+          Yeni diziler ve yayındaki dizilere eklenen yeni bölümler burada. Onaylanan içerik vitrine
+          çıkar; reddedilen veya düzeltme istenen creator&apos;a notla döner.
         </p>
       </header>
 
@@ -70,10 +93,10 @@ export default async function AdminPage({
       ) : (
         <ul className="space-y-4">
           {pending.map((s) => {
-            const episodeCount = (s.seasons ?? []).reduce(
-              (sum, se) => sum + se.episodes.length,
-              0
-            );
+            const episodes = (s.seasons ?? []).flatMap((se) => se.episodes);
+            const episodeCount = episodes.length;
+            const reviewCount = episodes.filter((e) => e.status === "moderating").length;
+            const isNew = s.status === "moderating";
             const production = one(s.productions);
             const creatorName = one(production?.creator_profiles)?.creator_name;
             const categoryName = one(
@@ -85,7 +108,16 @@ export default async function AdminPage({
                 className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5"
               >
                 <div>
-                  <h2 className="font-semibold">{s.title}</h2>
+                  <h2 className="flex items-center gap-2 font-semibold">
+                    {s.title}
+                    <span
+                      className={`rounded-full border px-2 py-0.5 text-xs font-normal ${
+                        isNew ? "border-sky-800 text-sky-300" : "border-emerald-800 text-emerald-300"
+                      }`}
+                    >
+                      {isNew ? "Yeni dizi" : `Yayında · ${reviewCount} yeni bölüm`}
+                    </span>
+                  </h2>
                   <p className="mt-1 text-sm text-zinc-500">
                     {creatorName} · {production?.production_type} ·{" "}
                     {s.primary_language.toUpperCase()} · {episodeCount} bölüm

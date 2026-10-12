@@ -11,11 +11,11 @@ import {
 } from "@/lib/cloudflare/stream";
 import { applyStreamVideo } from "@/lib/video/sync";
 import { getVideoSettings } from "@/lib/settings";
+import { EDITABLE_STATUSES } from "@/lib/content/manage";
 
 // Basic (single POST) uploads are limited to 200 MB by Cloudflare Stream.
 const MAX_UPLOAD_BYTES = 200 * 1024 * 1024;
 const MAX_DURATION_SECONDS = 6 * 60 * 60;
-const EDITABLE_SERIES_STATUSES = ["draft", "rejected", "needs_changes"];
 
 type Result<T = object> = ({ ok: true } & T) | { ok: false; error: string };
 
@@ -32,7 +32,7 @@ async function requireOwnedEpisode(episodeId: string) {
 
   const { data: episode } = await supabase
     .from("episodes")
-    .select("id, season_id, seasons!inner(series!inner(id, status, production_id))")
+    .select("id, season_id, status, seasons!inner(series!inner(id, status, production_id))")
     .eq("id", episodeId)
     .maybeSingle();
   const series = one(one(episode?.seasons)?.series);
@@ -43,7 +43,9 @@ async function requireOwnedEpisode(episodeId: string) {
   });
   if (!owns) return null;
 
-  return { episodeId: episode.id, series };
+  // Video can change until the episode is sent to review (or after it is sent back)
+  const editable = EDITABLE_STATUSES.includes(episode.status) && series.status !== "blocked";
+  return { episodeId: episode.id, series, editable };
 }
 
 async function requireOwnedAsset(assetId: string) {
@@ -86,8 +88,8 @@ export async function startEpisodeUpload(input: {
   const owned = await requireOwnedEpisode(input.episodeId);
   if (!owned) return { ok: false, error: "Bu bölüme video yükleme yetkin yok" };
 
-  if (!EDITABLE_SERIES_STATUSES.includes(owned.series.status)) {
-    return { ok: false, error: "İncelemedeki veya yayındaki dizinin videosu değiştirilemez" };
+  if (!owned.editable) {
+    return { ok: false, error: "İncelemedeki veya yayındaki bölümün videosu değiştirilemez" };
   }
   if (!(input.fileSize > 0) || input.fileSize > MAX_UPLOAD_BYTES) {
     return { ok: false, error: "Video en fazla 200 MB olabilir" };
@@ -196,8 +198,8 @@ async function refreshWith(
 export async function removeEpisodeVideo(assetId: string): Promise<Result> {
   const owned = await requireOwnedAsset(assetId);
   if (!owned) return { ok: false, error: "Video bulunamadı" };
-  if (!EDITABLE_SERIES_STATUSES.includes(owned.series.status)) {
-    return { ok: false, error: "İncelemedeki veya yayındaki dizinin videosu silinemez" };
+  if (!owned.editable) {
+    return { ok: false, error: "İncelemedeki veya yayındaki bölümün videosu silinemez" };
   }
 
   await owned.admin.from("video_assets").update({ status: "deleted" }).eq("id", assetId);

@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { deleteEpisodePermanently, deleteProductionPermanently } from "@/lib/content/manage";
 
 async function requireModerator() {
   const supabase = await createClient();
@@ -19,11 +21,37 @@ async function requireModerator() {
 
   if (!roles?.length) redirect("/");
 
-  return supabase;
+  return { supabase, isAdmin: roles.some((r) => r.role === "admin") };
 }
 
+// Same-site return path from the form (queue, review page or productions list)
+function back(formData: FormData, error?: string): never {
+  const raw = String(formData.get("return_to") ?? "");
+  const path = /^\/admin(\/|$|\?)/.test(raw) ? raw : "/admin";
+  if (!error) redirect(path);
+  redirect(path + (path.includes("?") ? "&" : "?") + "error=" + encodeURIComponent(error));
+}
+
+function revalidateAll() {
+  revalidatePath("/admin", "layout");
+  revalidatePath("/");
+}
+
+async function episodeIdsInReview(supabase: Awaited<ReturnType<typeof createClient>>, seriesId: string) {
+  const { data } = await supabase
+    .from("episodes")
+    .select("id, seasons!inner(series_id)")
+    .eq("seasons.series_id", seriesId)
+    .eq("status", "moderating");
+  return (data ?? []).map((e) => e.id);
+}
+
+/**
+ * Publishes everything under review in the series: the series itself when it
+ * is new, and the episodes the creator submitted.
+ */
 export async function approveSeries(formData: FormData) {
-  const supabase = await requireModerator();
+  const { supabase } = await requireModerator();
   const seriesId = String(formData.get("series_id") ?? "");
 
   const { error } = await supabase
@@ -31,69 +59,105 @@ export async function approveSeries(formData: FormData) {
     .update({ status: "published", moderation_note: null })
     .eq("id", seriesId)
     .eq("status", "moderating");
+  if (error) back(formData, error.message);
 
-  if (error) {
-    redirect("/admin?error=" + encodeURIComponent(error.message));
-  }
-
-  // Publish the series' episodes so they appear on the public page
-  const { data: seasons } = await supabase
-    .from("seasons")
-    .select("id")
-    .eq("series_id", seriesId);
-
-  const seasonIds = (seasons ?? []).map((s) => s.id);
-  if (seasonIds.length) {
-    await supabase
+  const ids = await episodeIdsInReview(supabase, seriesId);
+  if (ids.length) {
+    const { error: eErr } = await supabase
       .from("episodes")
-      .update({ status: "published", published_at: new Date().toISOString() })
-      .in("season_id", seasonIds)
-      .eq("status", "draft");
+      .update({ status: "published", published_at: new Date().toISOString(), moderation_note: null })
+      .in("id", ids);
+    if (eErr) back(formData, eErr.message);
   }
 
-  revalidatePath("/admin");
-  revalidatePath("/");
+  revalidateAll();
+  redirect("/admin");
+}
+
+/** Sends the reviewed content back with a note ("rejected" or "needs_changes"). */
+async function sendBack(formData: FormData, status: "rejected" | "needs_changes") {
+  const { supabase } = await requireModerator();
+  const seriesId = String(formData.get("series_id") ?? "");
+  const note = String(formData.get("note") ?? "").trim() || null;
+
+  if (status === "needs_changes" && !note) back(formData, "Düzeltme isteğinde not zorunlu");
+
+  // A new series goes back as a whole; a published one stays on air
+  const { error } = await supabase
+    .from("series")
+    .update({ status, moderation_note: note })
+    .eq("id", seriesId)
+    .eq("status", "moderating");
+  if (error) back(formData, error.message);
+
+  const ids = await episodeIdsInReview(supabase, seriesId);
+  if (ids.length) {
+    const { error: eErr } = await supabase.from("episodes").update({ status, moderation_note: note }).in("id", ids);
+    if (eErr) back(formData, eErr.message);
+  }
+
+  revalidateAll();
   redirect("/admin");
 }
 
 export async function rejectSeries(formData: FormData) {
-  const supabase = await requireModerator();
+  await sendBack(formData, "rejected");
+}
+
+export async function requestChanges(formData: FormData) {
+  await sendBack(formData, "needs_changes");
+}
+
+/** Takes a series off the air (only staff can restore it) or restores it. */
+export async function setSeriesBlocked(formData: FormData) {
+  const { supabase } = await requireModerator();
   const seriesId = String(formData.get("series_id") ?? "");
+  const block = formData.get("block") === "1";
   const note = String(formData.get("note") ?? "").trim() || null;
 
   const { error } = await supabase
     .from("series")
-    .update({ status: "rejected", moderation_note: note })
+    .update(block ? { status: "blocked", moderation_note: note } : { status: "published", moderation_note: null })
     .eq("id", seriesId)
-    .eq("status", "moderating");
+    .in("status", block ? ["published", "paused", "moderating"] : ["blocked"]);
+  if (error) back(formData, error.message);
 
-  if (error) {
-    redirect("/admin?error=" + encodeURIComponent(error.message));
-  }
-
-  revalidatePath("/admin");
-  redirect("/admin");
+  revalidateAll();
+  back(formData);
 }
 
-export async function requestChanges(formData: FormData) {
-  const supabase = await requireModerator();
-  const seriesId = String(formData.get("series_id") ?? "");
-  const note = String(formData.get("note") ?? "").trim();
-
-  if (!note) {
-    redirect("/admin?error=" + encodeURIComponent("Düzeltme isteğinde not zorunlu"));
-  }
+export async function setEpisodeBlocked(formData: FormData) {
+  const { supabase } = await requireModerator();
+  const episodeId = String(formData.get("episode_id") ?? "");
+  const block = formData.get("block") === "1";
 
   const { error } = await supabase
-    .from("series")
-    .update({ status: "needs_changes", moderation_note: note })
-    .eq("id", seriesId)
-    .eq("status", "moderating");
+    .from("episodes")
+    .update({ status: block ? "blocked" : "published" })
+    .eq("id", episodeId)
+    .in("status", block ? ["published", "paused"] : ["blocked"]);
+  if (error) back(formData, error.message);
 
-  if (error) {
-    redirect("/admin?error=" + encodeURIComponent(error.message));
-  }
+  revalidateAll();
+  back(formData);
+}
 
-  revalidatePath("/admin");
-  redirect("/admin");
+export async function adminDeleteEpisode(formData: FormData) {
+  const { isAdmin } = await requireModerator();
+  if (!isAdmin) back(formData, "Silme yetkisi yalnızca adminlerde");
+
+  const result = await deleteEpisodePermanently(createAdminClient(), String(formData.get("episode_id") ?? ""));
+  revalidateAll();
+  back(formData, result.ok ? undefined : result.error);
+}
+
+export async function adminDeleteProduction(formData: FormData) {
+  const { isAdmin } = await requireModerator();
+  if (!isAdmin) back(formData, "Silme yetkisi yalnızca adminlerde");
+
+  const result = await deleteProductionPermanently(createAdminClient(), String(formData.get("production_id") ?? ""));
+  if (!result.ok) back(formData, result.error);
+
+  revalidateAll();
+  redirect("/admin/productions");
 }

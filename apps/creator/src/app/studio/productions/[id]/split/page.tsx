@@ -51,7 +51,8 @@ export default async function SplitPage({
         .maybeSingle()
     : { data: null };
 
-  const editable = ["draft", "rejected", "needs_changes"].includes(series.status);
+  // New episodes start as drafts and go to review on their own
+  const editable = series.status !== "blocked";
   const maxMinutes = Math.floor(settings.maxEpisodeSeconds / 60);
 
   return (
@@ -85,7 +86,7 @@ export default async function SplitPage({
         />
       ) : (
         <p className="rounded-lg border border-zinc-800 p-4 text-sm text-zinc-400">
-          İncelemedeki veya yayındaki diziye bölüm eklenemez.
+          Platform tarafından durdurulan diziye bölüm eklenemez.
         </p>
       )}
     </main>

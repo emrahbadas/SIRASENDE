@@ -1,9 +1,10 @@
 import { approveSeries, rejectSeries, requestChanges } from "./actions";
 
-export function ModerationForm({ seriesId }: { seriesId: string }) {
+export function ModerationForm({ seriesId, returnTo = "/admin" }: { seriesId: string; returnTo?: string }) {
   return (
     <form className="space-y-3" action={approveSeries}>
       <input type="hidden" name="series_id" value={seriesId} />
+      <input type="hidden" name="return_to" value={returnTo} />
       <textarea
         name="note"
         rows={2}

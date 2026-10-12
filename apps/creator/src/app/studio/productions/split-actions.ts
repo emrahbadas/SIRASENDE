@@ -8,7 +8,8 @@ import { applyStreamVideo } from "@/lib/video/sync";
 import { executeSplit } from "@/lib/video/split";
 import { getVideoSettings } from "@/lib/settings";
 
-const EDITABLE_SERIES_STATUSES = ["draft", "rejected", "needs_changes"];
+// New episodes can be added to any series the platform has not taken down
+const canAddEpisodes = (status: string) => status !== "blocked";
 
 type Result<T = object> = ({ ok: true } & T) | { ok: false; error: string };
 
@@ -81,8 +82,8 @@ export async function startSplitUpload(input: {
 }): Promise<Result<{ jobId: string }>> {
   const owned = await requireOwnedSeason(input.seasonId);
   if (!owned) return { ok: false, error: "Bu sezona video yükleme yetkin yok" };
-  if (!EDITABLE_SERIES_STATUSES.includes(owned.series.status)) {
-    return { ok: false, error: "İncelemedeki veya yayındaki diziye bölüm eklenemez" };
+  if (!canAddEpisodes(owned.series.status)) {
+    return { ok: false, error: "Platform tarafından durdurulan diziye bölüm eklenemez" };
   }
 
   const settings = await getVideoSettings(owned.supabase);
@@ -174,8 +175,8 @@ export async function confirmSplit(
   if (!owned) return { ok: false, error: "Bölme işi bulunamadı" };
   const { admin, job, series } = owned;
 
-  if (!EDITABLE_SERIES_STATUSES.includes(series.status)) {
-    return { ok: false, error: "İncelemedeki veya yayındaki diziye bölüm eklenemez" };
+  if (!canAddEpisodes(series.status)) {
+    return { ok: false, error: "Platform tarafından durdurulan diziye bölüm eklenemez" };
   }
   const settings = await getVideoSettings(owned.supabase);
   const result = await executeSplit(admin, job, cuts, settings.maxEpisodeSeconds);

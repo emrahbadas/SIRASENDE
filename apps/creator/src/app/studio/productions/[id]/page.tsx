@@ -1,7 +1,16 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { createEpisode, deleteEpisode, submitForReview } from "../actions";
+import {
+  createEpisode,
+  deleteEpisode,
+  deleteProduction,
+  setEpisodePaused,
+  setSeriesPaused,
+  submitForReview,
+} from "../actions";
+import { ConfirmSubmit } from "@/components/confirm-submit";
+import { EDITABLE_STATUSES } from "@/lib/content/manage";
 import { EpisodeVideo, type EpisodeAsset } from "./episode-video";
 import { getVideoSettings } from "@/lib/settings";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -17,7 +26,8 @@ const statusLabels: Record<string, { label: string; cls: string }> = {
   needs_changes: { label: "Düzeltme bekliyor", cls: "border-amber-700 text-amber-400" },
   ready: { label: "Hazır", cls: "border-emerald-700 text-emerald-400" },
   published: { label: "Yayında", cls: "border-emerald-600 text-emerald-300" },
-  blocked: { label: "Engellendi", cls: "border-rose-700 text-rose-400" },
+  paused: { label: "Durduruldu", cls: "border-zinc-600 text-zinc-300" },
+  blocked: { label: "Platform durdurdu", cls: "border-rose-700 text-rose-400" },
   failed: { label: "Hata", cls: "border-rose-700 text-rose-400" },
 };
 
@@ -40,7 +50,7 @@ export default async function ProductionDetailPage({
   const { data: production } = await supabase
     .from("productions")
     .select(
-      "id, title, description, production_type, series(id, title, status, moderation_note, primary_language, poster_url, free_episode_count, seasons(id, season_number, episodes(id, episode_number, title, status, created_at, video_assets(id, status, duration_seconds, error_message, created_at))))"
+      "id, title, description, production_type, series(id, title, status, moderation_note, primary_language, poster_url, free_episode_count, seasons(id, season_number, episodes(id, episode_number, title, status, moderation_note, created_at, video_assets(id, status, duration_seconds, error_message, created_at))))"
     )
     .eq("id", id)
     .is("deleted_at", null)
@@ -51,7 +61,13 @@ export default async function ProductionDetailPage({
   const series = production.series?.[0];
   const seasons = (series?.seasons ?? []).sort((a, b) => a.season_number - b.season_number);
   const totalEpisodes = seasons.reduce((sum, s) => sum + s.episodes.length, 0);
-  const editable = !!series && ["draft", "rejected", "needs_changes"].includes(series.status);
+  // Poster and series details lock once the series is reviewed; episodes have their own status
+  const editable = !!series && EDITABLE_STATUSES.includes(series.status);
+  const blocked = series?.status === "blocked";
+  const allEpisodes = seasons.flatMap((s) => s.episodes);
+  const pendingCount = allEpisodes.filter((e) => EDITABLE_STATUSES.includes(e.status)).length;
+  const inReview = series?.status === "moderating" || allEpisodes.some((e) => e.status === "moderating");
+  const onAir = series?.status === "published" || series?.status === "paused";
 
   // Latest non-deleted video per episode
   const currentAsset = (assets: (EpisodeAsset & { created_at: string })[] | null) =>
@@ -116,7 +132,7 @@ export default async function ProductionDetailPage({
             <p className="mt-3 text-zinc-400">{production.description}</p>
           )}
         </div>
-        {series && ["draft", "rejected", "needs_changes"].includes(series.status) && totalEpisodes > 0 && (
+        {series && !blocked && pendingCount > 0 && totalEpisodes > 0 && (
           <form action={submitForReview}>
             <input type="hidden" name="series_id" value={series.id} />
             <input type="hidden" name="production_id" value={production.id} />
@@ -124,11 +140,15 @@ export default async function ProductionDetailPage({
               type="submit"
               className="shrink-0 rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium transition hover:bg-rose-500"
             >
-              {series.status === "draft" ? "Onaya gönder" : "Tekrar onaya gönder"}
+              {onAir || series.status === "moderating"
+                ? `Yeni bölümleri onaya gönder (${pendingCount})`
+                : series.status === "draft"
+                  ? "Onaya gönder"
+                  : "Tekrar onaya gönder"}
             </button>
           </form>
         )}
-        {series?.status === "moderating" && (
+        {inReview && pendingCount === 0 && (
           <p className="shrink-0 rounded-lg border border-sky-800 bg-sky-950/50 px-4 py-2 text-sm text-sky-300">
             Platform incelemesinde
           </p>
@@ -156,6 +176,20 @@ export default async function ProductionDetailPage({
         </div>
       )}
 
+      {blocked && (
+        <div className="mb-6 rounded-xl border border-rose-800/60 bg-rose-950/30 p-4 text-sm">
+          <p className="font-semibold text-rose-300">Bu dizi platform tarafından yayından kaldırıldı</p>
+          {series?.moderation_note && <p className="mt-1 text-rose-200/90">{series.moderation_note}</p>}
+        </div>
+      )}
+
+      {onAir && pendingCount > 0 && (
+        <p className="mb-6 rounded-xl border border-sky-900/60 bg-sky-950/20 p-4 text-sm text-sky-200">
+          Dizin yayında kalırken yeni bölümlerin ayrıca incelenir. Videolarını yükleyip &quot;Yeni bölümleri onaya
+          gönder&quot;e bas; onaylanınca izleyicilere açılırlar.
+        </p>
+      )}
+
       {series?.moderation_note && ["rejected", "needs_changes"].includes(series.status) && (
         <div className="mb-6 rounded-xl border border-amber-800/60 bg-amber-950/30 p-4 text-sm">
           <p className="font-semibold text-amber-300">Moderasyon notu</p>
@@ -177,7 +211,7 @@ export default async function ProductionDetailPage({
           <section key={season.id} className="mb-10">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold">Sezon {season.season_number}</h2>
-              {editable && (
+              {!blocked && (
                 <Link
                   href={`/studio/productions/${production.id}/split?season=${season.id}`}
                   className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 transition hover:border-rose-600 hover:text-rose-300"
@@ -227,41 +261,67 @@ export default async function ProductionDetailPage({
               <ul className="mb-4 space-y-2">
                 {episodes.map((ep) => {
                   const st = statusLabels[ep.status] ?? statusLabels.draft!;
+                  const epEditable = !blocked && EDITABLE_STATUSES.includes(ep.status);
+                  const live = ep.status === "published" || ep.status === "paused";
                   return (
                     <li
                       key={ep.id}
-                      className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-3"
+                      className="rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-3"
                     >
-                      <div className="flex items-center gap-3">
-                        <span className="w-10 text-center font-mono text-sm text-zinc-500">
-                          {ep.episode_number}
-                        </span>
-                        <span className="font-medium">{ep.title}</span>
-                        <span className={`rounded-full border px-2 py-0.5 text-xs ${st.cls}`}>
-                          {st.label}
-                        </span>
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-3">
+                          <span className="w-10 text-center font-mono text-sm text-zinc-500">
+                            {ep.episode_number}
+                          </span>
+                          <span className="font-medium">{ep.title}</span>
+                          <span className={`rounded-full border px-2 py-0.5 text-xs ${st.cls}`}>
+                            {st.label}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <EpisodeVideo
+                            episodeId={ep.id}
+                            asset={currentAsset(ep.video_assets)}
+                            editable={epEditable}
+                            maxEpisodeSeconds={settings.maxEpisodeSeconds}
+                            splitHref={`/studio/productions/${production.id}/split?season=${season.id}`}
+                          />
+                          {live && (
+                            <form action={setEpisodePaused}>
+                              <input type="hidden" name="episode_id" value={ep.id} />
+                              <input type="hidden" name="production_id" value={production.id} />
+                              <input type="hidden" name="pause" value={ep.status === "published" ? "1" : "0"} />
+                              <button
+                                type="submit"
+                                className="rounded-lg border border-zinc-800 px-2 py-1 text-xs text-zinc-400 transition hover:border-zinc-600 hover:text-zinc-200"
+                              >
+                                {ep.status === "published" ? "Durdur" : "Yayına al"}
+                              </button>
+                            </form>
+                          )}
+                          {ep.status !== "moderating" && (
+                            <form action={deleteEpisode}>
+                              <input type="hidden" name="episode_id" value={ep.id} />
+                              <input type="hidden" name="production_id" value={production.id} />
+                              <ConfirmSubmit
+                                message={
+                                  live
+                                    ? `"${ep.title}" kalıcı olarak silinecek. İzleyiciler bu bölüme artık erişemez ve sonraki bölümlerin numarası bir azalır. Emin misin?`
+                                    : `"${ep.title}" ve videosu silinecek. Emin misin?`
+                                }
+                                className="rounded-lg border border-zinc-800 px-2 py-1 text-xs text-zinc-500 transition hover:border-rose-800 hover:text-rose-400"
+                              >
+                                Sil
+                              </ConfirmSubmit>
+                            </form>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <EpisodeVideo
-                          episodeId={ep.id}
-                          asset={currentAsset(ep.video_assets)}
-                          editable={editable}
-                          maxEpisodeSeconds={settings.maxEpisodeSeconds}
-                          splitHref={`/studio/productions/${production.id}/split?season=${season.id}`}
-                        />
-                        {ep.status === "draft" && (
-                          <form action={deleteEpisode}>
-                            <input type="hidden" name="episode_id" value={ep.id} />
-                            <input type="hidden" name="production_id" value={production.id} />
-                            <button
-                              type="submit"
-                              className="rounded-lg border border-zinc-800 px-2 py-1 text-xs text-zinc-500 transition hover:border-rose-800 hover:text-rose-400"
-                            >
-                              Sil
-                            </button>
-                          </form>
-                        )}
-                      </div>
+                      {ep.moderation_note && ["rejected", "needs_changes"].includes(ep.status) && (
+                        <p className="mt-2 rounded-lg bg-amber-950/30 px-3 py-2 text-xs text-amber-200/90">
+                          Moderasyon notu: {ep.moderation_note}
+                        </p>
+                      )}
                     </li>
                   );
                 })}
@@ -291,6 +351,47 @@ export default async function ProductionDetailPage({
           </section>
         );
       })}
+      {series && (
+        <section className="mt-12 rounded-xl border border-rose-950 p-5">
+          <h2 className="font-semibold">Yayın yönetimi</h2>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            {onAir && (
+              <form action={setSeriesPaused}>
+                <input type="hidden" name="production_id" value={production.id} />
+                <input type="hidden" name="pause" value={series.status === "published" ? "1" : "0"} />
+                {series.status === "published" ? (
+                  <ConfirmSubmit
+                    message="Dizi vitrinden ve uygulamadan kaldırılacak. İstediğin zaman tekrar yayına alabilirsin. Devam edilsin mi?"
+                    className="rounded-lg border border-zinc-700 px-4 py-2 text-sm text-zinc-300 transition hover:border-zinc-500"
+                  >
+                    Diziyi yayından durdur
+                  </ConfirmSubmit>
+                ) : (
+                  <button
+                    type="submit"
+                    className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium transition hover:bg-emerald-500"
+                  >
+                    Diziyi tekrar yayına al
+                  </button>
+                )}
+              </form>
+            )}
+            <form action={deleteProduction}>
+              <input type="hidden" name="production_id" value={production.id} />
+              <ConfirmSubmit
+                message={`"${production.title}" ve tüm bölüm videoları kalıcı olarak silinecek. Bu işlem geri alınamaz. Emin misin?`}
+                className="rounded-lg border border-rose-800 px-4 py-2 text-sm text-rose-400 transition hover:bg-rose-950"
+              >
+                Yapımı sil
+              </ConfirmSubmit>
+            </form>
+          </div>
+          <p className="mt-3 text-xs text-zinc-500">
+            Durdurulan dizi izleyicilere görünmez, verileri korunur. Silme, videoları kalıcı olarak kaldırır ve
+            depolama alanını boşaltır.
+          </p>
+        </section>
+      )}
     </main>
   );
 }
