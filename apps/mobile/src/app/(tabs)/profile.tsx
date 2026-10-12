@@ -6,7 +6,7 @@ import { useCallback, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MenuRow, MenuSection } from "@/components/menu-row";
-import { api, coinBalance } from "@/lib/api";
+import { api, wallet, type Wallet } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { colors, config } from "@/lib/config";
 import { supabase } from "@/lib/supabase";
@@ -20,19 +20,19 @@ export default function ProfileScreen() {
   const { session } = useAuth();
   const userId = session?.user.id;
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [balance, setBalance] = useState<number | null>(null);
+  const [coins, setCoins] = useState<Wallet | null>(null);
   const [counts, setCounts] = useState({ watched: 0, listed: 0, following: 0 });
   const [roles, setRoles] = useState<Roles>({ creator: false, admin: false, moderator: false, pending: 0 });
 
   const load = useCallback(async () => {
     if (!userId) return;
-    const [coins, library, { data: me }, { data: myRoles }] = await Promise.all([
-      coinBalance(),
+    const [myWallet, library, { data: me }, { data: myRoles }] = await Promise.all([
+      wallet(),
       api.library().catch(() => null),
       supabase.from("profiles").select("username, display_name").eq("id", userId).maybeSingle(),
       supabase.from("user_roles").select("role").eq("profile_id", userId),
     ]);
-    setBalance(coins);
+    setCoins(myWallet);
     setProfile(me);
     if (library) {
       setCounts({ watched: library.history.length, listed: library.watchlist.length, following: library.following.length });
@@ -124,9 +124,13 @@ export default function ProfileScreen() {
             <Text style={styles.walletLabel}>Coin bakiyem</Text>
             <View style={styles.coinRow}>
               <Ionicons name="logo-bitcoin" size={22} color={colors.coin} />
-              <Text style={styles.coins}>{balance ?? "–"}</Text>
+              <Text style={styles.coins}>{coins ? coins.purchased : "–"}</Text>
             </View>
-            <Text style={styles.walletHint}>Kilitli bölümleri reklam izleyerek de açabilirsin.</Text>
+            <Pressable onPress={() => router.push("/rewards")} hitSlop={6}>
+              <Text style={styles.walletHint}>
+                {coins && coins.bonus > 0 ? `+ ${coins.bonus} bonus coin · ` : ""}Günlük ödüller →
+              </Text>
+            </Pressable>
           </View>
           <Pressable
             style={styles.topUp}

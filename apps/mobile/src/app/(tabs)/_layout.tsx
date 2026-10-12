@@ -27,6 +27,13 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="rewards"
+        options={{
+          title: "Ödüller",
+          tabBarIcon: ({ color, size }) => <Ionicons name="gift" color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
         name="library"
         options={{
           title: "Listem",

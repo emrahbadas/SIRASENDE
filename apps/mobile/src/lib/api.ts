@@ -121,17 +121,71 @@ export async function unlockWithCoins(episodeId: string) {
   }
 }
 
-export async function coinBalance(): Promise<number | null> {
+export interface Wallet {
+  purchased: number;
+  bonus: number;
+  /** Bonus coins in the grant that expires next, and when */
+  bonusExpiring: number;
+  bonusExpiresAt: string | null;
+  /** Episodes that may still be paid with bonus coins today */
+  bonusUnlocksLeft: number;
+}
+
+/** Signed-in viewer's coins, purchased and bonus separately (expired bonus removed). */
+export async function wallet(): Promise<Wallet | null> {
   const { data: session } = await supabase.auth.getSession();
-  const userId = session.session?.user.id;
-  if (!userId) return null;
-  const { data } = await supabase
-    .from("wallet_accounts")
-    .select("balance")
-    .eq("profile_id", userId)
-    .eq("currency", "COIN")
-    .maybeSingle();
-  return data?.balance ?? 0;
+  if (!session.session) return null;
+  const { data, error } = await supabase.rpc("my_wallet").single<{
+    purchased: number;
+    bonus: number;
+    bonus_expiring: number;
+    bonus_expires_at: string | null;
+    bonus_unlocks_left: number;
+  }>();
+  if (error || !data) return { purchased: 0, bonus: 0, bonusExpiring: 0, bonusExpiresAt: null, bonusUnlocksLeft: 0 };
+  return {
+    purchased: data.purchased,
+    bonus: data.bonus,
+    bonusExpiring: data.bonus_expiring,
+    bonusExpiresAt: data.bonus_expires_at,
+    bonusUnlocksLeft: data.bonus_unlocks_left,
+  };
+}
+
+export async function coinBalance(): Promise<number | null> {
+  const w = await wallet();
+  return w ? w.purchased + w.bonus : null;
+}
+
+export interface DailyReward {
+  claimedToday: boolean;
+  /** Last claimed day of the current streak (0 = no streak) */
+  streakDay: number;
+  /** Day that today's claim counts as (1..7) */
+  todayDay: number;
+  rewards: number[];
+}
+
+export async function dailyReward(): Promise<DailyReward | null> {
+  const { data, error } = await supabase.rpc("my_daily_reward").single<{
+    claimed_today: boolean | null;
+    streak_day: number;
+    today_day: number;
+    rewards: number[];
+  }>();
+  if (error || !data) return null;
+  return {
+    claimedToday: !!data.claimed_today,
+    streakDay: data.streak_day,
+    todayDay: data.today_day,
+    rewards: data.rewards ?? [],
+  };
+}
+
+export async function claimDailyReward(): Promise<{ coins: number; day: number }> {
+  const { data, error } = await supabase.rpc("claim_daily_reward").single<{ coins: number; streak_day: number }>();
+  if (error || !data) throw new Error("Ödül alınamadı, birazdan tekrar dene");
+  return { coins: data.coins, day: data.streak_day };
 }
 
 export interface AdUnlockStatus {
