@@ -1,5 +1,6 @@
 import { DarkTheme, Stack, ThemeProvider } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { CurtainIntro } from "@/components/curtain-intro";
 import { AuthProvider } from "@/lib/auth";
 import { colors } from "@/lib/config";
 
@@ -19,6 +20,7 @@ export default function RootLayout() {
           <Stack.Screen name="watch/[seriesId]" options={{ headerShown: false, animation: "fade" }} />
           <Stack.Screen name="login" options={{ title: "Giriş yap", presentation: "modal" }} />
         </Stack>
+        <CurtainIntro />
       </ThemeProvider>
     </AuthProvider>
   );

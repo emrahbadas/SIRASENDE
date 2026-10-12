@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createProduction } from "../actions";
 
 const selectClass =
-  "mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 outline-none focus:border-rose-500";
+  "mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 outline-none focus:border-orange-500";
 
 export default async function NewProductionPage({
   searchParams,
@@ -166,7 +166,7 @@ export default async function NewProductionPage({
                   type="checkbox"
                   name="content_warnings"
                   value={value}
-                  className="accent-rose-600"
+                  className="accent-orange-600"
                 />
                 {label}
               </label>
@@ -207,7 +207,7 @@ export default async function NewProductionPage({
 
         <div className="space-y-3 rounded-xl border border-zinc-800 p-4 text-sm text-zinc-400">
           <label className="flex items-start gap-3">
-            <input type="checkbox" name="policy_content" required className="mt-0.5 accent-rose-600" />
+            <input type="checkbox" name="policy_content" required className="mt-0.5 accent-orange-600" />
             <span>
               İçeriğimde pornografik/müstehcen görüntü, gerçek kişilerin gizli veya ifşa
               görüntüleri ve senaryo dışı siyasi içerik <strong>bulunmadığını</strong> beyan
@@ -215,14 +215,14 @@ export default async function NewProductionPage({
             </span>
           </label>
           <label className="flex items-start gap-3">
-            <input type="checkbox" name="policy_fiction" required className="mt-0.5 accent-rose-600" />
+            <input type="checkbox" name="policy_fiction" required className="mt-0.5 accent-orange-600" />
             <span>
               Bu yapımın <strong>tamamen kurgusal bir senaryoya</strong> veya{" "}
               <strong>kendi hikâyemden türetilmiş</strong> bir anlatıya dayandığını onaylıyorum.
             </span>
           </label>
           <label className="flex items-start gap-3">
-            <input type="checkbox" name="policy_copyright" required className="mt-0.5 accent-rose-600" />
+            <input type="checkbox" name="policy_copyright" required className="mt-0.5 accent-orange-600" />
             <span>
               Kullanılan görüntü, ses ve müziklerin yayın haklarına sahibim; telif ihlallerinden
               doğacak tüm sorumluluğun <strong>bana ait olduğunu</strong> kabul ediyorum.
@@ -232,7 +232,7 @@ export default async function NewProductionPage({
 
         <button
           type="submit"
-          className="w-full rounded-lg bg-rose-600 py-2.5 font-medium transition hover:bg-rose-500"
+          className="w-full rounded-lg bg-orange-600 py-2.5 font-medium transition hover:bg-orange-500"
         >
           Production oluştur
         </button>

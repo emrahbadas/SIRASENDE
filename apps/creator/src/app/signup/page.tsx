@@ -11,7 +11,7 @@ export default async function SignupPage({
   return (
     <main className="flex min-h-screen items-center justify-center px-6">
       <div className="w-full max-w-sm">
-        <p className="text-sm font-medium text-rose-500">Sıra Sende</p>
+        <p className="text-sm font-medium text-orange-500">Sıra Sende</p>
         <h1 className="mt-1 text-2xl font-bold">Hesap oluştur</h1>
         <p className="mt-2 text-sm text-zinc-400">
           Üye ol, dizileri izle. Kendi dizini yayınlamak istersen sonradan creator olabilirsin.
@@ -40,7 +40,7 @@ export default async function SignupPage({
                   type="email"
                   required
                   autoComplete="email"
-                  className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 outline-none focus:border-rose-500"
+                  className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 outline-none focus:border-orange-500"
                 />
               </div>
               <div>
@@ -54,12 +54,12 @@ export default async function SignupPage({
                   required
                   minLength={8}
                   autoComplete="new-password"
-                  className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 outline-none focus:border-rose-500"
+                  className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 outline-none focus:border-orange-500"
                 />
               </div>
               <button
                 type="submit"
-                className="w-full rounded-lg bg-rose-600 py-2 font-medium transition hover:bg-rose-500"
+                className="w-full rounded-lg bg-orange-600 py-2 font-medium transition hover:bg-orange-500"
               >
                 Kayıt ol
               </button>
@@ -67,7 +67,7 @@ export default async function SignupPage({
 
             <p className="mt-6 text-sm text-zinc-400">
               Zaten hesabın var mı?{" "}
-              <Link href="/login" className="text-rose-400 hover:underline">
+              <Link href="/login" className="text-orange-400 hover:underline">
                 Giriş yap
               </Link>
             </p>

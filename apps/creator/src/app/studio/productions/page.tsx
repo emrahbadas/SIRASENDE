@@ -41,7 +41,7 @@ export default async function ProductionsPage() {
         </div>
         <Link
           href="/studio/productions/new"
-          className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium transition hover:bg-rose-500"
+          className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium transition hover:bg-orange-500"
         >
           + Yeni Production
         </Link>
@@ -62,7 +62,7 @@ export default async function ProductionsPage() {
               <li key={p.id}>
                 <Link
                   href={`/studio/productions/${p.id}`}
-                  className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 transition hover:border-rose-500/50"
+                  className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 transition hover:border-orange-500/50"
                 >
                   <div>
                     <h2 className="font-semibold">{p.title}</h2>

@@ -74,8 +74,12 @@ export default async function HomePage({
     <main className="min-h-screen">
       <header className="border-b border-zinc-800">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link href="/" className="text-lg font-bold">
-            <span className="text-rose-500">Sıra</span> Sende
+          <Link href="/" className="flex items-center gap-2 text-lg font-bold">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand-mark.svg" alt="" width={28} height={28} />
+            <span>
+              <span className="text-orange-500">Sıra</span> Sende
+            </span>
           </Link>
           <nav className="flex items-center gap-3 text-sm">
             {user ? (
@@ -96,14 +100,14 @@ export default async function HomePage({
                 {creatorProfile ? (
                   <Link
                     href="/studio"
-                    className="rounded-lg bg-rose-600 px-4 py-2 font-medium transition hover:bg-rose-500"
+                    className="rounded-lg bg-orange-600 px-4 py-2 font-medium transition hover:bg-orange-500"
                   >
                     Creator Studio
                   </Link>
                 ) : (
                   <Link
                     href="/onboarding"
-                    className="rounded-lg border border-rose-600/60 px-4 py-2 font-medium text-rose-400 transition hover:bg-rose-600/10"
+                    className="rounded-lg border border-orange-600/60 px-4 py-2 font-medium text-orange-400 transition hover:bg-orange-600/10"
                   >
                     Creator Ol
                   </Link>
@@ -124,7 +128,7 @@ export default async function HomePage({
                 </Link>
                 <Link
                   href="/signup"
-                  className="rounded-lg bg-rose-600 px-4 py-2 font-medium transition hover:bg-rose-500"
+                  className="rounded-lg bg-orange-600 px-4 py-2 font-medium transition hover:bg-orange-500"
                 >
                   Üye ol
                 </Link>
@@ -145,7 +149,7 @@ export default async function HomePage({
             href="/"
             className={`rounded-full border px-4 py-1.5 text-sm transition ${
               !category
-                ? "border-rose-500 bg-rose-500/10 text-rose-300"
+                ? "border-orange-500 bg-orange-500/10 text-orange-300"
                 : "border-zinc-800 text-zinc-400 hover:border-zinc-600"
             }`}
           >
@@ -157,7 +161,7 @@ export default async function HomePage({
               href={`/?category=${c.slug}`}
               className={`rounded-full border px-4 py-1.5 text-sm transition ${
                 category === c.slug
-                  ? "border-rose-500 bg-rose-500/10 text-rose-300"
+                  ? "border-orange-500 bg-orange-500/10 text-orange-300"
                   : "border-zinc-800 text-zinc-400 hover:border-zinc-600"
               }`}
             >
@@ -171,7 +175,7 @@ export default async function HomePage({
             <p className="text-zinc-400">Bu kategoride henüz yayında dizi yok.</p>
             <p className="mt-2 text-sm text-zinc-500">
               Creator mısın?{" "}
-              <Link href="/signup" className="text-rose-400 hover:underline">
+              <Link href="/signup" className="text-orange-400 hover:underline">
                 İlk dizini sen yayınla.
               </Link>
             </p>

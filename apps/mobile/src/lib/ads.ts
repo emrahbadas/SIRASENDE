@@ -5,7 +5,7 @@ type AdsModule = typeof import("react-native-google-mobile-ads");
 
 /**
  * Rewarded ads need the native Google Mobile Ads SDK, which exists only in a
- * development/store build — not in Expo Go or on the web. The module is
+ * development/store build — not in Expo Go (web uses ads.web.ts). The module is
  * required lazily so those environments never load it (it would crash).
  */
 export const adsAvailable =

@@ -11,7 +11,7 @@ export default async function OnboardingPage({
   return (
     <main className="flex min-h-screen items-center justify-center px-6">
       <div className="w-full max-w-sm">
-        <p className="text-sm font-medium text-rose-500">Sıra Sende</p>
+        <p className="text-sm font-medium text-orange-500">Sıra Sende</p>
         <h1 className="mt-1 text-2xl font-bold">Creator profilini oluştur</h1>
         <p className="mt-2 text-sm text-zinc-400">
           İzleyicilerin seni bu isimle görecek.
@@ -19,7 +19,7 @@ export default async function OnboardingPage({
         <p className="mt-2 rounded-lg border border-zinc-800 bg-zinc-900/50 p-3 text-xs text-zinc-500">
           Bu adım tamamen opsiyonel — yalnızca kendi dizini yayınlamak istiyorsan gerekli.
           İzlemek için creator olmana gerek yok.{" "}
-          <Link href="/" className="text-rose-400 hover:underline">
+          <Link href="/" className="text-orange-400 hover:underline">
             Vitrine dön ve izlemeye başla →
           </Link>
         </p>
@@ -42,12 +42,12 @@ export default async function OnboardingPage({
               required
               minLength={2}
               maxLength={60}
-              className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 outline-none focus:border-rose-500"
+              className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 outline-none focus:border-orange-500"
             />
           </div>
           <button
             type="submit"
-            className="w-full rounded-lg bg-rose-600 py-2 font-medium transition hover:bg-rose-500"
+            className="w-full rounded-lg bg-orange-600 py-2 font-medium transition hover:bg-orange-500"
           >
             Creator ol
           </button>

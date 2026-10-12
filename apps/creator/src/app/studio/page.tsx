@@ -35,7 +35,7 @@ export default async function DashboardPage() {
     <main className="mx-auto max-w-5xl px-6 py-12">
       <header className="mb-10 flex items-start justify-between">
         <div>
-          <p className="text-sm font-medium text-rose-500">Sıra Sende</p>
+          <p className="text-sm font-medium text-orange-500">Sıra Sende</p>
           <h1 className="mt-1 text-3xl font-bold tracking-tight">Creator Studio</h1>
           <p className="mt-2 text-zinc-400">
             Hoş geldin, <span className="text-zinc-200">{creatorProfile.creator_name}</span>
@@ -64,7 +64,7 @@ export default async function DashboardPage() {
           <Link
             key={s.href}
             href={s.href}
-            className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 transition hover:border-rose-500/50 hover:bg-zinc-900"
+            className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 transition hover:border-orange-500/50 hover:bg-zinc-900"
           >
             <h2 className="font-semibold">{s.title}</h2>
             <p className="mt-1 text-sm text-zinc-400">{s.desc}</p>

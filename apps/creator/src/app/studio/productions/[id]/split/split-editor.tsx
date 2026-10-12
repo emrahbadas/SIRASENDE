@@ -220,7 +220,7 @@ export function SplitEditor({
   return (
     <div className="space-y-6">
       {!fileUrl && (
-        <label className="flex cursor-pointer flex-col items-center gap-2 rounded-xl border border-dashed border-zinc-700 p-10 text-center transition hover:border-rose-600">
+        <label className="flex cursor-pointer flex-col items-center gap-2 rounded-xl border border-dashed border-zinc-700 p-10 text-center transition hover:border-orange-600">
           <span className="font-medium">
             {resumeJob ? "Yüklediğin videoyu tekrar seç" : "Uzun videoyu seç"}
           </span>
@@ -319,7 +319,7 @@ export function SplitEditor({
 
                       {i < sorted.length && (
                         <div className="flex flex-wrap items-center gap-1 pl-3 text-xs text-zinc-400">
-                          <span className="mr-1 text-rose-400">✂ {fmt(sorted[i]!)}</span>
+                          <span className="mr-1 text-orange-400">✂ {fmt(sorted[i]!)}</span>
                           {[-5, -1, 1, 5].map((d) => (
                             <button
                               key={d}
@@ -373,7 +373,7 @@ export function SplitEditor({
               type="button"
               disabled={!sourceReady || !!invalid || busy}
               onClick={onConfirm}
-              className="rounded-lg bg-rose-600 px-5 py-2 text-sm font-medium transition hover:bg-rose-500 disabled:opacity-40"
+              className="rounded-lg bg-orange-600 px-5 py-2 text-sm font-medium transition hover:bg-orange-500 disabled:opacity-40"
             >
               {sourceReady ? `${segments.length} bölüm oluştur` : "Video işleniyor…"}
             </button>

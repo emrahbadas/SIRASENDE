@@ -1,3 +1,4 @@
+import Constants from "expo-constants";
 import { Platform } from "react-native";
 
 // Public configuration only — everything here ships inside the app bundle.
@@ -5,12 +6,20 @@ import { Platform } from "react-native";
 
 const PRODUCTION_API = "https://sirasende-indol.vercel.app";
 
-// A local API override only makes sense for the web preview: on a phone,
-// "localhost" is the phone itself, so devices always use EXPO_PUBLIC_API_URL
-// (production by default).
+// EXPO_PUBLIC_API_URL=dev-lan points a phone at the local API on the same
+// computer that serves the JS bundle (port 3000), whatever network it is on —
+// so a changing Wi-Fi/hotspot IP never needs editing. Development only.
+function devLanApi() {
+  const host = __DEV__ ? Constants.expoConfig?.hostUri?.split(":")[0] : undefined;
+  return host ? `http://${host}:3000` : undefined;
+}
+
+// A localhost override only makes sense for the web preview: on a phone,
+// "localhost" is the phone itself (production by default).
+const configured = process.env.EXPO_PUBLIC_API_URL;
 const apiUrl =
   (Platform.OS === "web" ? process.env.EXPO_PUBLIC_WEB_API_URL : undefined) ??
-  process.env.EXPO_PUBLIC_API_URL ??
+  (configured === "dev-lan" ? devLanApi() : configured) ??
   PRODUCTION_API;
 
 export const config = {
@@ -26,7 +35,7 @@ export const colors = {
   text: "#fafafa",
   muted: "#a1a1aa",
   faint: "#71717a",
-  accent: "#e11d48",
+  accent: "#EA580C", // brand orange (logo gradient #FFB020 → #F2550F)
   coin: "#f59e0b",
   success: "#34d399",
 };

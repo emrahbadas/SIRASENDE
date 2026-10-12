@@ -124,12 +124,12 @@ export default async function RevenuePage({
               defaultValue={canRequest ? (balance / 100).toFixed(2) : undefined}
               placeholder="Tutar (₺)"
               disabled={!canRequest}
-              className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-rose-500 disabled:opacity-50"
+              className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-orange-500 disabled:opacity-50"
             />
             <button
               type="submit"
               disabled={!canRequest}
-              className="shrink-0 rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium transition hover:bg-rose-500 disabled:cursor-not-allowed disabled:opacity-40"
+              className="shrink-0 rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium transition hover:bg-orange-500 disabled:cursor-not-allowed disabled:opacity-40"
             >
               Ödeme talep et
             </button>
@@ -176,14 +176,14 @@ export default async function RevenuePage({
             defaultValue={account?.account_holder ?? ""}
             placeholder="Hesap sahibinin adı soyadı"
             required
-            className="rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-rose-500"
+            className="rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-orange-500"
           />
           <input
             name="iban"
             defaultValue={account ? formatIban(account.iban) : ""}
             placeholder="TR00 0000 0000 0000 0000 0000 00"
             required
-            className="rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 font-mono text-sm outline-none focus:border-rose-500"
+            className="rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 font-mono text-sm outline-none focus:border-orange-500"
           />
           <button
             type="submit"
@@ -206,7 +206,7 @@ export default async function RevenuePage({
         </div>
         <div className="mt-2 h-2 overflow-hidden rounded-full bg-zinc-800">
           <div
-            className={`h-full ${quota && usedMinutes / quota > 0.9 ? "bg-amber-500" : "bg-rose-600"}`}
+            className={`h-full ${quota && usedMinutes / quota > 0.9 ? "bg-amber-500" : "bg-orange-600"}`}
             style={{ width: `${quota ? Math.min(100, (usedMinutes / quota) * 100) : 0}%` }}
           />
         </div>

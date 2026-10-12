@@ -64,13 +64,13 @@ export default async function AdminPayoutsPage({
       <nav className="mt-6 flex items-center gap-2">
         <Link
           href="/admin/payouts"
-          className={`rounded-full border px-3 py-1 text-sm ${!all ? "border-rose-600 bg-rose-950/40 text-rose-200" : "border-zinc-800 text-zinc-400"}`}
+          className={`rounded-full border px-3 py-1 text-sm ${!all ? "border-orange-600 bg-orange-950/40 text-orange-200" : "border-zinc-800 text-zinc-400"}`}
         >
           Bekleyenler
         </Link>
         <Link
           href="/admin/payouts?all=1"
-          className={`rounded-full border px-3 py-1 text-sm ${all ? "border-rose-600 bg-rose-950/40 text-rose-200" : "border-zinc-800 text-zinc-400"}`}
+          className={`rounded-full border px-3 py-1 text-sm ${all ? "border-orange-600 bg-orange-950/40 text-orange-200" : "border-zinc-800 text-zinc-400"}`}
         >
           Tümü
         </Link>
@@ -139,7 +139,7 @@ export default async function AdminPayoutsPage({
                       <input
                         name="note"
                         placeholder="Red sebebi (creator görür)"
-                        className="min-w-0 flex-1 rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-1.5 text-xs outline-none focus:border-rose-500"
+                        className="min-w-0 flex-1 rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-1.5 text-xs outline-none focus:border-orange-500"
                       />
                       <ConfirmSubmit
                         message="Talep reddedilsin mi? Tutar creator'ın bakiyesine geri döner."

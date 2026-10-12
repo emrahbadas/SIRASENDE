@@ -80,7 +80,7 @@ export default async function AdminProductionsPage({
               key={f.key}
               href={f.key ? `/admin/productions?status=${f.key}` : "/admin/productions"}
               className={`rounded-full border px-3 py-1 text-sm ${
-                active ? "border-rose-600 bg-rose-950/40 text-rose-200" : "border-zinc-800 text-zinc-400 hover:border-zinc-600"
+                active ? "border-orange-600 bg-orange-950/40 text-orange-200" : "border-zinc-800 text-zinc-400 hover:border-zinc-600"
               }`}
             >
               {f.label}
@@ -137,7 +137,7 @@ export default async function AdminProductionsPage({
                         <input
                           name="note"
                           placeholder="Sebep (creator görür)"
-                          className="w-40 rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-1.5 text-xs outline-none focus:border-rose-500"
+                          className="w-40 rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-1.5 text-xs outline-none focus:border-orange-500"
                         />
                         <ConfirmSubmit
                           message={`"${s.title}" yayından kaldırılsın mı? Creator tekrar yayına alamaz.`}

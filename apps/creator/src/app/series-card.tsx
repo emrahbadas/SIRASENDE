@@ -55,14 +55,14 @@ export function SeriesCard({
         }
       }}
       onContextMenu={(e) => preview && e.preventDefault()}
-      className="group overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/50 transition select-none [-webkit-touch-callout:none] hover:border-rose-500/50"
+      className="group overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/50 transition select-none [-webkit-touch-callout:none] hover:border-orange-500/50"
     >
       <div className="relative flex aspect-9/13 items-center justify-center bg-linear-to-br from-zinc-900 to-zinc-950">
         {poster ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={poster} alt={title} loading="lazy" className="h-full w-full object-cover" />
         ) : (
-          <span className="px-4 text-center text-lg font-bold text-zinc-700 transition group-hover:text-rose-500/70">
+          <span className="px-4 text-center text-lg font-bold text-zinc-700 transition group-hover:text-orange-500/70">
             {title}
           </span>
         )}

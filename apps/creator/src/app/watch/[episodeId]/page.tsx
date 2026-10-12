@@ -95,7 +95,7 @@ export default async function WatchPage({
                 <input type="hidden" name="episode_id" value={episodeId} />
                 <button
                   type="submit"
-                  className="rounded-lg bg-rose-600 px-5 py-2 text-sm font-medium transition hover:bg-rose-500"
+                  className="rounded-lg bg-orange-600 px-5 py-2 text-sm font-medium transition hover:bg-orange-500"
                 >
                   {series.episode_coin_price} coin ile aç
                 </button>
@@ -104,7 +104,7 @@ export default async function WatchPage({
             ) : (
               <Link
                 href="/login"
-                className="rounded-lg bg-rose-600 px-5 py-2 text-sm font-medium transition hover:bg-rose-500"
+                className="rounded-lg bg-orange-600 px-5 py-2 text-sm font-medium transition hover:bg-orange-500"
               >
                 Açmak için giriş yap
               </Link>

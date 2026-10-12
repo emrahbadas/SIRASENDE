@@ -4,7 +4,7 @@ import { requireCreator } from "../require-creator";
 import { updateCreatorProfile } from "./actions";
 
 const input =
-  "w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-rose-500";
+  "w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-orange-500";
 
 export default async function SettingsPage({
   searchParams,
@@ -54,7 +54,7 @@ export default async function SettingsPage({
               className={input}
             />
           </label>
-          <button type="submit" className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium transition hover:bg-rose-500">
+          <button type="submit" className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium transition hover:bg-orange-500">
             Kaydet
           </button>
         </form>

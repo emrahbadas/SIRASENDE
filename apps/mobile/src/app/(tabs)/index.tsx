@@ -180,9 +180,9 @@ const styles = StyleSheet.create({
   grid: { flexDirection: "row", flexWrap: "wrap", gap: GAP },
   chips: { gap: 8 },
   chip: { borderColor: colors.border, borderWidth: 1, borderRadius: 16, paddingHorizontal: 14, paddingVertical: 6 },
-  chipActive: { borderColor: colors.accent, backgroundColor: "rgba(225,29,72,0.12)" },
+  chipActive: { borderColor: colors.accent, backgroundColor: "rgba(234,88,12,0.14)" },
   chipText: { color: colors.muted, fontSize: 13 },
-  chipTextActive: { color: "#fda4af", fontWeight: "600" },
+  chipTextActive: { color: "#fdba74", fontWeight: "600" },
   resumeCard: { width: 112 },
   resumePoster: {
     width: 112,

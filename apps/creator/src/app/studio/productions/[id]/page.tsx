@@ -138,7 +138,7 @@ export default async function ProductionDetailPage({
             <input type="hidden" name="production_id" value={production.id} />
             <button
               type="submit"
-              className="shrink-0 rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium transition hover:bg-rose-500"
+              className="shrink-0 rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium transition hover:bg-orange-500"
             >
               {onAir || series.status === "moderating"
                 ? `Yeni bölümleri onaya gönder (${pendingCount})`
@@ -214,7 +214,7 @@ export default async function ProductionDetailPage({
               {!blocked && (
                 <Link
                   href={`/studio/productions/${production.id}/split?season=${season.id}`}
-                  className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 transition hover:border-rose-600 hover:text-rose-300"
+                  className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 transition hover:border-orange-600 hover:text-orange-300"
                 >
                   ✂ Uzun videoyu bölümlere ayır
                 </Link>
@@ -339,11 +339,11 @@ export default async function ProductionDetailPage({
                 type="text"
                 required
                 placeholder={`Bölüm ${episodes.length + 1} başlığı (video en fazla ${maxMinutes} dk)`}
-                className="flex-1 rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-rose-500"
+                className="flex-1 rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-orange-500"
               />
               <button
                 type="submit"
-                className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium transition hover:bg-rose-500"
+                className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium transition hover:bg-orange-500"
               >
                 + Bölüm ekle
               </button>

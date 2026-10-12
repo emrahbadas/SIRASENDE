@@ -9,7 +9,7 @@ export function ModerationForm({ seriesId, returnTo = "/admin" }: { seriesId: st
         name="note"
         rows={2}
         placeholder="Red / düzeltme notu — creator bu notu görecek (onayda boş bırakılabilir)"
-        className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-rose-500"
+        className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-orange-500"
       />
       <div className="flex flex-wrap gap-2">
         <button

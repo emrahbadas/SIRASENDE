@@ -73,7 +73,7 @@ export default async function AnalyticsPage() {
       {!series.length ? (
         <div className="mt-8 rounded-xl border border-dashed border-zinc-800 p-12 text-center text-zinc-500">
           Henüz dizin yok.{" "}
-          <Link href="/studio/productions/new" className="text-rose-400 hover:underline">
+          <Link href="/studio/productions/new" className="text-orange-400 hover:underline">
             İlk yapımını oluştur
           </Link>
         </div>

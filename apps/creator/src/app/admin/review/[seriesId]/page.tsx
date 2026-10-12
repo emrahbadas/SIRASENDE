@@ -216,7 +216,7 @@ export default async function ReviewPage({
                   <Link
                     href={`/admin/review/${series.id}?ep=${e.id}`}
                     className={`flex items-center gap-3 px-4 py-3 text-sm transition ${
-                      active ? "bg-rose-950/40" : "hover:bg-zinc-900"
+                      active ? "bg-orange-950/40" : "hover:bg-zinc-900"
                     }`}
                   >
                     <span className="w-14 shrink-0 text-zinc-500">
@@ -262,7 +262,7 @@ export default async function ReviewPage({
                   <input
                     name="note"
                     placeholder="Sebep (creator görür)"
-                    className="w-48 rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-1.5 text-xs outline-none focus:border-rose-500"
+                    className="w-48 rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-1.5 text-xs outline-none focus:border-orange-500"
                   />
                   <ConfirmSubmit
                     message={`"${series.title}" yayından kaldırılsın mı? Creator tekrar yayına alamaz.`}

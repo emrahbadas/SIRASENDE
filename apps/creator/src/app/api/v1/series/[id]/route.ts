@@ -64,9 +64,18 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const progress = new Map<string, { position: number; completed: boolean }>();
   let inWatchlist = false;
   let following = false;
+  // The series' creator and staff can watch everything (as can_watch_episode allows)
+  let watchesAll = false;
   if (userId) {
-    const [{ data: unlocks }, { data: watched }, { data: myLikes }, { data: listed }, { data: follow }] =
-      await Promise.all([
+    const [
+      { data: unlocks },
+      { data: watched },
+      { data: myLikes },
+      { data: listed },
+      { data: follow },
+      { data: ownCreator },
+      { data: staffRoles },
+    ] = await Promise.all([
         supabase.from("episode_unlocks").select("episode_id").in("episode_id", ids),
         supabase.from("watch_progress").select("episode_id, position_seconds, completed").in("episode_id", ids),
         supabase.from("episode_likes").select("episode_id").in("episode_id", ids),
@@ -74,7 +83,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         creator
           ? supabase.from("creator_follows").select("creator_id").eq("creator_id", creator.id).maybeSingle()
           : Promise.resolve({ data: null }),
+        creator
+          ? supabase.from("creator_profiles").select("id").eq("id", creator.id).eq("profile_id", userId).maybeSingle()
+          : Promise.resolve({ data: null }),
+        supabase.from("user_roles").select("role").eq("profile_id", userId).in("role", ["admin", "moderator"]),
       ]);
+    watchesAll = !!ownCreator || (staffRoles?.length ?? 0) > 0;
     for (const u of unlocks ?? []) unlocked.add(u.episode_id);
     for (const w of watched ?? []) progress.set(w.episode_id, { position: w.position_seconds, completed: w.completed });
     for (const l of myLikes ?? []) liked.add(l.episode_id);
@@ -105,7 +119,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         episodeNumber: e.episode_number,
         title: e.title,
         durationSeconds: e.duration_seconds,
-        access: free ? "free" : unlocked.has(e.id) ? "unlocked" : "locked",
+        access: free ? "free" : watchesAll || unlocked.has(e.id) ? "unlocked" : "locked",
         progress: progress.get(e.id) ?? null,
         likes: likes.get(e.id) ?? 0,
         liked: liked.has(e.id),

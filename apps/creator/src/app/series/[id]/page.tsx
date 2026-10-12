@@ -73,7 +73,7 @@ export default async function PublicSeriesPage({
         </div>
         <div>
           <h1 className="text-3xl font-bold">{series.title}</h1>
-          {creatorName && <p className="mt-1 text-sm text-rose-400">{creatorName}</p>}
+          {creatorName && <p className="mt-1 text-sm text-orange-400">{creatorName}</p>}
           <p className="mt-1 flex items-center gap-2 text-xs uppercase text-zinc-600">
             <span>
               {series.primary_language} · {production?.production_type}
@@ -115,7 +115,7 @@ export default async function PublicSeriesPage({
                   <li key={ep.id}>
                     <Link
                       href={`/watch/${ep.id}`}
-                      className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-3 transition hover:border-rose-700"
+                      className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-3 transition hover:border-orange-700"
                     >
                       <div className="flex items-center gap-3">
                         <span className="w-8 text-center font-mono text-sm text-zinc-500">

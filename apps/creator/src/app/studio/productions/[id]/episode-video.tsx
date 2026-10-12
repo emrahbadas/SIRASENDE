@@ -135,7 +135,7 @@ export function EpisodeVideo({
         type="button"
         disabled={busy}
         onClick={() => inputRef.current?.click()}
-        className="rounded-lg border border-zinc-700 px-2 py-1 text-xs text-zinc-300 transition hover:border-rose-600 hover:text-rose-300 disabled:opacity-50"
+        className="rounded-lg border border-zinc-700 px-2 py-1 text-xs text-zinc-300 transition hover:border-orange-600 hover:text-orange-300 disabled:opacity-50"
       >
         {status === "ready" ? "Değiştir" : status === "failed" || !asset ? "Video yükle" : "Yeniden yükle"}
       </button>
