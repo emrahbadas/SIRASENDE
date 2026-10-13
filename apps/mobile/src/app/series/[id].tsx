@@ -1,10 +1,12 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { Image } from "expo-image";
 import { router, Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ReportSheet } from "@/components/report-sheet";
 import { api, type SeriesDetail } from "@/lib/api";
 import { colors } from "@/lib/config";
-import { setFollowing, setInWatchlist } from "@/lib/social";
+import { setBlocked, setFollowing, setInWatchlist } from "@/lib/social";
 
 const warningLabels: Record<string, string> = {
   violence: "Şiddet",
@@ -20,6 +22,7 @@ export default function SeriesScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [series, setSeries] = useState<SeriesDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [reporting, setReporting] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -58,6 +61,30 @@ export default function SeriesScreen() {
       apply(!next);
       Alert.alert((e as Error).message);
     }
+  }
+
+  // Blocking hides the creator's series from the viewer's home and Shorts feed
+  function toggleBlock() {
+    const creator = series!.creator!;
+    const apply = async (blocked: boolean) => {
+      try {
+        if (await setBlocked(creator.id, blocked)) {
+          setSeries((s) => (s?.creator ? { ...s, creator: { ...s.creator, blocked } } : s));
+          if (blocked) router.back();
+        }
+      } catch (e) {
+        Alert.alert((e as Error).message);
+      }
+    };
+    if (creator.blocked) return apply(false);
+    Alert.alert(
+      `${creator.name} engellensin mi?`,
+      "Bu creator'ın dizileri artık ana sayfanda ve Kısa akışında görünmez. Profil → Ayarlar'dan engeli kaldırabilirsin.",
+      [
+        { text: "Vazgeç", style: "cancel" },
+        { text: "Engelle", style: "destructive", onPress: () => apply(true) },
+      ]
+    );
   }
 
   // Resume where the viewer left off, otherwise start from episode 1
@@ -118,6 +145,20 @@ export default function SeriesScreen() {
           <Text style={styles.listButtonText}>{series.inWatchlist ? "✓ Listemde" : "＋ Listeme ekle"}</Text>
         </Pressable>
       </View>
+
+      <View style={styles.safety}>
+        <Pressable style={styles.safetyButton} onPress={() => setReporting(true)} hitSlop={6}>
+          <Ionicons name="flag-outline" size={15} color={colors.faint} />
+          <Text style={styles.safetyText}>Bildir</Text>
+        </Pressable>
+        {series.creator && (
+          <Pressable style={styles.safetyButton} onPress={toggleBlock} hitSlop={6}>
+            <Ionicons name={series.creator.blocked ? "eye-outline" : "ban-outline"} size={15} color={colors.faint} />
+            <Text style={styles.safetyText}>{series.creator.blocked ? "Engeli kaldır" : "Creator'ı engelle"}</Text>
+          </Pressable>
+        )}
+      </View>
+      <ReportSheet visible={reporting} onClose={() => setReporting(false)} seriesId={series.id} subject={series.title} />
 
       <Text style={styles.sectionTitle}>{series.episodes.length} bölüm</Text>
       {series.episodes.map((e) => (
@@ -183,6 +224,9 @@ const styles = StyleSheet.create({
   description: { color: colors.muted, marginTop: 16, lineHeight: 20 },
   play: { backgroundColor: colors.accent, borderRadius: 10, paddingVertical: 14, alignItems: "center" },
   playText: { color: "#fff", fontWeight: "700", fontSize: 15 },
+  safety: { flexDirection: "row", gap: 18, marginTop: 14 },
+  safetyButton: { flexDirection: "row", alignItems: "center", gap: 5 },
+  safetyText: { color: colors.faint, fontSize: 12 },
   sectionTitle: { color: colors.text, fontSize: 16, fontWeight: "700", marginTop: 28, marginBottom: 8 },
   episode: {
     flexDirection: "row",

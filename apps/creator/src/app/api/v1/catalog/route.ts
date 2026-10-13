@@ -1,6 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSeriesCovers } from "@/lib/video/covers";
-import { callerClient, json, one, preflight } from "@/lib/api/v1";
+import { callerUserId, json, one, preflight } from "@/lib/api/v1";
 
 export const dynamic = "force-dynamic";
 
@@ -15,17 +15,21 @@ type SeasonRow = { season_number: number; episodes: { id: string; status: string
  * stats (all-time and last 7 days) and the first episode for the Shorts feed.
  */
 export async function GET(request: Request) {
-  const { supabase } = callerClient(request);
-  const [{ data: series, error }, { data: stats }] = await Promise.all([
+  const { supabase, userId } = await callerUserId(request);
+  const [{ data: series, error }, { data: stats }, { data: blocks }] = await Promise.all([
     supabase
       .from("series")
       .select(
-        "id, title, description, poster_url, free_episode_count, episode_coin_price, created_at, productions(age_rating, production_type, creator_profiles(creator_name), production_categories(categories(slug, name_tr))), seasons(season_number, episodes(id, status, episode_number))"
+        "id, title, description, poster_url, free_episode_count, episode_coin_price, created_at, productions(age_rating, production_type, creator_profiles(id, creator_name), production_categories(categories(slug, name_tr))), seasons(season_number, episodes(id, status, episode_number))"
       )
       .eq("status", "published")
       .is("deleted_at", null)
       .order("created_at", { ascending: false }),
     supabase.rpc("series_view_stats"),
+    // Creators the signed-in viewer blocked are left out (RLS returns only their rows)
+    userId
+      ? supabase.from("creator_blocks").select("creator_id")
+      : Promise.resolve({ data: [] as { creator_id: string }[] }),
   ]);
   if (error) return json({ error: "catalog_unavailable" }, 500);
 
@@ -34,10 +38,14 @@ export async function GET(request: Request) {
       (s) => [s.series_id, s]
     )
   );
-  const covers = await getSeriesCovers(createAdminClient(), series ?? []);
+  const blocked = new Set((blocks ?? []).map((b) => b.creator_id));
+  const visible = (series ?? []).filter(
+    (s) => !blocked.has(one(one(s.productions)?.creator_profiles)?.id as string)
+  );
+  const covers = await getSeriesCovers(createAdminClient(), visible);
 
   return json({
-    series: (series ?? []).map((s) => {
+    series: visible.map((s) => {
       const production = one(s.productions);
       const published = ((s.seasons ?? []) as SeasonRow[])
         .flatMap((se) => se.episodes.map((e) => ({ ...e, season: se.season_number })))

@@ -14,6 +14,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EpisodePlayer } from "@/components/episode-player";
 import { LockedEpisode } from "@/components/locked-episode";
+import { ReportSheet } from "@/components/report-sheet";
 import { api, type SeriesDetail, type SeriesEpisode } from "@/lib/api";
 import { colors } from "@/lib/config";
 import { saveProgress } from "@/lib/progress";
@@ -30,6 +31,7 @@ export default function WatchScreen() {
   const [episodes, setEpisodes] = useState<SeriesEpisode[]>([]);
   const [active, setActive] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [reporting, setReporting] = useState<SeriesEpisode | null>(null);
 
   useEffect(() => {
     api.series(seriesId).then(
@@ -128,6 +130,14 @@ export default function WatchScreen() {
                 <Text style={styles.likeCount}>{item.likes}</Text>
               </Pressable>
             )}
+            <Pressable
+              style={[styles.report, { bottom: insets.bottom + 128 }]}
+              onPress={() => setReporting(item)}
+              hitSlop={10}
+              accessibilityLabel="Bölümü bildir"
+            >
+              <Ionicons name="flag-outline" size={24} color="#fff" />
+            </Pressable>
 
             <View style={[styles.caption, { paddingBottom: insets.bottom + 24 }]} pointerEvents="none">
               <Text style={styles.seriesTitle}>{series.title}</Text>
@@ -138,6 +148,14 @@ export default function WatchScreen() {
             </View>
           </View>
         )}
+      />
+
+      <ReportSheet
+        visible={!!reporting}
+        onClose={() => setReporting(null)}
+        seriesId={series.id}
+        episodeId={reporting?.id}
+        subject={`${series.title} · Bölüm ${reporting?.episodeNumber ?? ""}`}
       />
 
       <Pressable style={[styles.back, { top: insets.top + 8 }]} onPress={() => router.back()} hitSlop={12}>
@@ -154,6 +172,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#000" },
   caption: { position: "absolute", left: 16, right: 80, bottom: 0 },
   like: { position: "absolute", right: 14, alignItems: "center" },
+  report: { position: "absolute", right: 19, alignItems: "center", opacity: 0.85 },
   likeCount: { color: "#fff", fontSize: 12, fontWeight: "700", marginTop: 2, textShadowColor: "#000", textShadowRadius: 4 },
   seriesTitle: { color: colors.text, fontSize: 16, fontWeight: "800", textShadowColor: "#000", textShadowRadius: 6 },
   episodeTitle: { color: "#e4e4e7", fontSize: 14, marginTop: 4, textShadowColor: "#000", textShadowRadius: 6 },

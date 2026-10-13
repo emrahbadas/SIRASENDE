@@ -259,3 +259,22 @@ export async function unbanCreator(formData: FormData) {
   revalidateAll();
   back(formData);
 }
+
+/** Closes a content report: resolved (action taken) or dismissed (no violation). */
+export async function closeReport(formData: FormData) {
+  const { supabase } = await requireModerator();
+  const status = formData.get("status") === "resolved" ? "resolved" : "dismissed";
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { error } = await supabase
+    .from("content_reports")
+    .update({ status, resolved_by: user?.id ?? null, resolved_at: new Date().toISOString() })
+    .eq("id", String(formData.get("report_id") ?? ""))
+    .eq("status", "open");
+  if (error) back(formData, error.message);
+
+  revalidatePath("/admin/reports");
+  back(formData);
+}

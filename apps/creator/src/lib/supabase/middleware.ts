@@ -3,7 +3,18 @@ import { NextResponse, type NextRequest } from "next/server";
 
 // /watch decides access per episode (free window); webhooks authenticate by signature;
 // /api/v1 (mobile app) authenticates with a bearer token, not cookies
-const PUBLIC_PREFIXES = ["/series", "/watch", "/login", "/signup", "/auth", "/api/webhooks", "/api/v1"];
+const PUBLIC_PREFIXES = [
+  "/series",
+  "/watch",
+  "/login",
+  "/signup",
+  "/auth",
+  "/api/webhooks",
+  "/api/v1",
+  "/privacy",
+  "/terms",
+  "/account/delete",
+];
 
 function isPublicPath(path: string) {
   if (path === "/") return true;

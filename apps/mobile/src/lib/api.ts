@@ -41,7 +41,7 @@ export interface SeriesDetail {
   title: string;
   description: string | null;
   creatorName: string | null;
-  creator: { id: string; name: string; followers: number; following: boolean } | null;
+  creator: { id: string; name: string; followers: number; following: boolean; blocked: boolean } | null;
   inWatchlist: boolean;
   ageRating: string | null;
   contentWarnings: string[];

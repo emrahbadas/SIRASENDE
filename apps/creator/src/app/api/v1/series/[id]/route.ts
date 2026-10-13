@@ -64,6 +64,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const progress = new Map<string, { position: number; completed: boolean }>();
   let inWatchlist = false;
   let following = false;
+  let blocked = false;
   // The series' creator and staff can watch everything (as can_watch_episode allows)
   let watchesAll = false;
   if (userId) {
@@ -75,6 +76,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       { data: follow },
       { data: ownCreator },
       { data: staffRoles },
+      { data: block },
     ] = await Promise.all([
         supabase.from("episode_unlocks").select("episode_id").in("episode_id", ids),
         supabase.from("watch_progress").select("episode_id, position_seconds, completed").in("episode_id", ids),
@@ -87,6 +89,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
           ? supabase.from("creator_profiles").select("id").eq("id", creator.id).eq("profile_id", userId).maybeSingle()
           : Promise.resolve({ data: null }),
         supabase.from("user_roles").select("role").eq("profile_id", userId).in("role", ["admin", "moderator"]),
+        creator
+          ? supabase.from("creator_blocks").select("creator_id").eq("creator_id", creator.id).maybeSingle()
+          : Promise.resolve({ data: null }),
       ]);
     watchesAll = !!ownCreator || (staffRoles?.length ?? 0) > 0;
     for (const u of unlocks ?? []) unlocked.add(u.episode_id);
@@ -94,6 +99,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     for (const l of myLikes ?? []) liked.add(l.episode_id);
     inWatchlist = !!listed;
     following = !!follow;
+    blocked = !!block;
   }
 
   const covers = series.poster_url ? null : await getSeriesCovers(admin, [series]);
@@ -104,7 +110,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     description: series.description,
     creatorName: creator?.creator_name ?? null,
     creator: creator
-      ? { id: creator.id, name: creator.creator_name, followers: Number(followers ?? 0), following }
+      ? { id: creator.id, name: creator.creator_name, followers: Number(followers ?? 0), following, blocked }
       : null,
     inWatchlist,
     ageRating: production?.age_rating ?? null,

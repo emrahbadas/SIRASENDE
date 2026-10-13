@@ -34,6 +34,7 @@ Platform; mobil izleme deneyimini, creator ekonomisini, vertical discovery akı�
 - [Creator Growth Program](#creator-growth-program)
 - [KPI Framework](#kpi-framework)
 - [MVP Scope](#mvp-scope)
+- [Store Readiness (Google Play)](#store-readiness-google-play)
 - [Non-Goals and V2 Scope](#non-goals-and-v2-scope)
 - [Repository Structure](#repository-structure)
 - [Environment Configuration](#environment-configuration)
@@ -1532,6 +1533,48 @@ Creator Registration
   → Analytics
   → Revenue Event
 ```
+
+---
+
+## Store Readiness (Google Play)
+
+### Yapılanlar
+
+| Gereksinim | Nerede |
+|---|---|
+| Uygulama içinden hesap silme | Mobil: Profil → Ayarlar → Hesabımı sil (`POST /api/v1/me/delete-account`) |
+| Uygulama dışından hesap silme bağlantısı | Web: `/account/delete` (Play Console "Hesap silme URL'si") |
+| Gizlilik politikası URL'si | Web: `/privacy` (KVKK aydınlatma metni dahil); uygulamada Ayarlar → Yasal |
+| Kullanım şartları | Web: `/terms` |
+| UGC: içerik bildirme | Mobil: dizi sayfası "Bildir", izleme ekranında bayrak → `content_reports`; admin `/admin/reports` |
+| UGC: kullanıcı engelleme | Mobil: dizi sayfası "Creator'ı engelle" → `creator_blocks` (katalog ve Kısa akışından çıkar); Ayarlar'dan engeli kaldırma |
+| UGC: yayın öncesi moderasyon | Tüm yeni dizi ve bölümler onaydan geçer |
+
+Hesap silme: kişisel veriler silinir/anonimleştirilir (`anonymize_account`); creator içerikleri ve videoları silinir. Mali kayıtlar (coin satın alma, defter, ödemeler) yasal saklama süresi boyunca kimliksiz kalır; mali kaydı olmayan kullanıcıda auth kaydı tamamen silinir, olanda e-posta silinip giriş kalıcı olarak kapatılır. Bekleyen ödeme talebi varsa silme reddedilir.
+
+### Veri Güvenliği formu (Play Console) — taslak cevaplar
+
+| Veri türü | Toplanıyor | Amaç | Paylaşım |
+|---|---|---|---|
+| E-posta adresi | Evet (zorunlu) | Hesap yönetimi | Hayır |
+| Ad / kullanıcı adı | Evet | Hesap, uygulama işlevi | Hayır |
+| Satın alma geçmişi | Evet | Uygulama işlevi, muhasebe | Hayır (Google Play ödemeyi işler) |
+| Uygulama etkileşimleri (izleme, beğeni, liste) | Evet | Uygulama işlevi, analiz | Hayır |
+| Kullanıcı içeriği (video, geri bildirim, bildirim) | Evet | Uygulama işlevi, moderasyon | Hayır |
+| Finansal bilgi (creator IBAN) | Evet (yalnızca creator) | Ödeme | Hayır |
+| Cihaz / reklam kimliği | Evet (AdMob) | Reklam, sahtekârlık önleme | Evet — Google AdMob |
+| Konum, kişiler, fotoğraf galerisi | Hayır | — | — |
+
+Aktarımda şifreleme: Evet (HTTPS). Kullanıcı silme talep edebilir: Evet.
+
+### Kalanlar
+
+- **Yasal metinler**: veri sorumlusu (Emrah Badaş) ve iletişim (support@kargomarketing.com) `apps/creator/src/lib/legal.ts` içinde; metinler mağazaya çıkmadan önce bir hukukçuya kontrol ettirilmeli. Şirket kurulunca unvan ve adres eklenecek.
+- **İçerik derecelendirmesi (IARC)**: 18+ içerik barındırdığı için anket buna göre doldurulmalı; uygulamada yaş doğrulama/ebeveyn denetimi değerlendirmesi.
+- **Reklam beyanı**: "Uygulama reklam içeriyor" işaretlenmeli; `app-ads.txt` web kök dizinine eklenmeli (AdMob hesabı açılınca).
+- **Mağaza görselleri**: 512×512 ikon (`assets/brand-mark.svg`'den), 1024×500 tanıtım görseli, en az 2 ekran görüntüsü, kısa ve uzun açıklama.
+- **Kapalı test**: bireysel geliştirici hesabında üretime çıkmadan önce 12 test kullanıcısı ile 14 gün kapalı test.
+- **Üretim derlemesi**: `eas build --profile production` (AAB), gerçek AdMob uygulama/birim kimlikleri ve `EXPO_PUBLIC_API_URL` üretim adresi.
 
 ---
 

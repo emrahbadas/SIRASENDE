@@ -37,9 +37,10 @@ export default async function AdminPage({
   if (!roles?.length) redirect("/");
 
   // New series under review, plus published series with new episodes to review
-  const [{ data: newSeries }, { data: newEpisodes }] = await Promise.all([
+  const [{ data: newSeries }, { data: newEpisodes }, { count: openReports }] = await Promise.all([
     supabase.from("series").select("id").eq("status", "moderating").is("deleted_at", null),
     supabase.from("episodes").select("seasons!inner(series_id)").eq("status", "moderating"),
+    supabase.from("content_reports").select("id", { count: "exact", head: true }).eq("status", "open"),
   ]);
   const ids = [
     ...new Set([
@@ -66,7 +67,15 @@ export default async function AdminPage({
           <Link href="/" className="text-sm text-zinc-500 hover:text-zinc-300">
             ← Vitrin
           </Link>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
+            <Link
+              href="/admin/reports"
+              className={`rounded-lg border px-3 py-1.5 text-sm hover:border-zinc-600 ${
+                openReports ? "border-rose-800 text-rose-300" : "border-zinc-800 text-zinc-300"
+              }`}
+            >
+              Bildirimler{openReports ? ` (${openReports})` : ""} →
+            </Link>
             <Link
               href="/admin/creators"
               className="rounded-lg border border-zinc-800 px-3 py-1.5 text-sm text-zinc-300 hover:border-zinc-600"
