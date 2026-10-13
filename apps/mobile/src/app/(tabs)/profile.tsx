@@ -67,7 +67,7 @@ export default function ProfileScreen() {
         <View style={[styles.avatar, styles.avatarLarge]}>
           <Ionicons name="person" size={34} color={colors.muted} />
         </View>
-        <Text style={styles.name}>Sıra Sende’ye katıl</Text>
+        <Text style={styles.name}>Sıra Senin’e katıl</Text>
         <Text style={styles.centerText}>
           Listeni, izleme geçmişini ve coin bakiyeni tüm cihazlarında görmek için giriş yap.
         </Text>
@@ -182,7 +182,7 @@ export default function ProfileScreen() {
           <MenuRow icon="settings-outline" label="Ayarlar" onPress={() => router.push("/settings")} last />
         </MenuSection>
 
-        <Text style={styles.version}>Sıra Sende {version}</Text>
+        <Text style={styles.version}>Sıra Senin {version}</Text>
       </ScrollView>
     </SafeAreaView>
   );

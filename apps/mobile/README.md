@@ -1,4 +1,4 @@
-# Sıra Sende — Mobile (Expo)
+# Sıra Senin — Mobile (Expo)
 
 Viewer app: home, series page and a vertical, swipeable episode player.
 

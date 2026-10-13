@@ -7,7 +7,7 @@ import { colors, config } from "@/lib/config";
 import { supabase } from "@/lib/supabase";
 
 /**
- * Permanent reminder of what makes Sıra Sende different: viewers can publish
+ * Permanent reminder of what makes Sıra Senin different: viewers can publish
  * their own series. Creators get a shortcut to Studio instead.
  */
 export function CreatorCta() {
@@ -35,7 +35,7 @@ export function CreatorCta() {
       accessibilityRole="link"
     >
       <View style={{ flex: 1 }}>
-        <Text style={styles.eyebrow}>İzledin. Şimdi sıra sende.</Text>
+        <Text style={styles.eyebrow}>İzledin. Şimdi sıra senin.</Text>
         <Text style={styles.text}>
           {creator
             ? "Yeni bölümün hazır mı? Studio’da yükle, izleyicilerine ulaşsın."

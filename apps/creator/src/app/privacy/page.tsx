@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 import { LEGAL } from "@/lib/legal";
 import { LegalPage } from "../legal-page";
 
-export const metadata: Metadata = { title: "Gizlilik Politikası — Sıra Sende" };
+export const metadata: Metadata = { title: "Gizlilik Politikası — Sıra Senin" };
 
 export default function PrivacyPage() {
   return (
     <LegalPage title="Gizlilik Politikası ve KVKK Aydınlatma Metni">
       <p>
-        Bu metin, Sıra Sende mobil uygulaması ve sirasende web sitesi (birlikte “Platform”) üzerinden işlenen kişisel
+        Bu metin, Sıra Senin mobil uygulaması ve web sitesi (birlikte “Platform”) üzerinden işlenen kişisel
         verilerin 6698 sayılı Kişisel Verilerin Korunması Kanunu (“KVKK”) kapsamında nasıl işlendiğini açıklar.
       </p>
 

@@ -1,15 +1,15 @@
 {
   "expo": {
-    "name": "Sıra Sende",
+    "name": "Sıra Senin",
     "slug": "sirasende",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "sirasende",
+    "scheme": "sirasenin",
     "userInterfaceStyle": "dark",
     "ios": {
       "icon": "./assets/images/icon.png",
-      "bundleIdentifier": "app.sirasende"
+      "bundleIdentifier": "app.sirasenin"
     },
     "android": {
       "adaptiveIcon": {
@@ -19,7 +19,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "app.sirasende"
+      "package": "app.sirasenin"
     },
     "web": {
       "output": "single",

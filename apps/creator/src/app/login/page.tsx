@@ -11,7 +11,7 @@ export default async function LoginPage({
   return (
     <main className="flex min-h-screen items-center justify-center px-6">
       <div className="w-full max-w-sm">
-        <p className="text-sm font-medium text-orange-500">Sıra Sende</p>
+        <p className="text-sm font-medium text-orange-500">Sıra Senin</p>
         <h1 className="mt-1 text-2xl font-bold">Giriş yap</h1>
 
         {error && (

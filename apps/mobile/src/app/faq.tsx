@@ -5,7 +5,7 @@ import { colors } from "@/lib/config";
 
 const QUESTIONS: { q: string; a: string }[] = [
   {
-    q: "Sıra Sende nedir?",
+    q: "Sıra Senin nedir?",
     a: "Bölümleri birkaç dakikalık, telefona göre dikey çekilmiş kısa diziler platformu. İzleyebilir ya da kendi dizini yayınlayıp izlendikçe kazanabilirsin.",
   },
   {

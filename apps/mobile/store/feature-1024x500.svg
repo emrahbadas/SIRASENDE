@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="500" viewBox="0 0 1024 500">
+  <defs>
+    <radialGradient id="glow" cx="0.27" cy="0.5" r="0.55">
+      <stop offset="0" stop-color="#F2550F" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#0B0B0D" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="curtainL" x1="0" x2="1">
+      <stop offset="0" stop-color="#8E1A1C"/><stop offset="1" stop-color="#C02A23" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="curtainR" x1="1" x2="0">
+      <stop offset="0" stop-color="#B83C0A"/><stop offset="1" stop-color="#E3591A" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="500" fill="#0B0B0D"/>
+  <rect width="1024" height="500" fill="url(#glow)"/>
+  <rect x="0" y="0" width="70" height="500" fill="url(#curtainL)" opacity="0.8"/>
+  <rect x="954" y="0" width="70" height="500" fill="url(#curtainR)" opacity="0.8"/>
+  <svg x="120" y="90" width="320" height="320" viewBox="0 0 320 320">
+  <defs>
+    <linearGradient id="g" gradientUnits="userSpaceOnUse" x1="40" y1="20" x2="200" y2="320">
+      <stop offset="0" stop-color="#FFB020"/>
+      <stop offset="1" stop-color="#F2550F"/>
+    </linearGradient>
+    <mask id="m" maskUnits="userSpaceOnUse" x="-60" y="-60" width="360" height="460">
+      <rect x="-60" y="-60" width="360" height="460" fill="#fff"/>
+      <path d="M 106 149 L 106 191 L 142 170 Z" fill="#000" stroke="#000" stroke-width="6" stroke-linejoin="round"/>
+    </mask>
+  </defs>
+  
+  <g transform="translate(51.58 6.40) scale(0.9035)">
+    <path d="M 200 84 L 120 38 L 40 84 L 40 128 L 200 212 L 200 256 L 120 302 L 40 256" fill="none" stroke="url(#g)" stroke-width="66" stroke-linejoin="round" stroke-linecap="round" mask="url(#m)"/>
+  </g>
+</svg>
+  <text x="460" y="232" font-family="Segoe UI" font-weight="900" font-size="84"><tspan fill="#F2550F">Sıra</tspan><tspan fill="#FAFAFA"> Senin</tspan></text>
+  <text x="464" y="288" font-family="Segoe UI" font-weight="400" font-size="30" fill="#D4D4D8">İzledin. Şimdi sıra senin.</text>
+  <text x="464" y="336" font-family="Segoe UI" font-weight="700" font-size="20" fill="#A1A1AA">Kısa dikey diziler · bölüm bölüm izle, üret, kazan</text>
+</svg>

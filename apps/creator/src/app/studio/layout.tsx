@@ -17,7 +17,7 @@ export default async function StudioLayout({ children }: { children: React.React
 
   return (
     <main className="mx-auto max-w-xl px-6 py-20">
-      <p className="text-sm font-medium text-orange-500">Sıra Sende</p>
+      <p className="text-sm font-medium text-orange-500">Sıra Senin</p>
       <h1 className="mt-1 text-2xl font-bold">Creator hesabın askıya alındı</h1>
       <p className="mt-3 text-zinc-400">
         {new Date(ban.banned_at).toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })}{" "}

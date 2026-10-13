@@ -88,7 +88,7 @@ export default function SettingsScreen() {
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.message ?? "Hesap silinemedi, lütfen tekrar dene");
       await supabase.auth.signOut().catch(() => undefined);
-      Alert.alert("Hesabın silindi", "Sıra Sende'yi kullandığın için teşekkürler.");
+      Alert.alert("Hesabın silindi", "Sıra Senin'i kullandığın için teşekkürler.");
       router.replace("/");
     } catch (e) {
       Alert.alert("Hesap silinemedi", (e as Error).message);

@@ -82,7 +82,7 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.screen} edges={["top"]}>
       <View style={styles.header}>
         <Text style={styles.logo}>
-          <Text style={{ color: colors.accent }}>Sıra</Text> Sende
+          <Text style={{ color: colors.accent }}>Sıra</Text> Senin
         </Text>
         {!session && (
           <Link href="/login" style={styles.headerLink}>

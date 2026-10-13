@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 import { LEGAL } from "@/lib/legal";
 import { LegalPage } from "../legal-page";
 
-export const metadata: Metadata = { title: "Kullanım Şartları — Sıra Sende" };
+export const metadata: Metadata = { title: "Kullanım Şartları — Sıra Senin" };
 
 export default function TermsPage() {
   return (
     <LegalPage title="Kullanım Şartları">
       <p>
-        Sıra Sende&apos;yi kullanarak bu şartları kabul etmiş olursun. Şartlar değişirse güncel hâli bu sayfada yayınlanır.
+        Sıra Senin&apos;i kullanarak bu şartları kabul etmiş olursun. Şartlar değişirse güncel hâli bu sayfada yayınlanır.
       </p>
 
       <h2>1. Hesap</h2>
@@ -37,7 +37,7 @@ export default function TermsPage() {
       <h2>4. Creator&apos;lar</h2>
       <ul>
         <li>Yüklediğin içeriğin tüm haklarına sahip olduğunu ve içerik politikasına uyduğunu beyan edersin; telif ihlallerinden doğan sorumluluk sana aittir.</li>
-        <li>İçeriğini Platform&apos;da yayınlaman için Sıra Sende&apos;ye münhasır olmayan, içerik yayında kaldığı sürece geçerli bir yayın lisansı verirsin.</li>
+        <li>İçeriğini Platform&apos;da yayınlaman için Sıra Senin&apos;e münhasır olmayan, içerik yayında kaldığı sürece geçerli bir yayın lisansı verirsin.</li>
         <li>Reklam, coin ve indirme gelirinden payın Creator Studio&apos;da ilan edilen oranlarla, mağaza komisyonu, vergiler ve video dağıtım maliyeti düşüldükten sonra hesaplanır. Oranlar ileriye dönük olarak değişebilir.</li>
         <li>Kazancını asgari ödeme tutarına ulaştığında kendi adına kayıtlı bir IBAN&apos;a talep edebilirsin. Ödemeler, Platform&apos;un ilgili gelirleri tahsil etmesinden sonra yapılır.</li>
         <li>Depolama kotası planına göre belirlenir; kampanya ve ödül olarak verilen ek depolama süreli olabilir.</li>

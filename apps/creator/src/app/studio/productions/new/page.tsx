@@ -180,7 +180,7 @@ export default async function NewProductionPage({
           </h2>
           <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-amber-200/90">
             <li>
-              Sıra Sende&apos;de <strong>pornografik veya müstehcen içerik kesinlikle yasaktır</strong>.
+              Sıra Senin&apos;de <strong>pornografik veya müstehcen içerik kesinlikle yasaktır</strong>.
             </li>
             <li>
               Gerçek kişilerin <strong>gizli çekimleri, ifşa görüntüleri veya rızası olmayan

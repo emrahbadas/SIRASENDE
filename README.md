@@ -1,8 +1,8 @@
-# Sıra Sende
+# Sıra Senin
 
-> İzledin. Şimdi sıra sende.
+> İzledin. Şimdi sıra senin.
 
-Sıra Sende, bağımsız ve AI destekli creatorların dikey mini dizi ve kısa film yayınlayabildiği, izleyicilerin kısa bölümler halinde içerik tükettiği ve creatorların gelir elde ettiği **creator-driven vertical micro-drama streaming marketplace** platformudur.
+Sıra Senin, bağımsız ve AI destekli creatorların dikey mini dizi ve kısa film yayınlayabildiği, izleyicilerin kısa bölümler halinde içerik tükettiği ve creatorların gelir elde ettiği **creator-driven vertical micro-drama streaming marketplace** platformudur.
 
 Platform; mobil izleme deneyimini, creator ekonomisini, vertical discovery akışını ve AI destekli altyazı/lokalizasyon altyapısını bir araya getirir.
 
@@ -47,13 +47,13 @@ Platform; mobil izleme deneyimini, creator ekonomisini, vertical discovery akı�
 
 ## Product Definition
 
-Sıra Sende, ReelShort, NetShort ve DramaBox gibi vertical micro-drama platformlarına alternatif olarak geliştirilen, aynı zamanda creatorların kendi yapımlarını yayınlayıp gelir elde edebildiği bir platformdur.
+Sıra Senin, ReelShort, NetShort ve DramaBox gibi vertical micro-drama platformlarına alternatif olarak geliştirilen, aynı zamanda creatorların kendi yapımlarını yayınlayıp gelir elde edebildiği bir platformdur.
 
 Ürünün gerçek tanımı:
 
 > **Creator-driven vertical micro-drama streaming marketplace**
 
-Sıra Sende yalnızca bir video hosting ürünü değildir. Üç temel sistemi birleştirir:
+Sıra Senin yalnızca bir video hosting ürünü değildir. Üç temel sistemi birleştirir:
 
 1. **Vertical Micro-Drama Streaming Platform**  
    İzleyicilerin kısa, dikey ve bölüm bazlı hikâyeler tükettiği mobil-first deneyim.
@@ -66,7 +66,7 @@ Sıra Sende yalnızca bir video hosting ürünü değildir. Üç temel sistemi b
 
 Ana mesaj:
 
-> İzledin. Şimdi sıra sende.
+> İzledin. Şimdi sıra senin.
 
 Alternatif mesajlar:
 
@@ -91,7 +91,7 @@ Alternatif mesajlar:
 
 ### Uzun Vadeli Vizyon
 
-Sıra Sende yalnızca Türkçe kısa dizilerin yayınlandığı bir uygulama olmayacaktır. Hedef, Türkiye'de başlayan ancak global creatorların kendi micro-drama içeriklerini yayınlayabildiği uluslararası bir vertical storytelling marketplace oluşturmaktır.
+Sıra Senin yalnızca Türkçe kısa dizilerin yayınlandığı bir uygulama olmayacaktır. Hedef, Türkiye'de başlayan ancak global creatorların kendi micro-drama içeriklerini yayınlayabildiği uluslararası bir vertical storytelling marketplace oluşturmaktır.
 
 > **Create locally. Watch globally.**
 
@@ -221,7 +221,7 @@ Kullanıcı şu içerikler arasında geçiş yapabilir:
 - Kategori bazlı içerikler
 - Dil bazlı içerikler
 
-Ancak Sıra Sende, TikTok clone değildir. Her video bir içerik hiyerarşisinin parçasıdır:
+Ancak Sıra Senin, TikTok clone değildir. Her video bir içerik hiyerarşisinin parçasıdır:
 
 ```text
 Series → Season → Episode
@@ -342,7 +342,7 @@ MVP'de ana odak `Series → Season → Episode` yapısıdır. Standalone movie d
 
 ## Localization Strategy
 
-Sıra Sende'nin temel rekabet avantajlarından biri otomatik lokalizasyondur.
+Sıra Senin'in temel rekabet avantajlarından biri otomatik lokalizasyondur.
 
 ### Başlangıç Dilleri
 
@@ -1108,7 +1108,7 @@ User Generated Content nedeniyle moderasyon core feature'dır.
 
 ### Platform Sınırı
 
-Sıra Sende genel bir UGC/sosyal medya platformu değildir; **yalnızca bölümlü dikey video yayın platformudur** (senaryolu dizi, kısa film ve sohbet / mini ders serisi).
+Sıra Senin genel bir UGC/sosyal medya platformu değildir; **yalnızca bölümlü dikey video yayın platformudur** (senaryolu dizi, kısa film ve sohbet / mini ders serisi).
 
 - Kurgusal senaryo içerikleri, kişilerin kendi hikâyelerinden türetilmiş diziler ve creator'ın kendi hazırladığı sohbet / mini ders serileri yayınlanır.
 - Manevi içerikler saygılı bir dille anlatılır; başka inanç ve gruplara yönelik aşağılama veya nefret söylemi kabul edilmez.
@@ -1173,7 +1173,7 @@ AI moderation yardımcı olabilir ancak gerekli durumlarda manual review destekl
 
 Creator yayın sırasında aşağıdaki **Yayıncı Beyanı**'nı kabul etmelidir:
 
-> Yüklediğim içeriğin senaryolu/kurgu niteliğinde olduğunu; pornografik içerik, rıza dışı veya gizli görüntü, özel hayatın ifşası, gerçek kişilere yönelik zarar verici içerik veya platformun yasakladığı başka materyaller içermediğini beyan ederim. İçerikte kullanılan görüntü, video, müzik, ses, senaryo ve diğer eserler için gerekli yayın ve kullanım haklarına sahip olduğumu veya gerekli izinleri aldığımı kabul ederim. İçeriğin üçüncü kişilerin haklarını ihlal etmesi halinde doğabilecek taleplerden kendi yüklemem ölçüsünde sorumluyum. Sıra Sende'nin içeriği inceleme, yayınlamama, yayından kaldırma veya ek bilgi/kanıt isteme hakkını kabul ederim.
+> Yüklediğim içeriğin senaryolu/kurgu niteliğinde olduğunu; pornografik içerik, rıza dışı veya gizli görüntü, özel hayatın ifşası, gerçek kişilere yönelik zarar verici içerik veya platformun yasakladığı başka materyaller içermediğini beyan ederim. İçerikte kullanılan görüntü, video, müzik, ses, senaryo ve diğer eserler için gerekli yayın ve kullanım haklarına sahip olduğumu veya gerekli izinleri aldığımı kabul ederim. İçeriğin üçüncü kişilerin haklarını ihlal etmesi halinde doğabilecek taleplerden kendi yüklemem ölçüsünde sorumluyum. Sıra Senin'in içeriği inceleme, yayınlamama, yayından kaldırma veya ek bilgi/kanıt isteme hakkını kabul ederim.
 
 Beyan maddeleri:
 
@@ -1976,7 +1976,7 @@ Bu kararlar kesinleştiğinde:
 
 ## Product Principles Summary
 
-Sıra Sende:
+Sıra Senin:
 
 - TikTok clone değildir.
 - YouTube clone değildir.

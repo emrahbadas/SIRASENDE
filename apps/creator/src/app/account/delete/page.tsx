@@ -5,7 +5,7 @@ import { LEGAL } from "@/lib/legal";
 import { LegalPage } from "../../legal-page";
 import { deleteMyAccount } from "./actions";
 
-export const metadata: Metadata = { title: "Hesap silme — Sıra Sende" };
+export const metadata: Metadata = { title: "Hesap silme — Sıra Senin" };
 
 export default async function DeleteAccountPage({
   searchParams,
@@ -22,12 +22,12 @@ export default async function DeleteAccountPage({
     <LegalPage title="Hesabını sil">
       {done ? (
         <p className="rounded-lg border border-emerald-900 bg-emerald-950/40 p-4 text-emerald-200">
-          Hesabın silindi. Sıra Sende&apos;yi kullandığın için teşekkürler.
+          Hesabın silindi. Sıra Senin&apos;i kullandığın için teşekkürler.
         </p>
       ) : (
         <>
           <p>
-            Sıra Sende hesabını uygulamada <strong>Profil → Ayarlar → Hesabımı sil</strong> yolundan ya da bu sayfadan
+            Sıra Senin hesabını uygulamada <strong>Profil → Ayarlar → Hesabımı sil</strong> yolundan ya da bu sayfadan
             silebilirsin.
           </p>
 

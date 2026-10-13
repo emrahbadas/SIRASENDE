@@ -35,7 +35,7 @@ export default async function DashboardPage() {
     <main className="mx-auto max-w-5xl px-6 py-12">
       <header className="mb-10 flex items-start justify-between">
         <div>
-          <p className="text-sm font-medium text-orange-500">Sıra Sende</p>
+          <p className="text-sm font-medium text-orange-500">Sıra Senin</p>
           <h1 className="mt-1 text-3xl font-bold tracking-tight">Creator Studio</h1>
           <p className="mt-2 text-zinc-400">
             Hoş geldin, <span className="text-zinc-200">{creatorProfile.creator_name}</span>

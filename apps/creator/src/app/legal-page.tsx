@@ -6,7 +6,7 @@ export function LegalPage({ title, children }: { title: string; children: React.
   return (
     <main className="mx-auto max-w-3xl px-6 py-12">
       <Link href="/" className="text-sm text-zinc-500 hover:text-zinc-300">
-        ← Sıra Sende
+        ← Sıra Senin
       </Link>
       <h1 className="mt-2 text-3xl font-bold">{title}</h1>
       <p className="mt-1 text-sm text-zinc-500">Son güncelleme: {LEGAL.updatedAt}</p>
