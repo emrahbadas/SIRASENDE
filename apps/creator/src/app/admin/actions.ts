@@ -184,3 +184,78 @@ export async function resolvePayout(formData: FormData) {
   revalidatePath("/admin/payouts");
   back(formData);
 }
+
+/** Admin gives a creator a time-boxed grant (storage minutes for now). */
+export async function grantCreator(formData: FormData) {
+  const { supabase, isAdmin } = await requireModerator();
+  if (!isAdmin) back(formData, "Hak atama yalnızca adminlerde");
+
+  const minutes = Number(formData.get("minutes"));
+  const days = Number(formData.get("days"));
+  if (!Number.isInteger(minutes) || minutes < 1 || minutes > 100000) back(formData, "Geçerli bir dakika gir");
+  if (!Number.isInteger(days) || days < 1 || days > 366) back(formData, "Süre 1–366 gün olmalı");
+
+  const { error } = await supabase.rpc("admin_grant", {
+    p_creator_id: String(formData.get("creator_id") ?? ""),
+    p_kind: "storage_minutes",
+    p_value: minutes,
+    p_days: days,
+    p_note: String(formData.get("note") ?? "").trim() || null,
+  });
+  if (error) back(formData, error.message);
+
+  revalidatePath("/admin/campaigns");
+  back(formData);
+}
+
+export async function revokeGrant(formData: FormData) {
+  const { supabase, isAdmin } = await requireModerator();
+  if (!isAdmin) back(formData, "Hak geri alma yalnızca adminlerde");
+
+  const { error } = await supabase.rpc("admin_revoke_grant", { p_grant_id: String(formData.get("grant_id") ?? "") });
+  if (error) back(formData, error.message);
+
+  revalidatePath("/admin/campaigns");
+  back(formData);
+}
+
+const banErrors: Record<string, string> = {
+  ban_reason_required: "Ban sebebini yaz (en az 3 karakter)",
+  creator_not_found_or_already_banned: "Creator bulunamadı veya zaten banlı",
+  creator_not_banned: "Bu creator banlı değil",
+};
+
+/** Admin suspends a creator: their live and in-review series are blocked. */
+export async function banCreator(formData: FormData) {
+  const { supabase, isAdmin } = await requireModerator();
+  if (!isAdmin) back(formData, "Ban yalnızca adminlerde");
+
+  const { error } = await supabase.rpc("admin_ban_creator", {
+    p_creator_id: String(formData.get("creator_id") ?? ""),
+    p_reason: String(formData.get("reason") ?? ""),
+  });
+  if (error) {
+    const key = Object.keys(banErrors).find((k) => error.message.includes(k));
+    back(formData, (key && banErrors[key]) || error.message);
+  }
+
+  revalidateAll();
+  back(formData);
+}
+
+/** Lifts the ban and restores the series the ban had blocked. */
+export async function unbanCreator(formData: FormData) {
+  const { supabase, isAdmin } = await requireModerator();
+  if (!isAdmin) back(formData, "Ban açma yalnızca adminlerde");
+
+  const { error } = await supabase.rpc("admin_unban_creator", {
+    p_creator_id: String(formData.get("creator_id") ?? ""),
+  });
+  if (error) {
+    const key = Object.keys(banErrors).find((k) => error.message.includes(k));
+    back(formData, (key && banErrors[key]) || error.message);
+  }
+
+  revalidateAll();
+  back(formData);
+}

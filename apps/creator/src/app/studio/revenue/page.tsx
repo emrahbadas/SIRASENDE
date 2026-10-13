@@ -36,7 +36,7 @@ export default async function RevenuePage({
   const { error, requested, saved } = await searchParams;
   const { supabase, creator } = await requireCreator();
 
-  const [{ data: wallet }, { data: payouts }, { data: policy }, { data: storage }, { data: account }] = await Promise.all([
+  const [{ data: wallet }, { data: payouts }, { data: policy }, { data: storage }, { data: account }, { data: grants }] = await Promise.all([
     supabase
       .from("wallet_accounts")
       .select("id, balance")
@@ -59,6 +59,14 @@ export default async function RevenuePage({
       .maybeSingle(),
     supabase.rpc("my_storage_summary").maybeSingle<{ quota_minutes: number; used_seconds: number }>(),
     supabase.from("creator_payout_accounts").select("account_holder, iban").eq("creator_id", creator.id).maybeSingle(),
+    supabase
+      .from("creator_grants")
+      .select("id, value, source, note, ends_at, activated_at")
+      .eq("creator_id", creator.id)
+      .eq("kind", "storage_minutes")
+      .is("revoked_at", null)
+      .gt("ends_at", new Date().toISOString())
+      .order("ends_at"),
   ]);
 
   const { data: entries } = wallet
@@ -211,6 +219,22 @@ export default async function RevenuePage({
             style={{ width: `${quota ? Math.min(100, (usedMinutes / quota) * 100) : 0}%` }}
           />
         </div>
+        {(grants ?? []).map((g) => {
+          const endsAt = new Date(g.ends_at).toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" });
+          const founderPending = g.source === "founder_100" && !g.activated_at;
+          return (
+            <div key={g.id} className="mt-3 rounded-lg border border-orange-900/60 bg-orange-950/20 px-3 py-2 text-xs text-orange-200">
+              <strong>+{g.value} dk</strong>{" "}
+              {g.source === "founder_100" ? "Kurucu creator kampanyası" : g.note || "Platform hediyesi"} ·{" "}
+              {founderPending
+                ? `ilk dizini ${endsAt} tarihine kadar yayına alırsan yayından itibaren 90 gün geçerli`
+                : `${endsAt} tarihine kadar geçerli`}
+            </div>
+          );
+        })}
+        <p className="mt-2 text-xs text-zinc-500">
+          Ek depolama hakkının süresi bitince videoların silinmez; yalnızca kotanı aşan yeni yüklemeler durur.
+        </p>
       </section>
 
       <div className="mt-8 grid gap-6 md:grid-cols-2">

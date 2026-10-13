@@ -1400,7 +1400,8 @@ Performans puanı bileşenleri (ağırlıklar pilotta ayarlanır): farklı giri�
 
 - **creator_grants** tablosu (ilk 100 creator kampanyasıyla ortak): creator, tür (`storage_minutes`, `featured`, `share_bonus_bps` + kazanç tavanı, `badge`), değer, başlangıç/bitiş, kaynak kampanya, veren admin. Kotalar ve pay hesabı yalnızca süresi geçmemiş hakları dikkate alır.
 - **Admin creator sıralaması**: dönem, kategori ve yarış alanı filtreli tablo (farklı izleyici, geçiş, tamamlama, açılış türleri, takipçi); satırdan hak atama.
-- Hak tablosu ilk 100 creator kampanyasıyla birlikte kurulur; sıralama sayfası ölçütlerin anlamlı olacağı ölçekte (≈20+ aktif creator) açılır.
+- **Kuruldu:** `creator_grants` + kurucu kampanya (yeni creator otomatik 240 dk alır; ilk diziyi 30 gün içinde yayına alırsa yayından itibaren 90 gün; kullanılmayan hak kontenjanı boşaltır; hak creator'a bağlıdır çünkü depolama maliyeti projeden bağımsızdır) ve admin `/admin/campaigns` sayfası (kontenjan, haklar, elle hak verme/geri alma). Şimdilik yalnızca `storage_minutes` kotayı etkiler.
+- Sıralama sayfası ölçütlerin anlamlı olacağı ölçekte (≈20+ aktif creator) açılır.
 
 ---
 
