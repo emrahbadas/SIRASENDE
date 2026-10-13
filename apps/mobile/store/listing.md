@@ -45,8 +45,8 @@ Sorun, öneri veya içerik bildirimi için: support@kargomarketing.com
 - Uygulama kategorisi: Eğlence
 - Etiketler: Video, Dizi, Kısa video, Eğlence, Drama
 - İletişim e-postası: support@kargomarketing.com
-- Gizlilik politikası: https://sirasende-indol.vercel.app/privacy
-- Hesap silme: https://sirasende-indol.vercel.app/account/delete
+- Gizlilik politikası: https://sirasenin.app/privacy
+- Hesap silme: https://sirasenin.app/account/delete
 
 ## Ekran görüntüsü planı (telefondan alınacak, 9:16)
 

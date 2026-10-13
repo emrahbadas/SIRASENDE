@@ -4,7 +4,7 @@ import { Platform } from "react-native";
 // Public configuration only — everything here ships inside the app bundle.
 // Secrets (signing keys, service role) stay on the server behind /api/v1.
 
-const PRODUCTION_API = "https://sirasende-indol.vercel.app";
+const PRODUCTION_API = "https://sirasenin.app";
 
 // EXPO_PUBLIC_API_URL=dev-lan points a phone at the local API on the same
 // computer that serves the JS bundle (port 3000), whatever network it is on —
