@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSeriesCovers } from "@/lib/video/covers";
 import { OG_BASE, SITE_NAME, SITE_URL } from "@/lib/site";
+import { productionTypeLabel } from "@/lib/labels";
 
 // PostgREST to-one relations are inferred as arrays without generated DB types
 const one = <T,>(v: T | T[] | null | undefined): T | null =>
@@ -144,7 +145,7 @@ export default async function PublicSeriesPage({
           {creatorName && <p className="mt-1 text-sm text-orange-400">{creatorName}</p>}
           <p className="mt-1 flex items-center gap-2 text-xs uppercase text-zinc-600">
             <span>
-              {series.primary_language} · {production?.production_type}
+              {series.primary_language} · {productionTypeLabel(production?.production_type)}
             </span>
             {production?.age_rating && (
               <span className="rounded border border-amber-700/60 px-1.5 py-0.5 text-amber-400">

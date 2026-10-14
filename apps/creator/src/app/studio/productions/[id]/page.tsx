@@ -16,6 +16,7 @@ import { getVideoSettings } from "@/lib/settings";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSeriesCovers } from "@/lib/video/covers";
 import { PosterEditor } from "./poster-editor";
+import { productionTypeLabel } from "@/lib/labels";
 
 const statusLabels: Record<string, { label: string; cls: string }> = {
   draft: { label: "Taslak", cls: "border-zinc-700 text-zinc-400" },
@@ -116,7 +117,7 @@ export default async function ProductionDetailPage({
         <div className="flex-1">
           <h1 className="text-2xl font-bold">{production.title}</h1>
           <p className="mt-1 flex items-center gap-2 text-sm text-zinc-500">
-            <span>{production.production_type}</span>
+            <span>{productionTypeLabel(production.production_type)}</span>
             {series && <span>· {series.primary_language.toUpperCase()}</span>}
             {series && (
               <span

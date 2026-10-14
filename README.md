@@ -1620,7 +1620,8 @@ Güncel iş listesi (14 Ekim 2026). Bitenler commit geçmişinde; burada yalnız
 - [x] **`sitemap.xml` ve `robots.txt`**: yayındaki diziler ve kategoriler sitemap'te; `/admin`, `/studio`, `/statements`, `/verify`, `/api`, `/watch` taranmaz.
 - [x] **Canonical adres**: tek adres `https://sirasenin.app` (`src/lib/site.ts`); diğer host'lar (vercel.app, önizlemeler) `X-Robots-Tag: noindex` ve tamamen kapalı robots.txt alır. Eski adres yönlendirilmedi: eski mobil derlemeler API'yi oradan kullanıyor.
 - [x] **Yapılandırılmış veri — dizi**: dizi sayfalarında `TVSeries` (tür, yaş sınırı, creator, bölüm/sezon sayısı).
-- [ ] **Yapılandırılmış veri — site**: ana sayfada `Organization` + `WebSite`; bölüm düzeyinde `VideoObject`.
+- [x] **Yapılandırılmış veri — site**: ana sayfada `Organization` (logo, destek e-postası) + `WebSite`.
+- [ ] **Yapılandırılmış veri — bölüm**: bölüm düzeyinde `VideoObject` (ücretsiz bölümler için).
 - [x] **Google Search Console**: alan adı mülkü DNS TXT ile doğrulandı, `https://sirasenin.app/sitemap.xml` gönderildi (14 Ekim 2026, 17 adres).
 - [ ] **Bing Webmaster Tools**: Search Console'dan içe aktarma.
 - [x] **Kategori sayfaları**: taranabilir `/kategori/[slug]` adresleri; eski `/?category=` bağlantıları 308 ile yönlenir.

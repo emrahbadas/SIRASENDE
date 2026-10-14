@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ModerationForm } from "./moderation-form";
+import { productionTypeLabel } from "@/lib/labels";
 
 const warningLabels: Record<string, string> = {
   violence: "Şiddet",
@@ -160,7 +161,7 @@ export default async function AdminPage({
                     </span>
                   </h2>
                   <p className="mt-1 text-sm text-zinc-500">
-                    {creatorName} · {production?.production_type} ·{" "}
+                    {creatorName} · {productionTypeLabel(production?.production_type)} ·{" "}
                     {s.primary_language.toUpperCase()} · {episodeCount} bölüm
                     {categoryName && <> · {categoryName}</>}
                     {production?.age_rating && (

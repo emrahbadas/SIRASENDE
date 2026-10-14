@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createProduction } from "../actions";
+import { PRODUCTION_TYPES } from "@/lib/labels";
 
 const selectClass =
   "mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 outline-none focus:border-orange-500";
@@ -55,10 +56,11 @@ export default async function NewProductionPage({
               Yapım tipi
             </label>
             <select id="production_type" name="production_type" className={selectClass}>
-              <option value="human">Human Production</option>
-              <option value="ai_assisted">AI Assisted</option>
-              <option value="ai_generated">AI Generated</option>
-              <option value="hybrid">Hybrid</option>
+              {Object.entries(PRODUCTION_TYPES).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
             </select>
           </div>
           <div>

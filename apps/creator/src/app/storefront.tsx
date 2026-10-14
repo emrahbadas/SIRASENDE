@@ -4,6 +4,7 @@ import { logout } from "@/app/auth/actions";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSeriesCovers } from "@/lib/video/covers";
 import { SeriesCard } from "./series-card";
+import { productionTypeLabel } from "@/lib/labels";
 
 // PostgREST to-one relations are inferred as arrays without generated DB types
 const one = <T,>(v: T | T[] | null | undefined): T | null =>
@@ -189,7 +190,7 @@ export async function Storefront({ category }: { category?: string }) {
                   <p className="mt-1 line-clamp-2 text-sm text-zinc-500">{s.description}</p>
                   <p className="mt-2 flex items-center gap-2 text-xs uppercase text-zinc-600">
                     <span>
-                      {s.primary_language} · {one(s.productions)?.production_type}
+                      {s.primary_language} · {productionTypeLabel(one(s.productions)?.production_type)}
                     </span>
                     {one(s.productions)?.age_rating && (
                       <span className="rounded border border-amber-700/60 px-1.5 py-0.5 text-amber-400">

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { productionTypeLabel } from "@/lib/labels";
 
 const statusLabels: Record<string, string> = {
   draft: "Taslak",
@@ -67,7 +68,7 @@ export default async function ProductionsPage() {
                   <div>
                     <h2 className="font-semibold">{p.title}</h2>
                     <p className="mt-1 text-sm text-zinc-500">
-                      {p.production_type} ·{" "}
+                      {productionTypeLabel(p.production_type)} ·{" "}
                       {new Date(p.created_at).toLocaleDateString("tr-TR")}
                     </p>
                   </div>
