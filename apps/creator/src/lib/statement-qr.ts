@@ -1,12 +1,12 @@
-import { headers } from "next/headers";
 import QRCode from "qrcode";
 
-/** Public verification link of a statement (current host, so it also works locally). */
+// Always the live site: local and production share one database, so a
+// statement printed anywhere verifies on the public domain.
+const SITE_URL = process.env.SITE_URL ?? "https://sirasenin.app";
+
+/** Public verification link of a statement. */
 export async function statementVerifyUrl(number: string, token: string) {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "sirasenin.app";
-  const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") || /^\d/.test(host) ? "http" : "https");
-  return `${proto}://${host}/verify/hakedis/${encodeURIComponent(number)}?token=${token}`;
+  return `${SITE_URL}/verify/hakedis/${encodeURIComponent(number)}?token=${token}`;
 }
 
 export const qrSvg = (text: string) =>
