@@ -5,7 +5,10 @@ import { LEGAL } from "@/lib/legal";
 import { LegalPage } from "../../legal-page";
 import { deleteMyAccount } from "./actions";
 
-export const metadata: Metadata = { title: "Hesap silme — Sıra Senin" };
+export const metadata: Metadata = {
+  title: "Hesap silme",
+  alternates: { canonical: "/account/delete" },
+};
 
 export default async function DeleteAccountPage({
   searchParams,

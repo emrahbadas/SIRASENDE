@@ -1,8 +1,11 @@
+import { cache } from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSeriesCovers } from "@/lib/video/covers";
+import { OG_BASE, SITE_NAME, SITE_URL } from "@/lib/site";
 
 // PostgREST to-one relations are inferred as arrays without generated DB types
 const one = <T,>(v: T | T[] | null | undefined): T | null =>
@@ -16,33 +19,93 @@ const warningLabels: Record<string, string> = {
   substance_use: "Madde kullanımı",
 };
 
+// Shared by generateMetadata and the page (one query per request)
+const loadSeries = cache(async (id: string) => {
+  const supabase = await createClient();
+  const { data: series } = await supabase
+    .from("series")
+    .select(
+      "id, title, description, poster_url, primary_language, status, free_episode_count, episode_coin_price, created_at, productions(production_type, age_rating, content_warnings, creator_profiles(creator_name), production_categories(categories(name_tr))), seasons(season_number, episodes(id, episode_number, title, status, duration_seconds))"
+    )
+    .eq("id", id)
+    .eq("status", "published")
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (!series) return null;
+
+  const cover = series.poster_url
+    ? null
+    : (await getSeriesCovers(createAdminClient(), [series])).get(series.id);
+  const production = one(series.productions);
+  return {
+    series,
+    production,
+    creatorName: one(production?.creator_profiles)?.creator_name ?? null,
+    genres: (production?.production_categories ?? []).map((pc) => one(pc.categories)?.name_tr).filter(Boolean) as string[],
+    posterSrc: series.poster_url ?? cover?.thumbnail ?? null,
+  };
+});
+
+const publishedCount = (series: NonNullable<Awaited<ReturnType<typeof loadSeries>>>["series"]) =>
+  (series.seasons ?? []).reduce((n, s) => n + s.episodes.filter((e) => e.status === "published").length, 0);
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const data = await loadSeries((await params).id);
+  if (!data) return { title: "Dizi bulunamadı", robots: { index: false } };
+  const { series, creatorName, genres, posterSrc } = data;
+
+  const episodes = publishedCount(series);
+  const description = (
+    series.description?.trim() ||
+    `${series.title}: ${genres.length ? genres.join(", ").toLocaleLowerCase("tr-TR") + " türünde " : ""}kısa dikey dizi.`
+  ).slice(0, 155);
+  const title = `${series.title} — ${episodes} bölüm${creatorName ? ` · ${creatorName}` : ""}`;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: `/series/${series.id}` },
+    openGraph: {
+      ...OG_BASE,
+      type: "video.tv_show",
+      title,
+      description,
+      url: `/series/${series.id}`,
+      ...(posterSrc ? { images: [{ url: posterSrc, alt: series.title }] } : {}),
+    },
+    twitter: { card: "summary_large_image", title, description },
+  };
+}
+
 export default async function PublicSeriesPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const supabase = await createClient();
-
-  const { data: series } = await supabase
-    .from("series")
-    .select(
-      "id, title, description, poster_url, primary_language, status, free_episode_count, episode_coin_price, productions(production_type, age_rating, content_warnings, creator_profiles(creator_name)), seasons(season_number, episodes(id, episode_number, title, status, duration_seconds))"
-    )
-    .eq("id", id)
-    .eq("status", "published")
-    .is("deleted_at", null)
-    .maybeSingle();
-
-  if (!series) notFound();
+  const data = await loadSeries(id);
+  if (!data) notFound();
+  const { series, production, creatorName, genres, posterSrc } = data;
 
   const seasons = (series.seasons ?? []).sort((a, b) => a.season_number - b.season_number);
-  const cover = series.poster_url
-    ? null
-    : (await getSeriesCovers(createAdminClient(), [series])).get(series.id);
-  const posterSrc = series.poster_url ?? cover?.thumbnail ?? null;
-  const production = one(series.productions);
-  const creatorName = one(production?.creator_profiles)?.creator_name;
+
+  // schema.org TVSeries for search engines
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "TVSeries",
+    name: series.title,
+    url: `${SITE_URL}/series/${series.id}`,
+    ...(series.description ? { description: series.description } : {}),
+    ...(posterSrc ? { image: posterSrc } : {}),
+    inLanguage: series.primary_language,
+    ...(genres.length ? { genre: genres } : {}),
+    ...(production?.age_rating ? { contentRating: production.age_rating } : {}),
+    ...(creatorName ? { creator: { "@type": "Person", name: creatorName } } : {}),
+    numberOfEpisodes: publishedCount(series),
+    numberOfSeasons: seasons.filter((s) => s.episodes.some((e) => e.status === "published")).length,
+    datePublished: series.created_at,
+    publisher: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
+  };
 
   // Position among published episodes decides the free window (matches can_watch_episode)
   const positions = new Map(
@@ -54,6 +117,11 @@ export default async function PublicSeriesPage({
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-10">
+      <script
+        type="application/ld+json"
+        // JSON.stringify output; "<" escaped so titles cannot close the script tag
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+      />
       <Link href="/" className="text-sm text-zinc-500 hover:text-zinc-300">
         ← Keşfet
       </Link>

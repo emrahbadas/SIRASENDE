@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { LEGAL } from "@/lib/legal";
 import { LegalPage } from "../legal-page";
 
-export const metadata: Metadata = { title: "Kullanım Şartları — Sıra Senin" };
+export const metadata: Metadata = {
+  title: "Kullanım Şartları",
+  alternates: { canonical: "/terms" },
+};
 
 export default function TermsPage() {
   return (

@@ -1,8 +1,8 @@
 import QRCode from "qrcode";
+import { SITE_URL } from "./site";
 
 // Always the live site: local and production share one database, so a
 // statement printed anywhere verifies on the public domain.
-const SITE_URL = process.env.SITE_URL ?? "https://sirasenin.app";
 
 /** Public verification link of a statement. */
 export async function statementVerifyUrl(number: string, token: string) {

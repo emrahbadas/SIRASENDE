@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { LEGAL } from "@/lib/legal";
 import { LegalPage } from "../legal-page";
 
-export const metadata: Metadata = { title: "Gizlilik Politikası — Sıra Senin" };
+export const metadata: Metadata = {
+  title: "Gizlilik Politikası",
+  alternates: { canonical: "/privacy" },
+};
 
 export default function PrivacyPage() {
   return (

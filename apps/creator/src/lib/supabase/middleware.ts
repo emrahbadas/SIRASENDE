@@ -1,10 +1,12 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { SITE_HOST } from "@/lib/site";
 
 // /watch decides access per episode (free window); webhooks authenticate by signature;
 // /api/v1 (mobile app) authenticates with a bearer token, not cookies
 const PUBLIC_PREFIXES = [
   "/series",
+  "/kategori",
   "/watch",
   "/login",
   "/signup",
@@ -15,6 +17,9 @@ const PUBLIC_PREFIXES = [
   "/terms",
   "/account/delete",
   "/verify",
+  "/robots.txt",
+  "/sitemap.xml",
+  "/opengraph-image",
 ];
 
 function isPublicPath(path: string) {
@@ -59,6 +64,11 @@ export async function updateSession(request: NextRequest) {
     // Return to the requested page after signing in
     url.search = `?next=${encodeURIComponent(path + request.nextUrl.search)}`;
     return NextResponse.redirect(url);
+  }
+
+  // Only the canonical domain may be indexed (vercel.app serves the same pages)
+  if (request.headers.get("host") !== SITE_HOST) {
+    supabaseResponse.headers.set("X-Robots-Tag", "noindex, nofollow");
   }
 
   return supabaseResponse;

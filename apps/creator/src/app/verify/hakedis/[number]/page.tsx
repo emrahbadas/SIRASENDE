@@ -5,7 +5,7 @@ import { TEXT, dateText, money, monthLabel, statementStatus, type StatementData 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Belge doğrulama · Sıra Senin",
+  title: "Belge doğrulama",
   robots: { index: false },
 };
 

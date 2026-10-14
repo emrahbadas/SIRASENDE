@@ -1576,6 +1576,47 @@ Aktarımda şifreleme: Evet (HTTPS). Kullanıcı silme talep edebilir: Evet.
 - **Kapalı test**: bireysel geliştirici hesabında üretime çıkmadan önce 12 test kullanıcısı ile 14 gün kapalı test.
 - **Üretim derlemesi**: `eas build --profile production` (AAB), gerçek AdMob uygulama/birim kimlikleri ve `EXPO_PUBLIC_API_URL` üretim adresi.
 
+## Yapılacaklar
+
+Güncel iş listesi (14 Ekim 2026). Bitenler commit geçmişinde; burada yalnızca açık işler var.
+
+### Yayın öncesi (uygulama mağazası)
+
+- [ ] **Google Play Console hesabı** (25 $, tek sefer). Bireysel hesapta 12 test kullanıcısıyla 14 günlük kapalı test zorunlu; erken açmak süreyi kısaltır.
+- [ ] **AdMob hesabı**: gerçek uygulama ve reklam birimi kimlikleri, `app-ads.txt`, SSV anahtarlarının canlıda doğrulanması.
+- [ ] **Vercel Pro**: Hobby planı ticari kullanıma izin vermiyor; para kazanmaya başlamadan önce.
+- [ ] **İçerik**: kendi çekilmiş / hakları bizde olan 3–4 dizi (vitrin ve mağaza görselleri için).
+- [ ] **Mağaza ekran görüntüleri**: `preview` build (geliştirici dişlisi yok) + telifsiz içerikle 6 ekran → 1080×1920 başlıklı kareler (`apps/mobile/store/listing.md`).
+- [ ] **IARC yaş derecelendirmesi** ve Veri Güvenliği formu (taslak cevaplar yukarıda).
+- [ ] **Hukukçu kontrolü**: gizlilik, KVKK, kullanım şartları.
+- [ ] **Google Play Billing**: coin satın alma ("Şarj et") henüz mağaza ödemesine bağlı değil; uygulama içi satın alma kütüphanesi + sunucuda satın alma doğrulaması → `credit_coin_purchase`. Üretimden önce şart; kapalı testte coin satışı kapalı kalabilir.
+- [ ] **Üretim derlemesi**: `eas build --profile production` (AAB) → Play Console kapalı test kanalı. Test eden kullanıcılar uygulamayı Play Store'dan kurar ve canlı API'ye (`sirasenin.app`) bağlanır; Wi-Fi/8081 geliştirme sunucusu gerekmez. Önce EAS ortam değişkenleri: `EXPO_PUBLIC_SUPABASE_URL` ve `EXPO_PUBLIC_SUPABASE_ANON_KEY` şu an yalnızca git'e girmeyen `apps/mobile/.env.local` içinde; bulut derlemesi bu dosyayı görmez (`eas env:create`, preview + production).
+
+### SEO (web: sirasenin.app)
+
+- [x] **Sayfa başlıkları ve açıklamaları**: vitrin, dizi ve kategori sayfaları için `generateMetadata` (dizi adı, bölüm sayısı, creator, açıklama).
+- [x] **Open Graph / Twitter kartları**: dizi afişiyle paylaşım önizlemesi; varsayılan marka görseli `src/app/opengraph-image.png` (1200×630).
+- [x] **`sitemap.xml` ve `robots.txt`**: yayındaki diziler ve kategoriler sitemap'te; `/admin`, `/studio`, `/statements`, `/verify`, `/api`, `/watch` taranmaz.
+- [x] **Canonical adres**: tek adres `https://sirasenin.app` (`src/lib/site.ts`); diğer host'lar (vercel.app, önizlemeler) `X-Robots-Tag: noindex` ve tamamen kapalı robots.txt alır. Eski adres yönlendirilmedi: eski mobil derlemeler API'yi oradan kullanıyor.
+- [x] **Yapılandırılmış veri — dizi**: dizi sayfalarında `TVSeries` (tür, yaş sınırı, creator, bölüm/sezon sayısı).
+- [ ] **Yapılandırılmış veri — site**: ana sayfada `Organization` + `WebSite`; bölüm düzeyinde `VideoObject`.
+- [ ] **Google Search Console**: alan adı doğrulaması (DNS TXT), sitemap gönderimi; Bing Webmaster Tools.
+- [x] **Kategori sayfaları**: taranabilir `/kategori/[slug]` adresleri; eski `/?category=` bağlantıları 308 ile yönlenir.
+- [ ] **Uygulama bağlantıları**: Android App Links (`/.well-known/assetlinks.json`) ve mağaza rozeti; dizi sayfasından "Uygulamada aç".
+- [ ] **Hız ve erişilebilirlik**: Core Web Vitals (afiş görselleri `next/image`), `lang`, alt metinler.
+
+### Ürün
+
+- [ ] **Bağış (donate)**: izleyici veya creator'ın beğendiği creator'a coin ile bağış; komisyon, hakediş belgesinde ayrı kalem, vergi durumu (muhasebeci). Önce tasarım konuşulacak.
+- [ ] **Hesap silme uçtan uca testi**: deneme hesabı + video ile Cloudflare video silme ve giriş sistemi hesap silme adımları.
+- [ ] **Altyazı (Phase 4)**: bilinçli ertelenmiş açık borç.
+
+### Şirket ve muhasebe
+
+- [ ] **Şirket kuruluşu** (proje tutarsa ~3 ay içinde): ardından ödeme taleplerini aç (Admin → Hakediş → "Ödemeleri aç"), biriken hakedişler gider pusulası / fatura ile ödenir.
+- [ ] **Muhasebeci**: 20/B, KDV, creator ödemeleri, bağış vergisi.
+- [ ] **iyzico**: şirket kurulunca; yalnızca web'de creator depolama planı satışı için (uygulama içi coin satışı Google Play Billing ile).
+
 ---
 
 ## Non-Goals and V2 Scope
