@@ -1569,7 +1569,7 @@ Aktarımda şifreleme: Evet (HTTPS). Kullanıcı silme talep edebilir: Evet.
 
 ### Kalanlar
 
-- **Yasal metinler**: veri sorumlusu (Emrah Badaş) ve iletişim (support@kargomarketing.com) `apps/creator/src/lib/legal.ts` içinde; metinler mağazaya çıkmadan önce bir hukukçuya kontrol ettirilmeli. Şirket kurulunca unvan ve adres eklenecek.
+- **Yasal metinler**: veri sorumlusu (Emrah Badaş) ve iletişim (support@sirasenin.app) `apps/creator/src/lib/legal.ts` içinde; metinler mağazaya çıkmadan önce bir hukukçuya kontrol ettirilmeli. Şirket kurulunca unvan ve adres eklenecek.
 - **İçerik derecelendirmesi (IARC)**: 18+ içerik barındırdığı için anket buna göre doldurulmalı; uygulamada yaş doğrulama/ebeveyn denetimi değerlendirmesi.
 - **Reklam beyanı**: "Uygulama reklam içeriyor" işaretlenmeli; `app-ads.txt` web kök dizinine eklenmeli (AdMob hesabı açılınca).
 - **Mağaza görselleri**: 512×512 ikon (`assets/brand-mark.svg`'den), 1024×500 tanıtım görseli, en az 2 ekran görüntüsü, kısa ve uzun açıklama.
@@ -1635,8 +1635,8 @@ Güncel iş listesi (14 Ekim 2026). Bitenler commit geçmişinde; burada yalnız
 
 ### E-posta (en sona bırakıldı)
 
-- [ ] **Kendi alan adından auth mailleri**: Supabase'in yerleşik maili saatte birkaç mail ve test amaçlı. Gönderen `noreply@sirasenin.app`, servis Resend (veya Brevo); SPF/DKIM kayıtları Namecheap DNS'e; Supabase → Authentication → SMTP (API anahtarını kurucu girer).
-- [ ] **Gelen mail**: Namecheap ücretsiz yönlendirme `destek@` / `info@sirasenin.app` → kurucunun Gmail'i. Sonra `lib/legal.ts` ve mağaza kaydındaki iletişim adresi `support@kargomarketing.com` → `sirasenin.app` adresi.
+- [ ] **Kendi alan adından auth mailleri**: Supabase'in yerleşik maili saatte birkaç mail ve test amaçlı. Gönderen `noreply@sirasenin.app`; servis Resend/Brevo ya da mevcut Namecheap Private Email SMTP'si (gönderim limitlerine bakılarak); SPF/DKIM kayıtları Namecheap DNS'e — SPF kaydı tek olmalı, yeni servis mevcut `include:spf.privateemail.com` kaydına eklenir; Supabase → Authentication → SMTP (API anahtarını kurucu girer).
+- [x] **Gelen mail**: `support@sirasenin.app` (Namecheap Private Email, MX + SPF kayıtlı); `lib/legal.ts`, mağaza kaydı ve Play Console cevap kâğıdı bu adrese geçti.
 - [ ] **Şablonlar**: üyelik onayı, şifre sıfırlama, e-posta değişikliği, sihirli bağlantı — Türkçe, logolu, turuncu HTML + konu satırları (repoya, Supabase'e yapıştırılır).
 - Kişisel Gmail veya `kargomarketing.com` adresi kullanılmayacak (gizlilik, spam, marka karışıklığı).
 

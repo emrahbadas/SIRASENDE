@@ -4,6 +4,7 @@ import * as WebBrowser from "expo-web-browser";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { MenuRow, MenuSection } from "@/components/menu-row";
+import { adPrivacyOptionsRequired, showAdPrivacyOptions } from "@/lib/ads";
 import { useAuth } from "@/lib/auth";
 import { colors, config } from "@/lib/config";
 import { setBlocked } from "@/lib/social";
@@ -22,6 +23,12 @@ export default function SettingsScreen() {
   const [busy, setBusy] = useState(false);
   const [blocked, setBlockedList] = useState<Blocked[]>([]);
   const [deleting, setDeleting] = useState(false);
+  // Shown only where the consent rules require it (EEA/UK)
+  const [adPrivacy, setAdPrivacy] = useState(false);
+
+  useEffect(() => {
+    adPrivacyOptionsRequired().then(setAdPrivacy).catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     if (!userId) return;
@@ -111,7 +118,21 @@ export default function SettingsScreen() {
   const legal = (
     <MenuSection title="Yasal">
       <MenuRow icon="shield-outline" label="Gizlilik Politikası" onPress={() => openWeb("/privacy")} external />
-      <MenuRow icon="document-text-outline" label="Kullanım Şartları" onPress={() => openWeb("/terms")} external last />
+      <MenuRow
+        icon="document-text-outline"
+        label="Kullanım Şartları"
+        onPress={() => openWeb("/terms")}
+        external
+        last={!adPrivacy}
+      />
+      {adPrivacy && (
+        <MenuRow
+          icon="megaphone-outline"
+          label="Reklam gizlilik tercihleri"
+          onPress={() => showAdPrivacyOptions().catch(() => Alert.alert("Şu an açılamadı", "Birazdan tekrar dene."))}
+          last
+        />
+      )}
     </MenuSection>
   );
 

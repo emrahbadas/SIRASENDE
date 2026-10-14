@@ -44,7 +44,7 @@ gerektirir. Kilitli bir bölümü açmak için bir dizide kilitli bölümü baş
 
 ## 5. İçerik derecelendirmesi (IARC anketi)
 
-- E-posta: `support@kargomarketing.com` (sertifika buraya gelir)
+- E-posta: `support@sirasenin.app` (sertifika buraya gelir)
 - Kategori: listede en yakını — **sosyal / kullanıcı içeriği paylaşımı** veya **içerik akışı (streaming)** türü. Oyun değil.
 - Cevap ilkesi: içerik creator'lardan geldiği için **platformun izin verdiği en olgun içeriğe** göre cevapla, en hafife göre değil. Platform kuralları: yaş etiketleri 7+ / 13+ / 16+ / 18+; uyarılar şiddet, korku, argo/küfür, hassas temalar, madde kullanımı; **pornografik / açık cinsel içerik yasak**; her dizi yayından önce incelenir.
 
@@ -124,7 +124,7 @@ Notlar:
 | Telefon ekran görüntüleri | en az 2 (9:16), preview sürümünden; başkasına ait içerik görünmesin |
 | Uygulama kategorisi | Eğlence |
 | Etiketler | Video, Dizi, Kısa video, Eğlence, Drama (listede olanlar) |
-| E-posta | `support@kargomarketing.com` (alan adı maili kurulunca güncellenecek) |
+| E-posta | `support@sirasenin.app` |
 | Web sitesi | `https://sirasenin.app` |
 | Telefon | boş bırakılabilir |
 

@@ -13,6 +13,7 @@ export const adsAvailable =
 
 let ads: AdsModule | null = null;
 let initialized: Promise<unknown> | null = null;
+let consent: Promise<boolean> | null = null;
 
 function loadAds(): AdsModule | null {
   if (!adsAvailable) return null;
@@ -36,6 +37,47 @@ function rewardedUnitId(m: AdsModule) {
   return configured || m.TestIds.REWARDED;
 }
 
+/**
+ * Google's consent flow (UMP): EEA/UK (and some US states) viewers see the
+ * consent form configured in AdMob → Privacy & messaging before any ad is
+ * requested; elsewhere it resolves at once. Run once per launch.
+ * Resolves to whether ads may be requested.
+ */
+function ensureConsent(m: AdsModule): Promise<boolean> {
+  consent ??= m.AdsConsent.gatherConsent()
+    .then((info) => info.canRequestAds)
+    .catch(async () => {
+      // Form not configured yet (e.g. Google test app id) or offline: fall back
+      // to the last known decision; without one the SDK applies its defaults.
+      const info = await m.AdsConsent.getConsentInfo().catch(() => null);
+      return info ? info.canRequestAds || info.status === m.AdsConsentStatus.UNKNOWN : true;
+    });
+  return consent;
+}
+
+/** Called at app start so the consent form appears up front, not mid-unlock. */
+export async function prepareAds(): Promise<void> {
+  const m = loadAds();
+  if (!m) return;
+  if (await ensureConsent(m)) initialized ??= m.default().initialize();
+}
+
+/** Whether the viewer must be offered a way to change their ad consent (Settings). */
+export async function adPrivacyOptionsRequired(): Promise<boolean> {
+  const m = loadAds();
+  if (!m) return false;
+  await ensureConsent(m);
+  const info = await m.AdsConsent.getConsentInfo().catch(() => null);
+  return info?.privacyOptionsRequirementStatus === m.AdsConsentPrivacyOptionsRequirementStatus.REQUIRED;
+}
+
+export async function showAdPrivacyOptions(): Promise<void> {
+  const m = loadAds();
+  if (!m) return;
+  const info = await m.AdsConsent.showPrivacyOptionsForm();
+  consent = Promise.resolve(info.canRequestAds);
+}
+
 export type RewardedResult = "earned" | "dismissed" | "unavailable";
 
 /**
@@ -46,6 +88,7 @@ export async function showRewardedAd(input: { userId: string; episodeId: string 
   const m = loadAds();
   if (!m) return "unavailable";
 
+  if (!(await ensureConsent(m))) return "unavailable";
   initialized ??= m.default().initialize();
   await initialized;
 

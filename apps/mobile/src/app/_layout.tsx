@@ -1,6 +1,8 @@
 import { DarkTheme, Stack, ThemeProvider } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { useEffect } from "react";
 import { CurtainIntro } from "@/components/curtain-intro";
+import { prepareAds } from "@/lib/ads";
 import { AuthProvider } from "@/lib/auth";
 import { colors } from "@/lib/config";
 
@@ -10,6 +12,11 @@ const theme = {
 };
 
 export default function RootLayout() {
+  // Ad consent (EEA/UK) is asked once at launch, before any ad request
+  useEffect(() => {
+    prepareAds().catch(() => undefined);
+  }, []);
+
   return (
     <AuthProvider>
       <ThemeProvider value={theme}>

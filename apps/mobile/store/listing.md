@@ -38,13 +38,13 @@ Sıra Senin sadece izlemek için değil. Kendi hikâyeni çek, Creator Studio'ya
 • Yaş sınırı ve içerik uyarıları her dizide görünür
 • Uygunsuz içeriği tek dokunuşla bildir, istemediğin creator'ı engelle
 
-Sorun, öneri veya içerik bildirimi için: support@kargomarketing.com
+Sorun, öneri veya içerik bildirimi için: support@sirasenin.app
 
 ## Kategori ve etiketler
 
 - Uygulama kategorisi: Eğlence
 - Etiketler: Video, Dizi, Kısa video, Eğlence, Drama
-- İletişim e-postası: support@kargomarketing.com
+- İletişim e-postası: support@sirasenin.app
 - Gizlilik politikası: https://sirasenin.app/privacy
 - Hesap silme: https://sirasenin.app/account/delete
 
