@@ -10,6 +10,7 @@ const errors: Record<string, string> = {
   payout_already_pending: "Bekleyen bir ödeme talebin zaten var",
   insufficient_balance: "Bakiye yetersiz",
   payout_account_missing: "Önce ödeme alacağın IBAN'ı kaydet",
+  payouts_disabled: "Ödeme talepleri henüz açılmadı; kazancın bakiyende birikmeye devam ediyor",
 };
 
 const fail = (msg: string): never => redirect("/studio/revenue?error=" + encodeURIComponent(msg));

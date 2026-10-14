@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { formatTry, requireCreator } from "../require-creator";
 import { formatIban } from "@/lib/iban";
+import { currentMonth, monthLabel, shiftMonth } from "@/lib/statements";
 import { requestPayout, savePayoutAccount } from "./actions";
 
 const one = <T,>(v: T | T[] | null | undefined): T | null =>
@@ -36,7 +37,16 @@ export default async function RevenuePage({
   const { error, requested, saved } = await searchParams;
   const { supabase, creator } = await requireCreator();
 
-  const [{ data: wallet }, { data: payouts }, { data: policy }, { data: storage }, { data: account }, { data: grants }] = await Promise.all([
+  const [
+    { data: wallet },
+    { data: payouts },
+    { data: policy },
+    { data: storage },
+    { data: account },
+    { data: grants },
+    { data: payoutsSetting },
+    { data: creatorRow },
+  ] = await Promise.all([
     supabase
       .from("wallet_accounts")
       .select("id, balance")
@@ -67,6 +77,8 @@ export default async function RevenuePage({
       .is("revoked_at", null)
       .gt("ends_at", new Date().toISOString())
       .order("ends_at"),
+    supabase.from("platform_settings").select("value").eq("key", "payouts_enabled").maybeSingle(),
+    supabase.from("creator_profiles").select("created_at").eq("id", creator.id).single(),
   ]);
 
   const { data: entries } = wallet
@@ -88,7 +100,16 @@ export default async function RevenuePage({
   const balance = wallet?.balance ?? 0;
   const minPayout = policy?.min_payout_minor ?? 50000;
   const pending = (payouts ?? []).some((p) => p.status === "requested" || p.status === "processing");
-  const canRequest = balance >= minPayout && !pending && !!account;
+  const payoutsEnabled = payoutsSetting?.value === true;
+  const canRequest = payoutsEnabled && balance >= minPayout && !pending && !!account;
+
+  // Monthly statements from the month the creator joined up to now (newest first, max 12)
+  const thisMonth = currentMonth();
+  const joined = creatorRow?.created_at
+    ? new Date(creatorRow.created_at).toLocaleDateString("en-CA", { timeZone: "Europe/Istanbul" }).slice(0, 7)
+    : thisMonth;
+  const months: string[] = [];
+  for (let m = thisMonth; m >= joined && months.length < 12; m = shiftMonth(m, -1)) months.push(m);
 
   const usedMinutes = Math.ceil((storage?.used_seconds ?? 0) / 60);
   const quota = storage?.quota_minutes ?? 0;
@@ -143,7 +164,9 @@ export default async function RevenuePage({
             </button>
           </form>
           <p className="mt-2 text-xs text-zinc-500">
-            {!account
+            {!payoutsEnabled
+              ? "Ödeme talepleri henüz açılmadı. Kazancın bakiyende güvende ve birikmeye devam ediyor; ödemeler açıldığında tamamını çekebilirsin."
+              : !account
               ? "Ödeme talep etmek için aşağıdan IBAN'ını kaydet."
               : pending
                 ? "Bekleyen bir talebin var; sonuçlanınca yenisini açabilirsin."
@@ -235,6 +258,26 @@ export default async function RevenuePage({
         <p className="mt-2 text-xs text-zinc-500">
           Ek depolama hakkının süresi bitince videoların silinmez; yalnızca kotanı aşan yeni yüklemeler durur.
         </p>
+      </section>
+
+      <section className="mt-4 rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
+        <div className="flex items-baseline justify-between">
+          <p className="text-sm text-zinc-500">Aylık hakediş belgeleri</p>
+          <p className="text-xs text-zinc-600">Yazdırılabilir · QR ile doğrulanabilir</p>
+        </div>
+        <ul className="mt-3 flex flex-wrap gap-2">
+          {months.map((m) => (
+            <li key={m}>
+              <Link
+                href={`/statements/${creator.id}/${m}`}
+                className="inline-block rounded-lg border border-zinc-700 px-3 py-1.5 text-sm transition hover:border-orange-500"
+              >
+                <span className="capitalize">{monthLabel(m)}</span>
+                {m === thisMonth && <span className="ml-1.5 text-xs text-sky-400">ara dönem</span>}
+              </Link>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <div className="mt-8 grid gap-6 md:grid-cols-2">

@@ -14,6 +14,7 @@ const PUBLIC_PREFIXES = [
   "/privacy",
   "/terms",
   "/account/delete",
+  "/verify",
 ];
 
 function isPublicPath(path: string) {

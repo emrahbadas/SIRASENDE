@@ -278,3 +278,17 @@ export async function closeReport(formData: FormData) {
   revalidatePath("/admin/reports");
   back(formData);
 }
+
+/** Admin opens/closes creator payout requests (closed until the company is set up). */
+export async function setPayoutsEnabled(formData: FormData) {
+  const { supabase, isAdmin } = await requireModerator();
+  const returnTo = "/admin/statements";
+  if (!isAdmin) redirect(returnTo + "?error=" + encodeURIComponent("Bu ayarı yalnızca adminler değiştirebilir"));
+
+  const { error } = await supabase.rpc("set_payouts_enabled", { p_enabled: formData.get("enabled") === "1" });
+  if (error) redirect(returnTo + "?error=" + encodeURIComponent(error.message));
+
+  revalidatePath("/admin/statements");
+  revalidatePath("/studio/revenue");
+  redirect(returnTo);
+}
