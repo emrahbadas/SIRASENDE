@@ -1621,7 +1621,8 @@ Güncel iş listesi (14 Ekim 2026). Bitenler commit geçmişinde; burada yalnız
 - [x] **Canonical adres**: tek adres `https://sirasenin.app` (`src/lib/site.ts`); diğer host'lar (vercel.app, önizlemeler) `X-Robots-Tag: noindex` ve tamamen kapalı robots.txt alır. Eski adres yönlendirilmedi: eski mobil derlemeler API'yi oradan kullanıyor.
 - [x] **Yapılandırılmış veri — dizi**: dizi sayfalarında `TVSeries` (tür, yaş sınırı, creator, bölüm/sezon sayısı).
 - [ ] **Yapılandırılmış veri — site**: ana sayfada `Organization` + `WebSite`; bölüm düzeyinde `VideoObject`.
-- [ ] **Google Search Console**: alan adı doğrulaması (DNS TXT), sitemap gönderimi; Bing Webmaster Tools.
+- [x] **Google Search Console**: alan adı mülkü DNS TXT ile doğrulandı, `https://sirasenin.app/sitemap.xml` gönderildi (14 Ekim 2026, 17 adres).
+- [ ] **Bing Webmaster Tools**: Search Console'dan içe aktarma.
 - [x] **Kategori sayfaları**: taranabilir `/kategori/[slug]` adresleri; eski `/?category=` bağlantıları 308 ile yönlenir.
 - [ ] **Uygulama bağlantıları**: Android App Links (`/.well-known/assetlinks.json`) ve mağaza rozeti; dizi sayfasından "Uygulamada aç".
 - [ ] **Hız ve erişilebilirlik**: Core Web Vitals (afiş görselleri `next/image`), `lang`, alt metinler.
@@ -1631,6 +1632,13 @@ Güncel iş listesi (14 Ekim 2026). Bitenler commit geçmişinde; burada yalnız
 - [ ] **Bağış (donate)**: izleyici veya creator'ın beğendiği creator'a coin ile bağış; komisyon, hakediş belgesinde ayrı kalem, vergi durumu (muhasebeci). Önce tasarım konuşulacak.
 - [ ] **Hesap silme uçtan uca testi**: deneme hesabı + video ile Cloudflare video silme ve giriş sistemi hesap silme adımları.
 - [ ] **Altyazı (Phase 4)**: bilinçli ertelenmiş açık borç.
+
+### E-posta (en sona bırakıldı)
+
+- [ ] **Kendi alan adından auth mailleri**: Supabase'in yerleşik maili saatte birkaç mail ve test amaçlı. Gönderen `noreply@sirasenin.app`, servis Resend (veya Brevo); SPF/DKIM kayıtları Namecheap DNS'e; Supabase → Authentication → SMTP (API anahtarını kurucu girer).
+- [ ] **Gelen mail**: Namecheap ücretsiz yönlendirme `destek@` / `info@sirasenin.app` → kurucunun Gmail'i. Sonra `lib/legal.ts` ve mağaza kaydındaki iletişim adresi `support@kargomarketing.com` → `sirasenin.app` adresi.
+- [ ] **Şablonlar**: üyelik onayı, şifre sıfırlama, e-posta değişikliği, sihirli bağlantı — Türkçe, logolu, turuncu HTML + konu satırları (repoya, Supabase'e yapıştırılır).
+- Kişisel Gmail veya `kargomarketing.com` adresi kullanılmayacak (gizlilik, spam, marka karışıklığı).
 
 ### Şirket ve muhasebe
 
