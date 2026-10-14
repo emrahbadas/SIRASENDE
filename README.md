@@ -1599,11 +1599,11 @@ Güncel iş listesi (14 Ekim 2026). Bitenler commit geçmişinde; burada yalnız
 
 - [ ] **Google Play Console hesabı** (25 $, tek sefer). Bireysel hesapta 12 test kullanıcısıyla 14 günlük kapalı test zorunlu; erken açmak süreyi kısaltır.
 - [ ] **AdMob (gerçek reklam)**:
-  1. AdMob hesabı (ödeme ve vergi bilgileri hesap sahibi tarafından girilir).
-  2. Uygulamayı ekle (Android, "henüz yayında değil"), uygulama kimliği `ca-app-pub-…~…` → `app.json` (plugin `androidAppId` ve kök `react-native-google-mobile-ads.android_app_id`).
-  3. Ödüllü reklam birimi oluştur → kimlik `EXPO_PUBLIC_ADMOB_REWARDED_ANDROID` (EAS production ortamı). Birimde **sunucu tarafı doğrulama (SSV)** geri çağırma adresi: `https://sirasenin.app/api/v1/ads/ssv`.
-  4. `https://sirasenin.app/app-ads.txt` (yayıncı kimliğiyle) ve Play listesinde geliştirici web sitesi `sirasenin.app`.
-  5. Gizlilik ve mesajlaşma: AB/İngiltere kullanıcıları için Google onaylı izin formu (UMP) ve uygulamada izin akışı.
+  1. [x] AdMob hesabı açıldı (ödeme ve vergi bilgileri ilk kazançta hesap sahibi tarafından girilir).
+  2. [x] Uygulama eklendi: `ca-app-pub-3424508173829737~4115434354` → `app.json` (plugin `androidAppId` ve kök `react-native-google-mobile-ads.android_app_id`).
+  3. [x] Ödüllü reklam birimi "Bölüm açma": `ca-app-pub-3424508173829737/1199205982`, SSV `https://sirasenin.app/api/v1/ads/ssv` doğrulandı (uyumlulaştırmadaki tüm ağlara uygulanır). **Yayın günü** EAS production ortamına `EXPO_PUBLIC_ADMOB_REWARDED_ANDROID` olarak eklenir; kapalı test de production profiliyle derlendiği için önce eklenmez (aksi hâlde test kullanıcıları gerçek reklam görür).
+  4. [x] `https://sirasenin.app/app-ads.txt` (`pub-3424508173829737`); Play listesinde geliştirici web sitesi `sirasenin.app` olmalı.
+  5. [x] Gizlilik ve mesajlaşma: AB tüzüğü (GDPR) mesajı yayında — İzin ver / Seçenekleri yönet / **İzin verme** (tüm ülkeler), rıza göstermeden kapatma kapalı; uygulamada UMP izin akışı ve Ayarlar → "Reklam gizlilik tercihleri".
   6. Kapalı test boyunca test reklamları kalır (geliştirici ve test kullanıcıları kendi gerçek reklamlarına tıklamamalı). Test reklamları SSV göndermediği için kapalı testte reklamla açma yalnızca Vercel'de `ADS_TEST_REWARDS=true` iken çalışır; üretime geçerken bu değişken **kaldırılmalı**.
 - [ ] **Vercel Pro**: Hobby planı ticari kullanıma izin vermiyor; para kazanmaya başlamadan önce.
 - [ ] **İçerik**: kendi çekilmiş / hakları bizde olan 3–4 dizi (vitrin ve mağaza görselleri için).

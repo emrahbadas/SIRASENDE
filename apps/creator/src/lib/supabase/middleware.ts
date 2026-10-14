@@ -19,6 +19,7 @@ const PUBLIC_PREFIXES = [
   "/verify",
   "/robots.txt",
   "/sitemap.xml",
+  "/app-ads.txt",
   "/opengraph-image",
 ];
 

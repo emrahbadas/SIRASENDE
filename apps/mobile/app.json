@@ -39,7 +39,7 @@
       [
         "react-native-google-mobile-ads",
         {
-          "androidAppId": "ca-app-pub-3940256099942544~3347511713",
+          "androidAppId": "ca-app-pub-3424508173829737~4115434354",
           "iosAppId": "ca-app-pub-3940256099942544~1458002511"
         }
       ]
@@ -57,7 +57,7 @@
     "owner": "emrahbadas"
   },
   "react-native-google-mobile-ads": {
-    "android_app_id": "ca-app-pub-3940256099942544~3347511713",
+    "android_app_id": "ca-app-pub-3424508173829737~4115434354",
     "ios_app_id": "ca-app-pub-3940256099942544~1458002511"
   }
 }
