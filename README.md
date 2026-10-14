@@ -1580,10 +1580,31 @@ Aktarımda şifreleme: Evet (HTTPS). Kullanıcı silme talep edebilir: Evet.
 
 Güncel iş listesi (14 Ekim 2026). Bitenler commit geçmişinde; burada yalnızca açık işler var.
 
+### Yol haritası (yayına kadar)
+
+| Zaman | Kim | İş |
+|---|---|---|
+| Bugün | Kurucu | **Google Play Console** kişisel hesap (25 $, tek sefer); kimlik doğrulaması birkaç gün sürebilir — en uzun bekleme bu. |
+| Bugün | Kurucu + Claude | **Google Search Console**: alan adı mülkü `sirasenin.app`, Namecheap'e TXT kaydı. |
+| Yarın | Kurucu | **AdMob**: aynı Google hesabı; uygulama ("henüz yayında değil") + ödüllü reklam birimi; kimlikler Claude'a. Ödeme/vergi bilgisi ilk kazançta. |
+| 1. hafta | Kurucu (Claude yönlendirir) | Play Console'da uygulama: mağaza metinleri, ikon, tanıtım görseli, ekran görüntüleri, gizlilik adresi, Veri Güvenliği formu, IARC, reklam beyanı. |
+| 1. hafta | Claude | Production AAB (kapalı testte test reklamları kalır). |
+| 1. hafta | Kurucu | AAB → kapalı test kanalı; test servisi + tanıdıklar katılım linkiyle. |
+| 1.–3. hafta | Hepsi | 14 gün kapalı test. Claude: geri bildirim düzeltmeleri, gerçek reklam kimlikleri, `app-ads.txt`, AB izin penceresi. Kurucu: kendi dizileri, hukukçu ve muhasebeci görüşmeleri. |
+| 3.–4. hafta | Kurucu | Üretim erişimi başvurusu (Google test sorularını sorar; cevaplar birlikte hazırlanır). |
+| Yayın günü | Kurucu + Claude | Vercel Pro; gerçek reklam kimlikli production build; Vercel'den `ADS_TEST_REWARDS` silinir; yayından sonra AdMob uygulaması Play kaydına bağlanır. |
+| Şirket kurulunca | — | Coin satışı (Play Billing + satıcı profili), creator ödemelerini açma, iyzico (web depolama planı), sonra iOS. İlk yayın yalnızca reklamla. |
+
 ### Yayın öncesi (uygulama mağazası)
 
 - [ ] **Google Play Console hesabı** (25 $, tek sefer). Bireysel hesapta 12 test kullanıcısıyla 14 günlük kapalı test zorunlu; erken açmak süreyi kısaltır.
-- [ ] **AdMob hesabı**: gerçek uygulama ve reklam birimi kimlikleri, `app-ads.txt`, SSV anahtarlarının canlıda doğrulanması.
+- [ ] **AdMob (gerçek reklam)**:
+  1. AdMob hesabı (ödeme ve vergi bilgileri hesap sahibi tarafından girilir).
+  2. Uygulamayı ekle (Android, "henüz yayında değil"), uygulama kimliği `ca-app-pub-…~…` → `app.json` (plugin `androidAppId` ve kök `react-native-google-mobile-ads.android_app_id`).
+  3. Ödüllü reklam birimi oluştur → kimlik `EXPO_PUBLIC_ADMOB_REWARDED_ANDROID` (EAS production ortamı). Birimde **sunucu tarafı doğrulama (SSV)** geri çağırma adresi: `https://sirasenin.app/api/v1/ads/ssv`.
+  4. `https://sirasenin.app/app-ads.txt` (yayıncı kimliğiyle) ve Play listesinde geliştirici web sitesi `sirasenin.app`.
+  5. Gizlilik ve mesajlaşma: AB/İngiltere kullanıcıları için Google onaylı izin formu (UMP) ve uygulamada izin akışı.
+  6. Kapalı test boyunca test reklamları kalır (geliştirici ve test kullanıcıları kendi gerçek reklamlarına tıklamamalı). Test reklamları SSV göndermediği için kapalı testte reklamla açma yalnızca Vercel'de `ADS_TEST_REWARDS=true` iken çalışır; üretime geçerken bu değişken **kaldırılmalı**.
 - [ ] **Vercel Pro**: Hobby planı ticari kullanıma izin vermiyor; para kazanmaya başlamadan önce.
 - [ ] **İçerik**: kendi çekilmiş / hakları bizde olan 3–4 dizi (vitrin ve mağaza görselleri için).
 - [ ] **Mağaza ekran görüntüleri**: `preview` build (geliştirici dişlisi yok) + telifsiz içerikle 6 ekran → 1080×1920 başlıklı kareler (`apps/mobile/store/listing.md`).

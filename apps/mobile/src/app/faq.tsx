@@ -30,7 +30,7 @@ const QUESTIONS: { q: string; a: string }[] = [
   },
   {
     q: "Creator’lar nasıl kazanır?",
-    a: "Dizindeki reklam gelirinden ve coin ile açılan bölümlerden pay alırsın. Kazancını Creator Studio’daki Gelir sayfasından IBAN’ına çekebilirsin.",
+    a: "Dizindeki reklam gelirinden ve coin ile açılan bölümlerden pay alırsın. Kazancın Creator Studio’daki Gelir sayfasında birikir; her ay için yazdırılabilir hakediş belgen de orada. Ödeme talepleri açıldığında kazancını IBAN’ına çekebilirsin.",
   },
   {
     q: "Uygunsuz bir içerik gördüm, ne yapmalıyım?",
