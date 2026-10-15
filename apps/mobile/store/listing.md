@@ -19,9 +19,10 @@ Sıra Senin, telefon için çekilmiş kısa dikey dizilerin platformu. Her böl�
 
 🎬 BÖLÜM BÖLÜM İZLE
 • Dikey, tam ekran oynatıcı; bölüm bitince sıradaki kendiliğinden başlar
+• İzlerken istediğin bölüme tek dokunuşla atla
 • Kaldığın yerden devam et — tüm cihazlarında aynı saniyeden
 • Kısa sekmesi: tüm dizilerin ilk bölümleri tek bir akışta, kaydırdıkça yeni hikâyeler
-• Popüler, Gündemde ve Yeni sıralamaları; romantik, dram, gerilim, komedi, korku ve daha fazla tür
+• Popüler, Gündemde ve Yeni sıralamaları; romantik, dram, gerilim, komedi, korku, animasyon ve daha fazla tür
 • Listene ekle, beğen, sevdiğin creator'ları takip et
 
 🔓 ÜCRETSİZ BAŞLA
@@ -31,7 +32,7 @@ Sıra Senin, telefon için çekilmiş kısa dikey dizilerin platformu. Her böl�
 • Her gün giriş yap, giriş serinle bonus coin kazan
 
 🎥 SIRA SENİN: KENDİ DİZİNİ YAYINLA
-Sıra Senin sadece izlemek için değil. Kendi hikâyeni çek, Creator Studio'ya yükle, platform incelemesinden sonra yayına çıksın. Uzun bir videoyu tek seferde yükle, araç onu doğal kesim noktalarından bölümlere ayırsın. İzleyicilerin reklam izledikçe ve coin ile bölüm açtıkça kazan; kazancını IBAN'ına çek.
+Sıra Senin sadece izlemek için değil. Kendi hikâyeni çek, Creator Studio'ya yükle, platform incelemesinden sonra yayına çıksın. Uzun videolarını tek seferde yükle, araç onları doğal kesim noktalarından bölümlere ayırsın. İzleyicilerin reklam izledikçe ve coin ile bölüm açtıkça kazan; kazancını ve aylık hakediş belgelerini Creator Studio'dan takip et.
 
 🛡️ GÜVENLİ İÇERİK
 • Tüm diziler yayına çıkmadan önce incelenir
@@ -40,21 +41,26 @@ Sıra Senin sadece izlemek için değil. Kendi hikâyeni çek, Creator Studio'ya
 
 Sorun, öneri veya içerik bildirimi için: support@sirasenin.app
 
+> Ödeme talepleri açılınca "kazancını IBAN'ına çek" ifadesi geri eklenebilir; mağaza metni yalnızca çalışan özellikleri anlatmalı.
+
 ## Kategori ve etiketler
 
 - Uygulama kategorisi: Eğlence
-- Etiketler: Video, Dizi, Kısa video, Eğlence, Drama
+- Etiketler (Play listesi): Eğlence, Video akışı, TV, Film, Mizah
 - İletişim e-postası: support@sirasenin.app
 - Gizlilik politikası: https://sirasenin.app/privacy
 - Hesap silme: https://sirasenin.app/account/delete
 
-## Ekran görüntüsü planı (telefondan alınacak, 9:16)
+## Ekran görüntüleri (`screenshots/`, 1080×1920, 9:16)
 
-| # | Ekran | Başlık |
+Telefon görüntüleri başlıklı karelere yerleştirildi (koyu zemin, turuncu vurgu). Sıra mağazadaki sıradır.
+
+| Dosya | Başlık | Ekran |
 |---|---|---|
-| 1 | Bir bölüm oynarken (izleme ekranı) | Bölüm bölüm izle |
-| 2 | Kısa sekmesi | Kaydır, yeni hikâyeler keşfet |
-| 3 | Keşfet ana sayfası | Popüler, gündemde, yeni |
-| 4 | Kilitli bölüm ekranı (reklam / coin) | Reklam izle, ücretsiz aç |
-| 5 | Ödüller sekmesi | Her gün gel, coin kazan |
-| 6 | Creator Studio veya "Creator ol" kartı | Sıra senin: dizini yayınla |
+| 01.png | Kısa dikey diziler | Keşfet |
+| 02.png | Bölüm bölüm izle | Oynatıcı + ilerleme çubuğu |
+| 03.png | İstediğin bölüme geç | Dizi sayfası, bölüm kutuları |
+| 04.png | Reklam izle, ücretsiz aç | Kilitli bölüm |
+| 05.png | Her gün gel, coin kazan | Ödüller |
+
+Yayından önce: 03'teki dizi açıklaması sadeleştirilip kare yeniden üretilmeli; mümkünse sıkıştırılmamış (WhatsApp'sız) orijinallerden.
