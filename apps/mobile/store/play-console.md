@@ -80,6 +80,8 @@ Hepsi **Hayır** / **Uygulamam bu özellikleri içermiyor**. Coin sanal para bir
 
 ## 9. Veri güvenliği
 
+Hazır dolu CSV: Play Console → Veri güvenliği → "CSV'den içe aktar". Doldurma betiği aşağıdaki tablonun aynısını uygular (Play'in dışa aktardığı boş CSV'ye).
+
 ### Genel sorular
 
 | Soru | Cevap |
@@ -100,7 +102,7 @@ Hepsi **Hayır** / **Uygulamam bu özellikleri içermiyor**. Coin sanal para bir
 | Kişisel bilgiler → **Kullanıcı kimlikleri** (kullanıcı adı, hesap kimliği) | Evet | Hayır | Zorunlu (hesap için) | Uygulama işlevi, Hesap yönetimi |
 | Kişisel bilgiler → **Ad** (görünen ad) | Evet | Hayır | İsteğe bağlı | Uygulama işlevi |
 | Finansal bilgiler → **Satın alma geçmişi** (coin bakiyesi, coin/reklamla açılan bölümler) | Evet | Hayır | Zorunlu değil (yalnızca kullanırsa) | Uygulama işlevi |
-| Uygulama etkinliği → **Uygulama etkileşimleri** (izleme ilerlemesi, beğeni, liste, takip) | Evet | Hayır | İsteğe bağlı | Uygulama işlevi, Analiz, Kişiselleştirme |
+| Uygulama etkinliği → **Uygulama etkileşimleri** (izleme ilerlemesi, beğeni, liste, takip; reklam etkileşimleri) | Evet | **Evet — Google AdMob** (reklam etkileşimleri) | Zorunlu | Toplama: Uygulama işlevi, Analiz · Paylaşım: Reklam, Analiz |
 | Uygulama etkinliği → **Kullanıcı tarafından oluşturulan diğer içerikler** (geri bildirim, içerik bildirimi) | Evet | Hayır | İsteğe bağlı | Uygulama işlevi, Güvenlik/uyumluluk |
 | Konum → **Yaklaşık konum** (AdMob, IP adresinden) | Evet | **Evet — Google AdMob** | Zorunlu değil (reklam izlerse) | Reklam/pazarlama, Sahtekarlık önleme |
 | Cihaz veya diğer kimlikler → **Cihaz/reklam kimliği** (AdMob) | Evet | **Evet — Google AdMob** | Zorunlu değil (reklam izlerse) | Reklam/pazarlama, Analiz, Sahtekarlık önleme |

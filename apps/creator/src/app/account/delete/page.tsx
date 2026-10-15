@@ -49,6 +49,14 @@ export default async function DeleteAccountPage({
             bu kayıtlardan kimliğin ayrılır. Bekleyen bir ödeme talebin varsa, sonuçlanana kadar hesap silinemez.
           </p>
 
+          <h2>Hesabını silmeden verilerini silmek</h2>
+          <p>
+            Hesabın kalsın ama izleme geçmişin, listen, beğenilerin veya geri bildirim mesajların gibi belirli verilerin
+            silinsin istiyorsan, kayıtlı e-posta adresinden <a href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a> adresine
+            &quot;Veri silme&quot; konulu bir e-posta gönder ve hangi verilerin silinmesini istediğini yaz; talebin en geç
+            30 gün içinde yerine getirilir.
+          </p>
+
           {error && (
             <p className="rounded-lg border border-rose-900 bg-rose-950/50 p-3 text-sm text-rose-300">
               {decodeURIComponent(error)}
