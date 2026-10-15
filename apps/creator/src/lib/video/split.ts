@@ -20,7 +20,8 @@ export async function executeSplit(
   admin: SupabaseClient,
   job: SplitJobRow,
   cuts: number[],
-  maxEpisodeSeconds: number
+  maxEpisodeSeconds: number,
+  title?: string
 ): Promise<SplitResult> {
   if (job.status !== "ready" || !job.duration_seconds || !job.provider_asset_id) {
     return { ok: false, error: "Video henüz işleniyor, biraz bekle" };
@@ -48,12 +49,15 @@ export async function executeSplit(
   let nextNumber = (last?.episode_number ?? 0) + 1;
 
   const segments = segmentsFromCuts(cuts, job.duration_seconds);
+  const base = title?.trim().slice(0, 100);
+  const titleFor = (i: number, number: number) =>
+    !base ? `Bölüm ${number}` : segments.length > 1 ? `${base} (${i + 1}/${segments.length})` : base;
   let created = 0;
   try {
-    for (const seg of segments) {
+    for (const [i, seg] of segments.entries()) {
       const { data: episode, error: epErr } = await admin
         .from("episodes")
-        .insert({ season_id: job.season_id, episode_number: nextNumber, title: `Bölüm ${nextNumber}` })
+        .insert({ season_id: job.season_id, episode_number: nextNumber, title: titleFor(i, nextNumber) })
         .select("id")
         .single();
       if (epErr || !episode) throw new Error(epErr?.message ?? "Bölüm oluşturulamadı");

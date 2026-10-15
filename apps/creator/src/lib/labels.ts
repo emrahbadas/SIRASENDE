@@ -1,10 +1,10 @@
 // Display names for enum values stored in the database
 
 export const PRODUCTION_TYPES = {
-  human: "Gerçek çekim",
+  human: "İnsan yapımı",
   ai_assisted: "Yapay zekâ destekli",
   ai_generated: "Yapay zekâ",
-  hybrid: "Karma (çekim + yapay zekâ)",
+  hybrid: "Karma (insan + yapay zekâ)",
 } as const;
 
 export const productionTypeLabel = (v?: string | null) =>

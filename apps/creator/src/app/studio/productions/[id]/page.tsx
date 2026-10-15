@@ -213,12 +213,20 @@ export default async function ProductionDetailPage({
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold">Sezon {season.season_number}</h2>
               {!blocked && (
-                <Link
-                  href={`/studio/productions/${production.id}/split?season=${season.id}`}
-                  className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 transition hover:border-orange-600 hover:text-orange-300"
-                >
-                  ✂ Uzun videoyu bölümlere ayır
-                </Link>
+                <div className="flex flex-wrap justify-end gap-2">
+                  <Link
+                    href={`/studio/productions/${production.id}/batch?season=${season.id}`}
+                    className="rounded-lg bg-orange-600 px-3 py-1.5 text-xs font-medium transition hover:bg-orange-500"
+                  >
+                    ⇪ Toplu video yükle
+                  </Link>
+                  <Link
+                    href={`/studio/productions/${production.id}/split?season=${season.id}`}
+                    className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 transition hover:border-orange-600 hover:text-orange-300"
+                  >
+                    ✂ Kesimleri elle ayarla
+                  </Link>
+                </div>
               )}
             </div>
 

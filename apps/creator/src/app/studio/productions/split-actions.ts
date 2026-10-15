@@ -79,6 +79,8 @@ export async function startSplitUpload(input: {
   seasonId: string;
   durationSeconds: number;
   fileSize: number;
+  /** Batch upload: short videos go through the same pipeline as one-episode "splits" */
+  batch?: boolean;
 }): Promise<Result<{ jobId: string }>> {
   const owned = await requireOwnedSeason(input.seasonId);
   if (!owned) return { ok: false, error: "Bu sezona video yükleme yetkin yok" };
@@ -90,7 +92,7 @@ export async function startSplitUpload(input: {
   if (!(input.durationSeconds > 0) || !(input.fileSize > 0)) {
     return { ok: false, error: "Videonun süresi okunamadı" };
   }
-  if (input.durationSeconds <= settings.maxEpisodeSeconds) {
+  if (!input.batch && input.durationSeconds <= settings.maxEpisodeSeconds) {
     return { ok: false, error: "Bu video zaten tek bölüm uzunluğunda; normal yüklemeyi kullan" };
   }
   if (input.durationSeconds > settings.maxSplitSourceSeconds) {
@@ -169,7 +171,9 @@ export async function refreshSplitJob(jobId: string): Promise<Result<{ job: Spli
 /** Creates one clip + episode per segment between the confirmed cut points. */
 export async function confirmSplit(
   jobId: string,
-  cuts: number[]
+  cuts: number[],
+  /** Episode titles become "<title> (1/3)"…; default "Bölüm N" */
+  title?: string
 ): Promise<Result<{ productionId: string; episodes: number }>> {
   const owned = await requireOwnedJob(jobId);
   if (!owned) return { ok: false, error: "Bölme işi bulunamadı" };
@@ -179,7 +183,7 @@ export async function confirmSplit(
     return { ok: false, error: "Platform tarafından durdurulan diziye bölüm eklenemez" };
   }
   const settings = await getVideoSettings(owned.supabase);
-  const result = await executeSplit(admin, job, cuts, settings.maxEpisodeSeconds);
+  const result = await executeSplit(admin, job, cuts, settings.maxEpisodeSeconds, title);
 
   revalidatePath(`/studio/productions/${series.production_id}`);
   if (!result.ok) return result;
