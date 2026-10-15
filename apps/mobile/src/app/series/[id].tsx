@@ -3,6 +3,7 @@ import { Image } from "expo-image";
 import { router, Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { EpisodeGrid } from "@/components/episode-grid";
 import { ReportSheet } from "@/components/report-sheet";
 import { api, type SeriesDetail } from "@/lib/api";
 import { colors } from "@/lib/config";
@@ -23,6 +24,7 @@ export default function SeriesScreen() {
   const [series, setSeries] = useState<SeriesDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [reporting, setReporting] = useState(false);
+  const [layout, setLayout] = useState<"grid" | "list">("grid");
 
   useFocusEffect(
     useCallback(() => {
@@ -160,8 +162,26 @@ export default function SeriesScreen() {
       </View>
       <ReportSheet visible={reporting} onClose={() => setReporting(false)} seriesId={series.id} subject={series.title} />
 
-      <Text style={styles.sectionTitle}>{series.episodes.length} bölüm</Text>
-      {series.episodes.map((e) => (
+      <View style={styles.sectionRow}>
+        <Text style={styles.sectionTitle}>{series.episodes.length} bölüm</Text>
+        <View style={styles.layoutToggle}>
+          {(["grid", "list"] as const).map((l) => (
+            <Pressable
+              key={l}
+              onPress={() => setLayout(l)}
+              style={[styles.layoutButton, layout === l && styles.layoutButtonActive]}
+              hitSlop={4}
+              accessibilityLabel={l === "grid" ? "Kutu görünümü" : "Liste görünümü"}
+            >
+              <Ionicons name={l === "grid" ? "grid-outline" : "list-outline"} size={16} color={layout === l ? colors.text : colors.faint} />
+            </Pressable>
+          ))}
+        </View>
+      </View>
+      {layout === "grid" && (
+        <EpisodeGrid episodes={series.episodes} currentId={resume?.progress ? resume.id : undefined} onSelect={(e) => watch(e.id)} />
+      )}
+      {layout === "list" && series.episodes.map((e) => (
         <Pressable key={e.id} style={styles.episode} onPress={() => watch(e.id)}>
           <Text style={styles.episodeNumber}>{e.episodeNumber}</Text>
           <View style={{ flex: 1 }}>
@@ -227,7 +247,11 @@ const styles = StyleSheet.create({
   safety: { flexDirection: "row", gap: 18, marginTop: 14 },
   safetyButton: { flexDirection: "row", alignItems: "center", gap: 5 },
   safetyText: { color: colors.faint, fontSize: 12 },
-  sectionTitle: { color: colors.text, fontSize: 16, fontWeight: "700", marginTop: 28, marginBottom: 8 },
+  sectionRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 28, marginBottom: 12 },
+  sectionTitle: { color: colors.text, fontSize: 16, fontWeight: "700" },
+  layoutToggle: { flexDirection: "row", backgroundColor: colors.surface, borderRadius: 8, padding: 2 },
+  layoutButton: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6 },
+  layoutButtonActive: { backgroundColor: colors.border },
   episode: {
     flexDirection: "row",
     alignItems: "center",

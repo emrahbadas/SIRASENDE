@@ -1,17 +1,26 @@
 import { useEvent, useEventListener } from "expo";
 import { useVideoPlayer, VideoView, type VideoPlayer } from "expo-video";
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View, type GestureResponderEvent } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ApiError, api } from "@/lib/api";
 import { colors } from "@/lib/config";
 
 const PROGRESS_INTERVAL_SECONDS = 5;
 // Resuming a few seconds before the end would immediately trigger "ended"
 const RESUME_END_MARGIN_SECONDS = 5;
+// How often the on-screen progress bar reads the playhead
+const BAR_REFRESH_MS = 250;
+
+const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 
 // expo-video is configured by setting properties on the player object
 function unmute(player: VideoPlayer) {
   player.muted = false;
+}
+
+function seek(player: VideoPlayer, seconds: number) {
+  player.currentTime = seconds;
 }
 
 /**
@@ -42,6 +51,16 @@ export function EpisodePlayer({
   const [aspect, setAspect] = useState<number | null>(null);
   const { isPlaying } = useEvent(player, "playingChange", { isPlaying: player.playing });
   const { muted } = useEvent(player, "mutedChange", { muted: player.muted });
+  const insets = useSafeAreaInsets();
+  const [time, setTime] = useState({ current: 0, duration: 0 });
+  const [barWidth, setBarWidth] = useState(0);
+  // 0..1 while the viewer drags the progress bar
+  const [scrub, setScrub] = useState<number | null>(null);
+
+  useEffect(() => {
+    const timer = setInterval(() => setTime({ current: player.currentTime, duration: player.duration }), BAR_REFRESH_MS);
+    return () => clearInterval(timer);
+  }, [player]);
 
   // Each episode gets its own component instance (keyed by id), so the
   // initial loading/error state is already correct here.
@@ -83,9 +102,16 @@ export function EpisodePlayer({
     if (currentTime > 0) onProgress(currentTime, false);
   });
   useEventListener(player, "playToEnd", () => {
-    onProgress(player.duration || player.currentTime, true);
+    // Some Android streams report "ended" right after loading (at 0s); only a
+    // real end may mark the episode watched and move on to the next one
+    const duration = player.duration;
+    if (!(duration > 0) || player.currentTime < duration - 2) return;
+    onProgress(duration, true);
     onEnded();
   });
+
+  const ratioAt = (e: GestureResponderEvent) =>
+    barWidth > 0 ? Math.min(1, Math.max(0, e.nativeEvent.locationX / barWidth)) : 0;
 
   // Vertical video fills the screen; horizontal video is shown whole
   // (letterboxed) instead of losing two thirds of the frame to cropping,
@@ -105,18 +131,55 @@ export function EpisodePlayer({
       {loading && <ActivityIndicator size="large" color={colors.text} style={styles.center} />}
       {error && <Text style={[styles.center, styles.error]}>{error}</Text>}
       {muted && (
-        <Pressable style={styles.unmute} onPress={() => unmute(player)} hitSlop={8}>
+        <Pressable style={[styles.unmute, { top: insets.top + 52 }]} onPress={() => unmute(player)} hitSlop={8}>
           <Text style={styles.unmuteText}>🔇 Sesi aç</Text>
         </Pressable>
       )}
       {landscape && !loading && !error && (
-        <Pressable style={styles.fullscreen} onPress={() => viewRef.current?.enterFullscreen()} hitSlop={8}>
+        <Pressable
+          style={[styles.fullscreen, { top: insets.top + (muted ? 92 : 52) }]}
+          onPress={() => viewRef.current?.enterFullscreen()}
+          hitSlop={8}
+        >
           <Text style={styles.fullscreenText}>⤢ Tam ekran</Text>
         </Pressable>
       )}
       {!loading && !error && !isPlaying && (
         <View style={[styles.center, styles.paused]}>
           <Text style={styles.pausedIcon}>▶</Text>
+        </View>
+      )}
+      {!loading && !error && time.duration > 0 && (
+        // Always-visible progress bar; tap or drag to seek
+        <View
+          style={[styles.barArea, { bottom: insets.bottom + 4 }]}
+          onLayout={(e) => setBarWidth(e.nativeEvent.layout.width)}
+          onStartShouldSetResponder={() => true}
+          onResponderTerminationRequest={() => false}
+          onResponderGrant={(e) => setScrub(ratioAt(e))}
+          onResponderMove={(e) => setScrub(ratioAt(e))}
+          onResponderRelease={(e) => {
+            const target = ratioAt(e) * time.duration;
+            seek(player, target);
+            setTime((t) => ({ ...t, current: target }));
+            setScrub(null);
+          }}
+          accessibilityRole="adjustable"
+          accessibilityLabel={`İlerleme ${fmt(time.current)} / ${fmt(time.duration)}`}
+        >
+          {scrub !== null && (
+            <Text style={styles.scrubTime} pointerEvents="none">
+              {fmt(scrub * time.duration)} / {fmt(time.duration)}
+            </Text>
+          )}
+          <View style={[styles.track, scrub !== null && styles.trackActive]} pointerEvents="none">
+            <View
+              style={[
+                styles.fill,
+                { width: `${Math.min(100, ((scrub ?? time.current / time.duration) || 0) * 100)}%` },
+              ]}
+            />
+          </View>
         </View>
       )}
     </Pressable>
@@ -130,8 +193,26 @@ const styles = StyleSheet.create({
   error: { color: colors.text, backgroundColor: "rgba(0,0,0,0.6)", padding: 12, borderRadius: 8 },
   paused: { width: 72, height: 72, borderRadius: 36, backgroundColor: "rgba(0,0,0,0.45)", alignItems: "center", justifyContent: "center", marginTop: -36 },
   pausedIcon: { color: "#fff", fontSize: 30, marginLeft: 4 },
-  unmute: { position: "absolute", right: 16, top: 64, backgroundColor: "rgba(0,0,0,0.55)", borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6 },
+  // top comes from the safe area, below the episode counter
+  unmute: { position: "absolute", right: 16, backgroundColor: "rgba(0,0,0,0.55)", borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6 },
   unmuteText: { color: "#fff", fontSize: 13, fontWeight: "600" },
-  fullscreen: { position: "absolute", right: 16, bottom: 120, backgroundColor: "rgba(0,0,0,0.55)", borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6 },
+  // Top right, under "Sesi aç": the right rail below holds episodes / like / report
+  fullscreen: { position: "absolute", right: 16, backgroundColor: "rgba(0,0,0,0.55)", borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6 },
   fullscreenText: { color: "#fff", fontSize: 13, fontWeight: "600" },
+  // Tall touch area, thin visible track
+  barArea: { position: "absolute", left: 12, right: 12, height: 28, justifyContent: "flex-end", paddingBottom: 10 },
+  track: { height: 3, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.25)", overflow: "hidden" },
+  trackActive: { height: 6, borderRadius: 3 },
+  fill: { height: "100%", backgroundColor: colors.accent },
+  scrubTime: {
+    position: "absolute",
+    alignSelf: "center",
+    bottom: 26,
+    color: "#fff",
+    fontSize: 15,
+    fontWeight: "700",
+    fontVariant: ["tabular-nums"],
+    textShadowColor: "#000",
+    textShadowRadius: 6,
+  },
 });

@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EpisodePlayer } from "@/components/episode-player";
+import { EpisodeSheet } from "@/components/episode-sheet";
 import { LockedEpisode } from "@/components/locked-episode";
 import { ReportSheet } from "@/components/report-sheet";
 import { api, type SeriesDetail, type SeriesEpisode } from "@/lib/api";
@@ -32,6 +33,7 @@ export default function WatchScreen() {
   const [active, setActive] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [reporting, setReporting] = useState<SeriesEpisode | null>(null);
+  const [picking, setPicking] = useState(false);
 
   useEffect(() => {
     api.series(seriesId).then(
@@ -49,6 +51,17 @@ export default function WatchScreen() {
   const onViewable = useCallback(({ viewableItems }: { viewableItems: ViewToken<SeriesEpisode>[] }) => {
     const first = viewableItems.find((v) => v.isViewable);
     if (first?.index != null) setActive(first.index);
+  }, []);
+
+  // Keeps the episode grid's watched marks current while watching
+  const markWatched = useCallback((episodeId: string, position: number) => {
+    setEpisodes((list) => list.map((e) => (e.id === episodeId ? { ...e, progress: { position, completed: true } } : e)));
+  }, []);
+
+  // Runs after the episode sheet has closed; scrolling while it animates out is lost
+  const jumpTo = useCallback((index: number) => {
+    setActive(index);
+    setTimeout(() => listRef.current?.scrollToIndex({ index, animated: false }), 60);
   }, []);
 
   const setAccess = useCallback((episodeId: string, access: SeriesEpisode["access"]) => {
@@ -104,7 +117,8 @@ export default function WatchScreen() {
                   key={item.id}
                   episodeId={item.id}
                   onLocked={() => setAccess(item.id, "locked")}
-                  onProgress={(seconds, completed) =>
+                  onProgress={(seconds, completed) => {
+                    if (completed) markWatched(item.id, seconds);
                     saveProgress({
                       seriesId: series.id,
                       episodeId: item.id,
@@ -112,13 +126,23 @@ export default function WatchScreen() {
                       seasonNumber: item.seasonNumber,
                       position: seconds,
                       completed,
-                    })
-                  }
+                    });
+                  }}
                   onEnded={() => {
                     if (index + 1 < episodes.length) listRef.current?.scrollToIndex({ index: index + 1, animated: true });
                   }}
                 />
               ))}
+
+            <Pressable
+              style={[styles.like, { bottom: insets.bottom + 252 }]}
+              onPress={() => setPicking(true)}
+              hitSlop={10}
+              accessibilityLabel="Bölümler"
+            >
+              <Ionicons name="albums-outline" size={30} color="#fff" />
+              <Text style={styles.likeCount}>Bölümler</Text>
+            </Pressable>
 
             {item.access !== "locked" && (
               <Pressable
@@ -139,7 +163,7 @@ export default function WatchScreen() {
               <Ionicons name="flag-outline" size={24} color="#fff" />
             </Pressable>
 
-            <View style={[styles.caption, { paddingBottom: insets.bottom + 24 }]} pointerEvents="none">
+            <View style={[styles.caption, { paddingBottom: insets.bottom + 40 }]} pointerEvents="none">
               <Text style={styles.seriesTitle}>{series.title}</Text>
               <Text style={styles.episodeTitle}>
                 Bölüm {item.episodeNumber} · {item.title}
@@ -148,6 +172,15 @@ export default function WatchScreen() {
             </View>
           </View>
         )}
+      />
+
+      <EpisodeSheet
+        visible={picking}
+        onClose={() => setPicking(false)}
+        series={series}
+        episodes={episodes}
+        currentId={episodes[active]?.id}
+        onSelect={jumpTo}
       />
 
       <ReportSheet
@@ -161,9 +194,12 @@ export default function WatchScreen() {
       <Pressable style={[styles.back, { top: insets.top + 8 }]} onPress={() => router.back()} hitSlop={12}>
         <Text style={styles.backText}>‹</Text>
       </Pressable>
-      <Text style={[styles.counter, { top: insets.top + 14 }]}>
-        {active + 1} / {episodes.length}
-      </Text>
+      <Pressable style={[styles.counterButton, { top: insets.top + 8 }]} onPress={() => setPicking(true)} hitSlop={8}>
+        <Text style={styles.counter}>
+          {active + 1} / {episodes.length}
+        </Text>
+        <Ionicons name="chevron-down" size={14} color="#fff" />
+      </Pressable>
     </View>
   );
 }
@@ -179,6 +215,17 @@ const styles = StyleSheet.create({
   last: { color: colors.muted, fontSize: 12, marginTop: 6 },
   back: { position: "absolute", left: 12, width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(0,0,0,0.45)", alignItems: "center", justifyContent: "center" },
   backText: { color: "#fff", fontSize: 30, lineHeight: 32, marginTop: -2 },
-  counter: { position: "absolute", right: 16, color: "#fff", fontWeight: "700", textShadowColor: "#000", textShadowRadius: 6 },
+  counterButton: {
+    position: "absolute",
+    right: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 12,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(0,0,0,0.45)",
+  },
+  counter: { color: "#fff", fontWeight: "700", fontVariant: ["tabular-nums"] },
   error: { color: "#fb7185", margin: 24 },
 });
