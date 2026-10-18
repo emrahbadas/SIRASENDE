@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { DailyChart, ErrorNote, Stats, duration, num, pct, requireAdmin, statusLabel } from "../../shared";
+import { DailyChart, ErrorNote, Stats, dateTime, duration, num, pct, requireAdmin, statusLabel } from "../../shared";
 
 type EpisodeRow = {
   episode_id: string;
@@ -27,7 +27,7 @@ export default async function AdminSeriesAnalyticsPage({ params }: { params: Pro
   const [{ data: series }, episodes, daily] = await Promise.all([
     supabase
       .from("series")
-      .select("id, title, status, productions(creator_profiles(creator_name))")
+      .select("id, title, status, deleted_at, productions(creator_profiles(creator_name))")
       .eq("id", id)
       .maybeSingle(),
     supabase.rpc("admin_episode_analytics", { p_series_id: id }),
@@ -41,12 +41,21 @@ export default async function AdminSeriesAnalyticsPage({ params }: { params: Pro
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-12">
-      <Link href="/admin/analytics" className="text-sm text-zinc-500 hover:text-zinc-300">
-        ← Analitik
+      <Link
+        href={series.deleted_at ? "/admin/analytics?deleted=1" : "/admin/analytics"}
+        className="text-sm text-zinc-500 hover:text-zinc-300"
+      >
+        ← {series.deleted_at ? "Silinenler" : "Analitik"}
       </Link>
-      <h1 className="mt-1 text-2xl font-bold">{series.title}</h1>
+      <h1 className="mt-1 flex items-center gap-2 text-2xl font-bold">
+        {series.title}
+        {series.deleted_at && (
+          <span className="rounded-full border border-zinc-700 px-2 py-0.5 text-xs font-normal text-zinc-400">Silinmiş</span>
+        )}
+      </h1>
       <p className="mt-1 text-sm text-zinc-500">
-        {creatorName} · {statusLabel(series.status)} · {eps.length} bölüm
+        {creatorName} · {series.deleted_at ? `Silindi ${dateTime(series.deleted_at)}` : statusLabel(series.status)} ·{" "}
+        {eps.length} bölüm
       </p>
 
       <ErrorNote message={(episodes.error ?? daily.error)?.message} />

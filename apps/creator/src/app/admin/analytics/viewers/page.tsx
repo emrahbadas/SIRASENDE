@@ -11,6 +11,7 @@ type Viewer = {
   series_count: number;
   episodes_started: number;
   episodes_completed: number;
+  deleted_series_count: number;
   unlocks: number;
   is_reviewer: boolean;
 };
@@ -30,7 +31,7 @@ export default async function AdminViewersPage({ searchParams }: { searchParams:
       </Link>
       <h1 className="mt-1 text-2xl font-bold">Analitik</h1>
       <p className="mt-1 text-sm text-zinc-500">
-        Giriş yapmış kullanıcıların izleme kaydı (yalnızca admin görür; creator&apos;lar sadece toplam sayıları görür).
+        Giriş yapmış kullanıcıların izleme kaydı (yalnızca admin görür; creator&apos;lar sadece toplam sayıları görür). Yapım ve bölüm sayıları yayındaki/aktif yapımları sayar; silinmiş yapımlar ayrıca belirtilir.
       </p>
 
       <AnalyticsNav active="viewers" />
@@ -85,7 +86,12 @@ export default async function AdminViewersPage({ searchParams }: { searchParams:
                   </td>
                   <td className="px-4 py-2 text-zinc-400">{dateTime(v.joined_at)}</td>
                   <td className="px-4 py-2 text-zinc-400">{dateTime(v.last_watched_at)}</td>
-                  <td className="px-4 py-2 text-right">{num(v.series_count)}</td>
+                  <td className="px-4 py-2 text-right">
+                    {num(v.series_count)}
+                    {Number(v.deleted_series_count) > 0 && (
+                      <span className="block text-xs text-zinc-600">+{num(v.deleted_series_count)} silinmiş</span>
+                    )}
+                  </td>
                   <td className="px-4 py-2 text-right">{num(v.episodes_started)}</td>
                   <td className="px-4 py-2 text-right">{num(v.episodes_completed)}</td>
                   <td className="px-4 py-2 text-right">{num(v.unlocks)}</td>

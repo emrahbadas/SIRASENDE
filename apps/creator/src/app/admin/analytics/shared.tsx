@@ -44,9 +44,10 @@ const statuses: Record<string, string> = {
 
 export const statusLabel = (v: string) => statuses[v] ?? v;
 
-export function AnalyticsNav({ active }: { active: "overview" | "viewers" }) {
+export function AnalyticsNav({ active }: { active: "overview" | "deleted" | "viewers" }) {
   const tabs = [
     { key: "overview", href: "/admin/analytics", label: "Yapımlar" },
+    { key: "deleted", href: "/admin/analytics?deleted=1", label: "Silinenler" },
     { key: "viewers", href: "/admin/analytics/viewers", label: "İzleyiciler" },
   ];
   return (

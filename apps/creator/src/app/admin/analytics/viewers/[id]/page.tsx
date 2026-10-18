@@ -5,6 +5,7 @@ import { ErrorNote, Stats, dateTime, duration, num, pct, requireAdmin } from "..
 type HistoryRow = {
   series_id: string;
   series_title: string;
+  series_deleted: boolean;
   episode_id: string;
   season_number: number;
   episode_number: number;
@@ -31,11 +32,13 @@ export default async function AdminViewerPage({ params }: { params: Promise<{ id
   if (!viewer && !viewersError) notFound();
 
   const rows = (history.data ?? []) as HistoryRow[];
-  const bySeries = [...new Map(rows.map((r) => [r.series_id, r.series_title])).entries()].map(([sid, title]) => ({
-    sid,
-    title,
-    eps: rows.filter((r) => r.series_id === sid),
+  const bySeries = [...new Map(rows.map((r) => [r.series_id, r])).values()].map((r) => ({
+    sid: r.series_id,
+    title: r.series_title,
+    deleted: r.series_deleted,
+    eps: rows.filter((x) => x.series_id === r.series_id),
   }));
+  const live = rows.filter((r) => !r.series_deleted);
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-12">
@@ -57,9 +60,13 @@ export default async function AdminViewerPage({ params }: { params: Promise<{ id
 
       <Stats
         items={[
-          { label: "Yapım", value: bySeries.length },
-          { label: "Başlanan bölüm", value: rows.length },
-          { label: "Biten bölüm", value: rows.filter((r) => r.completed).length },
+          {
+            label: "Yapım",
+            value: bySeries.filter((s) => !s.deleted).length,
+            hint: bySeries.some((s) => s.deleted) ? `+${bySeries.filter((s) => s.deleted).length} silinmiş` : undefined,
+          },
+          { label: "Başlanan bölüm", value: live.length },
+          { label: "Biten bölüm", value: live.filter((r) => r.completed).length },
           { label: "Kilit açma", value: Number(viewer?.unlocks ?? 0) },
         ]}
       />
@@ -76,6 +83,11 @@ export default async function AdminViewerPage({ params }: { params: Promise<{ id
                 <Link href={`/admin/analytics/series/${s.sid}`} className="hover:text-orange-300">
                   {s.title}
                 </Link>
+                {s.deleted && (
+                  <span className="ml-2 rounded-full border border-zinc-700 px-2 py-0.5 text-xs font-normal text-zinc-400">
+                    Silinmiş
+                  </span>
+                )}
                 <span className="ml-2 text-xs font-normal text-zinc-500">{num(s.eps.length)} bölüm</span>
               </h2>
               <div className="overflow-x-auto rounded-xl border border-zinc-800">
