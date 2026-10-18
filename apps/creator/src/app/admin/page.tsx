@@ -78,6 +78,12 @@ export default async function AdminPage({
               Bildirimler{openReports ? ` (${openReports})` : ""} →
             </Link>
             <Link
+              href="/admin/analytics"
+              className="rounded-lg border border-zinc-800 px-3 py-1.5 text-sm text-zinc-300 hover:border-zinc-600"
+            >
+              Analitik →
+            </Link>
+            <Link
               href="/admin/creators"
               className="rounded-lg border border-zinc-800 px-3 py-1.5 text-sm text-zinc-300 hover:border-zinc-600"
             >

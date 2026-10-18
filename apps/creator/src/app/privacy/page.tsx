@@ -39,7 +39,10 @@ export default function PrivacyPage() {
         <li>Muhasebe ve vergi kayıtlarını saklamak — hukuki yükümlülük (m.5/2-ç).</li>
         <li>İçerik moderasyonu, kötüye kullanımın ve sahtekârlığın önlenmesi, güvenlik — meşru menfaat (m.5/2-f).</li>
         <li>Ödüllü reklam göstermek ve reklam izlemeyi doğrulamak — sözleşmenin ifası ve meşru menfaat; kişiselleştirilmiş reklam için cihazındaki tercihlere/açık rızana göre.</li>
-        <li>İzlenme istatistikleri (anonim/toplu) ile platformu geliştirmek — meşru menfaat.</li>
+        <li>
+          İzlenme istatistikleriyle içerik ve hizmet kalitesini ölçmek, platformu geliştirmek — meşru menfaat. Kişi bazlı izleme
+          kayıtlarını yalnızca yetkili Platform yöneticileri görür; creator&apos;larla yalnızca toplu sayılar paylaşılır.
+        </li>
       </ul>
 
       <h2>4. Aktarım</h2>
