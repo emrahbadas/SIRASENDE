@@ -1,7 +1,7 @@
-import Constants from "expo-constants";
 import { router } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { versionLabel } from "@/lib/app-version";
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/lib/config";
 import { supabase } from "@/lib/supabase";
@@ -35,7 +35,7 @@ export default function FeedbackScreen() {
       profile_id: session.user.id,
       kind,
       message: message.trim(),
-      app_version: Constants.expoConfig?.version ?? null,
+      app_version: versionLabel || null,
       platform: Platform.OS,
     });
     setBusy(false);

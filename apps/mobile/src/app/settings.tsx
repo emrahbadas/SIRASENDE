@@ -1,10 +1,10 @@
-import Constants from "expo-constants";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { MenuRow, MenuSection } from "@/components/menu-row";
 import { adPrivacyOptionsRequired, showAdPrivacyOptions } from "@/lib/ads";
+import { versionLabel } from "@/lib/app-version";
 import { useAuth } from "@/lib/auth";
 import { colors, config } from "@/lib/config";
 import { setBlocked } from "@/lib/social";
@@ -193,7 +193,7 @@ export default function SettingsScreen() {
         />
       </MenuSection>
 
-      <Text style={styles.version}>Sürüm {Constants.expoConfig?.version}</Text>
+      <Text style={styles.version}>Sürüm {versionLabel}</Text>
     </ScrollView>
   );
 }

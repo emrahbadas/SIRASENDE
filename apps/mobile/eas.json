@@ -14,7 +14,10 @@
       "android": { "buildType": "apk" }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "android": {
+        "buildArtifactPaths": ["android/app/build/outputs/mapping/release/mapping.txt"]
+      }
     }
   },
   "submit": {

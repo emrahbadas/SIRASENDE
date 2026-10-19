@@ -32,11 +32,14 @@ export function EpisodePlayer({
   onProgress,
   onEnded,
   onLocked,
+  bottomInset,
 }: {
   episodeId: string;
   onProgress: (seconds: number, completed: boolean) => void;
   onEnded: () => void;
   onLocked: () => void;
+  /** Space below the progress bar; defaults to the safe area (full-screen player) */
+  bottomInset?: number;
 }) {
   const player = useVideoPlayer(null, (p) => {
     p.timeUpdateEventInterval = PROGRESS_INTERVAL_SECONDS;
@@ -152,7 +155,7 @@ export function EpisodePlayer({
       {!loading && !error && time.duration > 0 && (
         // Always-visible progress bar; tap or drag to seek
         <View
-          style={[styles.barArea, { bottom: insets.bottom + 4 }]}
+          style={[styles.barArea, { bottom: (bottomInset ?? insets.bottom) + 4 }]}
           onLayout={(e) => setBarWidth(e.nativeEvent.layout.width)}
           onStartShouldSetResponder={() => true}
           onResponderTerminationRequest={() => false}

@@ -92,6 +92,8 @@ export default function ShortsScreen() {
                   key={item.firstEpisodeId}
                   episodeId={item.firstEpisodeId}
                   onLocked={() => undefined}
+                  // The tab bar below already keeps clear of the system bar
+                  bottomInset={0}
                   onProgress={(seconds, completed) =>
                     saveProgress({
                       seriesId: item.id,
@@ -108,7 +110,8 @@ export default function ShortsScreen() {
                 />
               )}
 
-              <View style={[styles.caption, { paddingBottom: 18 }]}>
+              {/* Above the progress bar (bottom 4 + 28 tall), as on the watch screen */}
+              <View style={[styles.caption, { paddingBottom: 40 }]}>
                 <Pressable onPress={() => router.push({ pathname: "/series/[id]", params: { id: item.id } })}>
                   <Text style={styles.title}>{item.title}</Text>
                   <Text style={styles.meta} numberOfLines={1}>
